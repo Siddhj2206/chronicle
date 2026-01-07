@@ -1,78 +1,87 @@
 import Link from "next/link";
-
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { getMyPosts } from "@/actions/posts";
+import { cn } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const posts = await getMyPosts();
 
   return (
-    <div>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-serif text-3xl font-semibold">My Posts</h1>
-        <Button asChild>
-          <Link href="/new">New Post</Link>
-        </Button>
+    <div className="mx-auto max-w-5xl pb-20">
+      {/* Header */}
+      <div className="mb-12 flex items-end justify-between border-b-4 border-black pb-4 dark:border-white">
+        <h1 className="font-serif text-5xl font-black tracking-tighter">
+          Manuscripts
+        </h1>
+        <Link 
+          href="/new"
+          className="font-mono text-sm font-bold uppercase tracking-widest hover:underline"
+        >
+          [+ New Entry]
+        </Link>
       </div>
 
       {posts.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-serif">No posts yet</CardTitle>
-            <CardDescription>
-              Create your first post to get started.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/new">Create Post</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="py-24 text-center">
+          <p className="font-serif text-2xl italic text-muted-foreground">
+            The ledger is empty.
+          </p>
+          <Link 
+            href="/new" 
+            className="mt-4 inline-block font-mono text-sm font-bold uppercase tracking-widest underline decoration-2 underline-offset-4"
+          >
+            Start Writing
+          </Link>
+        </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {posts.map((post) => (
-            <Card
-              key={post.id}
-              className="transition-all duration-200 hover:-translate-y-1 hover:rotate-1 hover:shadow-lg"
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="font-serif text-lg font-medium">
-                    {post.title}
-                  </CardTitle>
-                  <Badge variant={post.published ? "default" : "secondary"}>
-                    {post.published ? "Published" : "Draft"}
-                  </Badge>
-                </div>
-                <CardDescription>
-                  {post.publishedAt
-                    ? `Published on ${new Date(post.publishedAt).toLocaleDateString()}`
-                    : `Created on ${new Date(post.createdAt).toLocaleDateString()}`}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/edit/${post.slug}`}>Edit</Link>
-                  </Button>
-                  {post.published && (
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/@${post.slug}`}>View</Link>
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b-2 border-black font-mono text-xs uppercase tracking-widest dark:border-white">
+                <th className="py-4 pr-8 font-bold">Status</th>
+                <th className="py-4 pr-8 font-bold">Date</th>
+                <th className="py-4 pr-8 font-bold">Title</th>
+                <th className="py-4 text-right font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+              {posts.map((post) => (
+                <tr key={post.id} className="group transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900">
+                  <td className="whitespace-nowrap py-6 pr-8 align-top font-mono text-xs font-bold uppercase tracking-widest">
+                    <span className={cn(
+                      "inline-block rounded-none border px-2 py-0.5",
+                      post.published 
+                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black" 
+                        : "border-neutral-400 text-neutral-500"
+                    )}>
+                      {post.published ? "PUB" : "DFT"}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap py-6 pr-8 align-top font-mono text-xs text-muted-foreground">
+                    {new Date(post.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })}
+                  </td>
+                  <td className="py-6 pr-8 align-top">
+                    <Link href={`/edit/${post.slug}`} className="group-hover:underline">
+                      <h3 className="font-serif text-xl font-bold leading-tight">
+                        {post.title}
+                      </h3>
+                    </Link>
+                    <p className="mt-2 line-clamp-1 font-serif text-sm italic text-muted-foreground">
+                      {post.excerpt || "No excerpt..."}
+                    </p>
+                  </td>
+                  <td className="whitespace-nowrap py-6 text-right align-top font-mono text-xs font-bold uppercase tracking-widest">
+                     <Link href={`/edit/${post.slug}`} className="hover:underline">
+                      [Edit]
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

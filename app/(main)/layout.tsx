@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/layout/navbar";
+import { Masthead } from "@/components/magazine/masthead";
 
 export default function MainLayout({
   children,
@@ -6,9 +6,9 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+    <div className="min-h-screen flex flex-col">
+      <Masthead />
+      <main className="flex-1 w-full mx-auto max-w-7xl px-4 py-8">{children}</main>
     </div>
   );
 }

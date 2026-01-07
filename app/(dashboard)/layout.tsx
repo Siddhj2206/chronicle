@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/session";
-import { Navbar } from "@/components/layout/navbar";
+import { Navbar } from "@/components/magazine/navbar";
 
 export default async function DashboardLayout({
   children,
@@ -21,7 +21,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Navbar className="sticky top-0 z-50" />
       <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
     </div>
   );

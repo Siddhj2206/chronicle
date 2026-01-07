@@ -2,15 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { checkUsernameAvailable, setUsername } from "@/actions/users";
@@ -33,7 +27,7 @@ export default function OnboardingPage() {
       setError(null);
       setIsAvailable(result.available);
       if (!result.available) {
-        setError("Username is already taken");
+        setError("Handle already assigned");
       }
     }
   }
@@ -44,6 +38,7 @@ export default function OnboardingPage() {
     startTransition(async () => {
       const result = await setUsername(username);
       if (result.success) {
+        toast.success("Credentials Issued");
         router.push("/dashboard");
         router.refresh();
       } else {
@@ -53,29 +48,40 @@ export default function OnboardingPage() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="font-serif">Choose your username</CardTitle>
-        <CardDescription>
-          This will be your unique identifier on Chronicle.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="w-full max-w-md p-4">
+      <div className="relative border-4 border-black bg-white p-8 dark:border-white dark:bg-black">
+        {/* Hole Punch Effect */}
+        <div className="absolute -top-6 left-1/2 h-12 w-12 -translate-x-1/2 rounded-full border-4 border-black bg-background dark:border-white" />
+
+        <div className="mb-12 mt-4 text-center">
+          <h1 className="font-sans text-2xl font-black uppercase tracking-widest">
+            Issue Credentials
+          </h1>
+          <p className="mt-2 font-serif text-sm italic text-muted-foreground">
+            "Select a handle for your byline."
+          </p>
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSubmit();
           }}
-          className="space-y-6"
+          className="space-y-12"
         >
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">@</span>
+            <Label htmlFor="username" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Requested Handle
+            </Label>
+            <div className="relative">
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 font-serif text-2xl font-bold text-muted-foreground">
+                @
+              </span>
               <Input
                 id="username"
-                placeholder="johndoe"
+                placeholder="editor"
                 value={username}
+                className="h-auto rounded-none border-0 border-b-2 border-black py-2 pl-8 font-serif text-2xl font-bold focus-visible:ring-0 dark:border-white"
                 onChange={(e) => {
                   setUsernameValue(e.target.value);
                   setIsAvailable(null);
@@ -84,18 +90,34 @@ export default function OnboardingPage() {
                 onBlur={handleCheck}
               />
             </div>
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
-            {isAvailable && (
-              <p className="text-sm text-primary">Username is available!</p>
-            )}
+            
+            {/* Status Messages */}
+            <div className="h-6 pt-2 font-mono text-[10px] uppercase tracking-widest">
+              {error && (
+                <p className="text-destructive">Error: {error}</p>
+              )}
+              {isAvailable && (
+                <p className="text-green-600 dark:text-green-400">Status: Available</p>
+              )}
+              {!error && !isAvailable && username && (
+                 <p className="text-muted-foreground">Status: Checking...</p>
+              )}
+            </div>
           </div>
-          <Button type="submit" disabled={isPending || !isAvailable} className="w-full">
-            {isPending ? "Setting up..." : "Continue"}
+
+          <Button 
+            type="submit" 
+            disabled={isPending || !isAvailable} 
+            className="w-full rounded-none bg-black py-6 font-mono text-xs font-bold uppercase tracking-widest text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
+          >
+            {isPending ? "Issuing..." : "Confirm Credentials"}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+
+        <div className="mt-8 border-t-2 border-black pt-4 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground dark:border-white">
+          Chronicle ID System v1.0
+        </div>
+      </div>
+    </div>
   );
 }

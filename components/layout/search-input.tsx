@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 
 import { Input } from "@/components/ui/input";
 
-export function SearchInput() {
+function SearchInputContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
@@ -27,5 +27,13 @@ export function SearchInput() {
         className="w-64"
       />
     </form>
+  );
+}
+
+export function SearchInput() {
+  return (
+    <Suspense fallback={<div className="w-64 h-10 animate-pulse rounded-md bg-muted" />}>
+      <SearchInputContent />
+    </Suspense>
   );
 }
