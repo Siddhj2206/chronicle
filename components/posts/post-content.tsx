@@ -90,27 +90,29 @@ export function PostContent({ content }: PostContentProps) {
       }
 
       return (
-        <SyntaxHighlighter
-          language={match?.[1] || "text"}
-          PreTag="div"
-          className="!my-4 !border !border-border !bg-muted !font-mono"
-          style={{}}
-          customStyle={{
-            margin: 0,
-            padding: "1rem",
-            background: "var(--muted)",
-            borderRadius: 0,
-            fontSize: "0.9em",
-            lineHeight: 1.5,
-          }}
-          codeTagProps={{
-            style: {
-              fontFamily: "var(--font-mono)",
-            },
-          }}
-        >
-          {codeString}
-        </SyntaxHighlighter>
+        <div className="my-4 overflow-x-auto">
+          <SyntaxHighlighter
+            language={match?.[1] || "text"}
+            PreTag="div"
+            className="!min-w-max !border !border-border !bg-muted !font-mono"
+            style={{}}
+            customStyle={{
+              margin: 0,
+              padding: "1rem",
+              background: "var(--muted)",
+              borderRadius: 0,
+              fontSize: "0.9em",
+              lineHeight: 1.5,
+            }}
+            codeTagProps={{
+              style: {
+                fontFamily: "var(--font-mono)",
+              },
+            }}
+          >
+            {codeString}
+          </SyntaxHighlighter>
+        </div>
       );
     },
     pre: ({ children }) => <>{children}</>,

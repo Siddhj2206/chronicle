@@ -578,7 +578,7 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
     );
 
   return (
-    <div className="lexical-toolbar sticky top-0 z-50 flex flex-wrap items-center gap-1 bg-background px-2 py-2">
+    <div className="lexical-toolbar sticky top-[49px] z-40 flex flex-wrap items-center gap-1 border-b border-border bg-background px-2 py-2">
       {/* Undo/Redo */}
       <div className="flex items-center">
         <Button
@@ -655,8 +655,8 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      {/* Text Formatting */}
-      <div className="flex items-center">
+      {/* Text Formatting - hidden on mobile, use More menu instead */}
+      <div className="hidden items-center md:flex">
         <Button
           type="button"
           variant="ghost"
@@ -758,16 +758,16 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         </Popover>
       </div>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Separator orientation="vertical" className="mx-1 hidden h-6 md:block" />
 
-      {/* Insert Dropdown */}
+      {/* Insert Dropdown - hidden on mobile */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 gap-1 rounded-none px-2 font-mono text-xs hover:bg-accent/50"
+            className="hidden h-8 gap-1 rounded-none px-2 font-mono text-xs hover:bg-accent/50 md:flex"
           >
             Insert
             <IconChevronDown />
@@ -785,22 +785,22 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Separator orientation="vertical" className="mx-1 hidden h-6 md:block" />
 
-      {/* Clear Formatting */}
+      {/* Clear Formatting - hidden on mobile */}
       <Button
         type="button"
         variant="ghost"
         size="sm"
         onClick={clearFormatting}
-        className={toolbarButtonClass()}
+        className={cn(toolbarButtonClass(), "hidden md:flex")}
         title="Clear Formatting"
       >
         <IconClearFormatting />
       </Button>
 
       {/* Mobile More Menu - hidden on desktop */}
-      <div className="ml-auto lg:hidden">
+      <div className="ml-auto md:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -828,6 +828,10 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
             <DropdownMenuItem onClick={formatCode}>
               <IconCode />
               <span className="ml-2">Code</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={insertLink}>
+              <IconLink />
+              <span className="ml-2">Link</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onInsertImage}>

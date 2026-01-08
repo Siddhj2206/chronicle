@@ -189,7 +189,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Sticky Header */}
-      <header className="sticky top-0 z-10 border-b border-border bg-background">
+      <header className="sticky top-0 z-50 border-b border-border bg-background">
         <div className="flex items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
             <Link

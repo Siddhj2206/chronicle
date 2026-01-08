@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/auth/user-menu";
@@ -16,8 +17,14 @@ export function Navbar({ className }: NavbarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const isHomePage = pathname === "/";
-  
-  const today = new Date().toLocaleDateString("en-US", {
+
+  const now = new Date();
+  const shortDate = now.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  const fullDate = now.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -30,10 +37,8 @@ export function Navbar({ className }: NavbarProps) {
         <div className="flex items-center gap-4">
           {isHomePage ? (
             <>
-              <Link href="/" className="font-bold text-foreground hover:underline md:hidden">
-                The Chronicle
-              </Link>
-              <div className="hidden md:block">{today}</div>
+              <div className="md:hidden">{shortDate}</div>
+              <div className="hidden md:block">{fullDate}</div>
             </>
           ) : (
             <Link href="/" className="font-serif text-xl font-black tracking-tight text-foreground hover:opacity-80">
