@@ -79,7 +79,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
       <div className="relative border-4 border-black bg-white p-8 dark:border-white dark:bg-black">
         {/* Hole Punch Effect */}
         <div className="absolute -top-6 left-1/2 h-12 w-12 -translate-x-1/2 rounded-full border-4 border-black bg-background dark:border-white" />
-        
+
         {/* Header */}
         <div className="mb-12 mt-4 text-center">
           <h1 className="font-sans text-2xl font-black uppercase tracking-widest">
@@ -90,7 +90,10 @@ export function SettingsForm({ user }: SettingsFormProps) {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-12 md:flex-row">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-12 md:flex-row"
+        >
           {/* Left Column: Photo */}
           <div className="flex flex-col gap-4">
             <ImageUpload
@@ -107,7 +110,10 @@ export function SettingsForm({ user }: SettingsFormProps) {
           {/* Right Column: Details */}
           <div className="flex-1 space-y-8">
             <div className="space-y-2">
-              <Label htmlFor="name" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              <Label
+                htmlFor="name"
+                className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground"
+              >
                 Full Name
               </Label>
               <Input
@@ -121,11 +127,16 @@ export function SettingsForm({ user }: SettingsFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="username" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              <Label
+                htmlFor="username"
+                className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground"
+              >
                 Username
               </Label>
               <div className="flex items-center border-b-2 border-black dark:border-white">
-                <span className="font-mono text-lg text-muted-foreground">@</span>
+                <span className="font-mono text-lg text-muted-foreground">
+                  @
+                </span>
                 <Input
                   id="username"
                   name="username"
@@ -137,8 +148,11 @@ export function SettingsForm({ user }: SettingsFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bio" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Biography / Beat
+              <Label
+                htmlFor="bio"
+                className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground"
+              >
+                Biography
               </Label>
               <Textarea
                 id="bio"
@@ -151,8 +165,8 @@ export function SettingsForm({ user }: SettingsFormProps) {
             </div>
 
             <div className="pt-4">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isPending}
                 className="w-full rounded-none bg-black py-6 font-mono text-sm font-bold uppercase tracking-widest text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
               >
@@ -165,9 +179,15 @@ export function SettingsForm({ user }: SettingsFormProps) {
         {/* Decorative Barcode or ID elements */}
         <div className="mt-12 flex justify-between border-t-2 border-black pt-4 font-mono text-[10px] dark:border-white">
           <div className="flex gap-1">
-             {[...Array(12)].map((_, i) => (
-                <div key={i} className={cn("h-8 bg-black dark:bg-white", i % 2 === 0 ? "w-1" : "w-3")} />
-             ))}
+            {[...Array(12)].map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "h-8 bg-black dark:bg-white",
+                  i % 2 === 0 ? "w-1" : "w-3",
+                )}
+              />
+            ))}
           </div>
           <div className="uppercase tracking-widest text-muted-foreground">
             Auth: Valid
@@ -181,8 +201,8 @@ export function SettingsForm({ user }: SettingsFormProps) {
           Danger Zone
         </h2>
         <p className="mt-4 text-sm text-muted-foreground">
-          Once you delete your account, all your posts, comments, and data will be permanently removed.
-          This action cannot be undone.
+          Once you delete your account, all your posts, comments, and data will
+          be permanently removed. This action cannot be undone.
         </p>
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -194,8 +214,9 @@ export function SettingsForm({ user }: SettingsFormProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete your account and all associated data including
-                posts, comments, and uploaded images. This action cannot be undone.
+                This will permanently delete your account and all associated
+                data including posts, comments, and uploaded images. This action
+                cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="my-4">
@@ -216,7 +237,10 @@ export function SettingsForm({ user }: SettingsFormProps) {
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteAccount}
-                disabled={confirmUsername.toLowerCase() !== user.username?.toLowerCase() || isDeleting}
+                disabled={
+                  confirmUsername.toLowerCase() !==
+                    user.username?.toLowerCase() || isDeleting
+                }
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {isDeleting ? "Deleting..." : "Delete Account"}
