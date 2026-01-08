@@ -17,15 +17,15 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps) {
 
   if (comments.length === 0) {
     return (
-      <p className="py-8 text-center font-serif italic text-muted-foreground">
-        No comments yet. Be the first to share your thoughts.
+      <p className="py-12 text-center font-serif italic text-muted-foreground">
+        No letters have been received for this article.
       </p>
     );
   }
 
   return (
-    <div className="divide-y divide-border">
-      {comments.map(({ comment, author }) => {
+    <div className="space-y-0">
+      {comments.map(({ comment, author }, index) => {
         const initials = author.name
           ?.split(" ")
           .map((n: string) => n[0])
@@ -40,43 +40,53 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps) {
         const formattedDate = new Date(comment.createdAt).toLocaleDateString(
           "en-US",
           {
-            month: "short",
+            month: "long",
             day: "numeric",
             year: "numeric",
           }
         );
 
         return (
-          <article key={comment.id} className="py-6">
-            <header className="mb-3 flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 border border-border">
+          <article
+            key={comment.id}
+            className={index > 0 ? "border-t border-neutral-300 pt-8 dark:border-neutral-700" : ""}
+          >
+            <header className="mb-4 flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-12 w-12 rounded-none border border-neutral-300 dark:border-neutral-700">
                   <AvatarImage src={author.image || undefined} />
-                  <AvatarFallback className="font-serif text-sm">
+                  <AvatarFallback className="rounded-none font-mono text-xs">
                     {initials || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <Link
-                    href={`/@${author.username}`}
-                    className="font-serif font-semibold hover:underline"
-                  >
-                    {author.name}
-                  </Link>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>@{author.username}</span>
-                    <span>•</span>
-                    <time dateTime={comment.createdAt.toISOString()}>
-                      {formattedDate}
-                    </time>
+                  <div className="flex items-baseline gap-2">
+                    <Link
+                      href={`/@${author.username}`}
+                      className="font-serif font-bold hover:underline"
+                    >
+                      {author.name}
+                    </Link>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      @{author.username}
+                    </span>
                   </div>
+                  <time
+                    dateTime={comment.createdAt.toISOString()}
+                    className="font-mono text-xs uppercase tracking-wide text-muted-foreground"
+                  >
+                    Published: {formattedDate}
+                  </time>
                 </div>
               </div>
               {canDelete && <DeleteCommentButton commentId={comment.id} />}
             </header>
-            <div className="prose prose-sm prose-neutral dark:prose-invert pl-13 font-serif">
+            <div className="prose prose-sm prose-neutral dark:prose-invert ml-16 font-serif italic">
+              <span className="text-muted-foreground">&ldquo;</span>
               <PostContent content={comment.content} />
+              <span className="text-muted-foreground">&rdquo;</span>
             </div>
+            {index < comments.length - 1 && <div className="pb-8" />}
           </article>
         );
       })}

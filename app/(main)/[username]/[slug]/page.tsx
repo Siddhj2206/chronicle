@@ -126,7 +126,7 @@ export default async function PostPage({ params }: PostPageProps) {
       <footer className="mt-12 border-b border-border pb-12">
         <div className="flex flex-col items-center gap-4 text-center">
           {author.image && (
-            <div className="relative h-16 w-16 overflow-hidden rounded-full border border-border">
+            <div className="relative h-16 w-16 overflow-hidden border border-neutral-300 dark:border-neutral-700">
               <Image
                 src={author.image}
                 alt={author.name}
@@ -150,8 +150,8 @@ export default async function PostPage({ params }: PostPageProps) {
 
       {/* Comments Section */}
       <section className="mt-12">
-        <h2 className="mb-8 border-b-2 border-black pb-4 font-serif text-2xl font-bold uppercase tracking-wide dark:border-white">
-          Reader Comments
+        <h2 className="mb-8 border-y-2 border-black py-4 text-center font-mono text-sm font-bold uppercase tracking-widest dark:border-white">
+          Letters to the Editor
         </h2>
         <div className="mb-10">
           <CommentForm postId={post.id} />

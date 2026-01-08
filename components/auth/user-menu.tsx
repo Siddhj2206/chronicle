@@ -36,9 +36,9 @@ export function UserMenu({ user }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon">
-          <Avatar>
+          <Avatar className="rounded-none border border-neutral-300 dark:border-neutral-700">
             <AvatarImage src={user.image || undefined} alt={user.name || ""} />
-            <AvatarFallback>{initials || "U"}</AvatarFallback>
+            <AvatarFallback className="rounded-none">{initials || "U"}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

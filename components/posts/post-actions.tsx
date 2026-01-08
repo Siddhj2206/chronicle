@@ -2,8 +2,8 @@
 
 import { useOptimistic, useTransition } from "react";
 
-import { Button } from "@/components/ui/button";
 import { toggleLike } from "@/actions/likes";
+import { cn } from "@/lib/utils";
 
 interface LikeButtonProps {
   postId: string;
@@ -32,17 +32,28 @@ export function LikeButton({
     });
   }
 
+  const likeText =
+    optimistic.count === 0
+      ? "Like This Story"
+      : optimistic.count === 1
+        ? "1 Reader Liked This Story"
+        : `${optimistic.count} Readers Liked This Story`;
+
   return (
-    <Button
-      variant={optimistic.liked ? "default" : "outline"}
+    <button
       onClick={handleClick}
       disabled={isPending}
-      className="gap-2 font-semibold uppercase tracking-wide"
+      className={cn(
+        "flex items-center gap-3 border-2 px-6 py-3 font-mono text-xs uppercase tracking-widest transition-colors",
+        "border-black dark:border-white",
+        "hover:bg-neutral-100 dark:hover:bg-neutral-900",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        optimistic.liked && "bg-black text-white dark:bg-white dark:text-black",
+        optimistic.liked && "hover:bg-neutral-800 dark:hover:bg-neutral-200"
+      )}
     >
-      <span>{optimistic.liked ? "♥" : "♡"}</span>
-      <span>
-        {optimistic.count} {optimistic.count === 1 ? "Like" : "Likes"}
-      </span>
-    </Button>
+      <span className="text-base">{optimistic.liked ? "♥" : "♡"}</span>
+      <span>{likeText}</span>
+    </button>
   );
 }

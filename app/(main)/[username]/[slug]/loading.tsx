@@ -32,7 +32,7 @@ export default function PostLoading() {
       {/* Author Bio Skeleton */}
       <footer className="mt-12 border-b border-border pb-12">
         <div className="flex flex-col items-center gap-4">
-          <Skeleton className="h-16 w-16 rounded-full" />
+          <Skeleton className="h-16 w-16" />
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-6 w-32" />
         </div>

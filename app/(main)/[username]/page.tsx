@@ -43,7 +43,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       {/* Profile Header - Classic Masthead Style */}
       <div className="mb-16 border-b-4 border-black pb-12 text-center dark:border-white">
         {userData.image && (
-          <div className="mx-auto mb-6 h-32 w-32 overflow-hidden rounded-full border border-border">
+          <div className="mx-auto mb-6 h-32 w-32 overflow-hidden border border-neutral-300 dark:border-neutral-700">
              <Image
               src={userData.image}
               alt={userData.name}
