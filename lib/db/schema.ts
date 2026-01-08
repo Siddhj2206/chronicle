@@ -136,13 +136,6 @@ export const like = pgTable(
 // ============================================================================
 
 export type User = typeof user.$inferSelect;
-export type NewUser = typeof user.$inferInsert;
-
 export type Post = typeof post.$inferSelect;
-export type NewPost = typeof post.$inferInsert;
-
 export type Comment = typeof comment.$inferSelect;
-export type NewComment = typeof comment.$inferInsert;
-
 export type Like = typeof like.$inferSelect;
-export type NewLike = typeof like.$inferInsert;

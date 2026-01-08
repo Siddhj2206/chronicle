@@ -69,8 +69,3 @@ export const profileSchema = z.object({
   bio: z.string().max(500, "Bio must be at most 500 characters").optional(),
   image: z.string().url("Invalid image URL").optional().or(z.literal("")),
 });
-
-export type UsernameInput = z.infer<typeof usernameSchema>;
-export type PostInput = z.infer<typeof postSchema>;
-export type CommentInput = z.infer<typeof commentSchema>;
-export type ProfileInput = z.infer<typeof profileSchema>;

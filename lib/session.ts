@@ -7,8 +7,3 @@ export async function getSession() {
     headers: await headers(),
   });
 }
-
-export async function getUser() {
-  const session = await getSession();
-  return session?.user ?? null;
-}
