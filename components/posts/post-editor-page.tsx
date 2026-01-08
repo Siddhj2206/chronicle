@@ -7,8 +7,21 @@ import TextareaAutosize from "react-textarea-autosize";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { LexicalEditor } from "@/components/posts/lexical-editor";
 import { ImageUpload } from "@/components/layout/image-upload";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   createPost,
   updatePost,
@@ -152,14 +165,6 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   }, [currentSlug, isPublished, hasChanges, mode, savePost, router]);
 
   const handleDelete = useCallback(async () => {
-    if (
-      !confirm(
-        "Are you sure you want to burn this manuscript? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
-
     if (!currentSlug) {
       router.push("/manuscripts");
       return;
@@ -193,7 +198,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
             >
               ← Back
             </Link>
-            <div className="hidden h-4 w-px bg-border md:block" />
+            <Separator orientation="vertical" className="hidden h-4 md:block" />
             <span
               className={cn(
                 "hidden rounded-none border px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-widest md:inline-block",
@@ -218,17 +223,42 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
 
           <div className="flex items-center gap-2">
             {mode === "edit" && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleDelete}
-                disabled={isPending}
-                className="h-8 font-mono text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive/10 hover:text-destructive"
-              >
-                Burn
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={isPending}
+                    className="h-8 font-mono text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    Burn
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-none border-2 border-black dark:border-white">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-serif text-xl font-bold">
+                      Burn This Manuscript?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="font-serif">
+                      Are you sure you want to burn this manuscript? This action
+                      cannot be undone. Your work will be permanently destroyed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-none border-2 border-black font-mono text-xs uppercase tracking-widest dark:border-white">
+                      Keep Manuscript
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="rounded-none border-2 border-destructive bg-destructive font-mono text-xs uppercase tracking-widest text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Burn
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
-            <div className="hidden h-4 w-px bg-border md:block" />
+            <Separator orientation="vertical" className="hidden h-4 md:block" />
             <Button
               type="button"
               variant="outline"
@@ -255,9 +285,9 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
         <div className="mx-auto max-w-4xl space-y-8">
           {/* Cover Image Upload */}
           <div className="space-y-2">
-            <label className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <Label className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Cover Image
-            </label>
+            </Label>
             <ImageUpload
               value={coverImage}
               onChange={setCoverImage}

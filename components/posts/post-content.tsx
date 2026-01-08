@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 
+import { Checkbox } from "@/components/ui/checkbox";
+
 import type { Components } from "react-markdown";
 
 interface PostContentProps {
@@ -130,19 +132,17 @@ export function PostContent({ content }: PostContentProps) {
     td: ({ children }) => (
       <td className="border border-border px-4 py-2">{children}</td>
     ),
-    input: ({ type, checked, ...props }) => {
+    input: ({ type, checked }) => {
       if (type === "checkbox") {
         return (
-          <input
-            type="checkbox"
+          <Checkbox
             checked={checked}
-            readOnly
-            className="mr-2 h-4 w-4 accent-primary"
-            {...props}
+            disabled
+            className="mr-2 h-4 w-4 rounded-none border-neutral-400 data-[state=checked]:bg-black data-[state=checked]:text-white dark:data-[state=checked]:bg-white dark:data-[state=checked]:text-black"
           />
         );
       }
-      return <input type={type} {...props} />;
+      return null;
     },
   };
 

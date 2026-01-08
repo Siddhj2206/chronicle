@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 
 import { getSession } from "@/lib/session";
 import { Navbar } from "@/components/magazine/navbar";
+import { Footer } from "@/components/magazine/footer";
 
 export default async function DashboardLayout({
   children,
@@ -25,9 +26,10 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <Navbar className="sticky top-0 z-50" />
-      <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">{children}</main>
+      <Footer />
     </div>
   );
 }

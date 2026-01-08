@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function SearchInputContent() {
   const router = useRouter();
@@ -32,7 +33,7 @@ function SearchInputContent() {
 
 export function SearchInput() {
   return (
-    <Suspense fallback={<div className="w-64 h-10 animate-pulse rounded-md bg-muted" />}>
+        <Suspense fallback={<Skeleton className="h-10 w-64" />}>
       <SearchInputContent />
     </Suspense>
   );

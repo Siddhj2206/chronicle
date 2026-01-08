@@ -92,6 +92,7 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 // ============================================
@@ -604,7 +605,7 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         </Button>
       </div>
 
-      <div className="mx-1 h-6 w-px bg-border" />
+      <Separator orientation="vertical" className="mx-1 h-6" />
 
       {/* Block Type Dropdown */}
       <DropdownMenu>
@@ -652,7 +653,7 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="mx-1 h-6 w-px bg-border" />
+      <Separator orientation="vertical" className="mx-1 h-6" />
 
       {/* Text Formatting */}
       <div className="flex items-center">
@@ -757,7 +758,7 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         </Popover>
       </div>
 
-      <div className="mx-1 h-6 w-px bg-border" />
+      <Separator orientation="vertical" className="mx-1 h-6" />
 
       {/* Insert Dropdown */}
       <DropdownMenu>
@@ -784,7 +785,7 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="mx-1 h-6 w-px bg-border" />
+      <Separator orientation="vertical" className="mx-1 h-6" />
 
       {/* Clear Formatting */}
       <Button

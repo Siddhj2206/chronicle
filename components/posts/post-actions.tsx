@@ -3,6 +3,7 @@
 import { useOptimistic, useTransition } from "react";
 
 import { toggleLike } from "@/actions/likes";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface LikeButtonProps {
@@ -40,11 +41,11 @@ export function LikeButton({
         : `${optimistic.count} Readers Liked This Story`;
 
   return (
-    <button
+    <Button
       onClick={handleClick}
       disabled={isPending}
       className={cn(
-        "flex items-center gap-3 border-2 px-6 py-3 font-mono text-xs uppercase tracking-widest transition-colors",
+        "flex items-center gap-3 rounded-none border-2 px-6 py-3 font-mono text-xs uppercase tracking-widest transition-colors",
         "border-black dark:border-white",
         "hover:bg-neutral-100 dark:hover:bg-neutral-900",
         "disabled:cursor-not-allowed disabled:opacity-50",
@@ -54,6 +55,6 @@ export function LikeButton({
     >
       <span className="text-base">{optimistic.liked ? "♥" : "♡"}</span>
       <span>{likeText}</span>
-    </button>
+    </Button>
   );
 }

@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { addComment } from "@/actions/comments";
 
 interface CommentFormProps {
@@ -55,12 +57,12 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-3">
-        <label
+        <Label
           htmlFor="comment"
           className="block font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground"
         >
           ━━━ Write to the Editor ━━━
-        </label>
+        </Label>
         <Textarea
           id="comment"
           placeholder="Share your thoughts on this article..."
@@ -73,13 +75,13 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
       {error && (
         <p className="font-mono text-sm font-medium text-destructive">{error}</p>
       )}
-      <button
+      <Button
         type="submit"
         disabled={isPending}
-        className="border-2 border-black bg-black px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:hover:bg-neutral-200"
+        className="rounded-none border-2 border-black bg-black px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:hover:bg-neutral-200"
       >
         {isPending ? "Submitting..." : "Submit Letter"}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { deleteComment } from "@/actions/comments";
 
 interface DeleteCommentButtonProps {
@@ -31,12 +32,13 @@ export function DeleteCommentButton({ commentId }: DeleteCommentButtonProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <button
+        <Button
+          variant="ghost"
           disabled={isPending}
-          className="font-mono text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-auto p-0 font-mono text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:bg-transparent hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "..." : "Retract"}
-        </button>
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="rounded-none border-2 border-black dark:border-white">
         <AlertDialogHeader>
