@@ -15,8 +15,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Get session token from cookie
-  const sessionToken = request.cookies.get("better-auth.session_token")?.value;
+  // Get session token from cookie (check both secure and non-secure variants)
+  const sessionToken =
+    request.cookies.get("__Secure-better-auth.session_token")?.value ||
+    request.cookies.get("better-auth.session_token")?.value;
   const isLoggedIn = !!sessionToken;
 
   // For username check, we'll handle this in the page components
