@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, like } from "drizzle-orm";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 
@@ -11,6 +11,44 @@ import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
 
 import type { Post } from "@/lib/db/schema";
+
+// Generate a unique slug - tries clean slug first, then adds suffix only if needed
+async function generateUniqueSlug(title: string, authorId: string): Promise<string> {
+  const baseSlug = slugify(title, { lower: true, strict: true });
+  
+  if (!baseSlug) {
+    // Fallback for titles that slugify to empty string
+    return nanoid(10);
+  }
+
+  // Check for existing slugs by this author that start with baseSlug
+  const existing = await db
+    .select({ slug: post.slug })
+    .from(post)
+    .where(and(eq(post.authorId, authorId), like(post.slug, `${baseSlug}%`)));
+
+  if (existing.length === 0) {
+    return baseSlug;
+  }
+
+  const slugs = new Set(existing.map((p) => p.slug));
+
+  // If base slug is available, use it
+  if (!slugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  // Try numbered suffixes: title-2, title-3, etc.
+  for (let counter = 2; counter <= 100; counter++) {
+    const candidate = `${baseSlug}-${counter}`;
+    if (!slugs.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  // Fallback to random suffix if somehow we have 100+ posts with same title
+  return `${baseSlug}-${nanoid(6)}`;
+}
 
 export async function createPost(formData: FormData) {
   const session = await getSession();
@@ -32,9 +70,8 @@ export async function createPost(formData: FormData) {
 
   const { title, content, excerpt, coverImage } = parsed.data;
 
-  // Generate unique slug
-  const baseSlug = slugify(title, { lower: true, strict: true });
-  const slug = `${baseSlug}-${nanoid(6)}`;
+  // Generate unique slug (clean, only adds suffix on conflict)
+  const slug = await generateUniqueSlug(title, session.user.id);
 
   try {
     const [newPost] = await db
@@ -50,7 +87,7 @@ export async function createPost(formData: FormData) {
       })
       .returning();
 
-    revalidatePath("/dashboard");
+    revalidatePath("/manuscripts");
 
     return { success: true, slug: newPost.slug };
   } catch (error) {
@@ -96,9 +133,8 @@ export async function updatePost(slug: string, formData: FormData) {
       return { error: "Post not found" };
     }
 
-    const username = (session.user as { username?: string }).username;
-    revalidatePath("/dashboard");
-    revalidatePath(`/@${username}/${slug}`);
+    revalidatePath("/manuscripts");
+    revalidatePath(`/@${(session.user as { username?: string }).username}/${slug}`);
 
     return { success: true, slug: updatedPost.slug };
   } catch (error) {
@@ -124,7 +160,7 @@ export async function deletePost(slug: string) {
       return { error: "Post not found" };
     }
 
-    revalidatePath("/dashboard");
+    revalidatePath("/manuscripts");
     revalidatePath("/");
 
     return { success: true };
@@ -156,10 +192,8 @@ export async function publishPost(slug: string) {
       return { error: "Post not found" };
     }
 
-    const username = (session.user as { username?: string }).username;
-    revalidatePath("/dashboard");
+    revalidatePath("/manuscripts");
     revalidatePath("/");
-    revalidatePath(`/@${username}/${slug}`);
 
     return { success: true };
   } catch (error) {
@@ -189,7 +223,7 @@ export async function unpublishPost(slug: string) {
       return { error: "Post not found" };
     }
 
-    revalidatePath("/dashboard");
+    revalidatePath("/manuscripts");
     revalidatePath("/");
 
     return { success: true };

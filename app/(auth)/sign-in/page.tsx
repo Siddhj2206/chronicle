@@ -12,7 +12,7 @@ export default async function SignInPage() {
     if (!username) {
       redirect("/onboarding");
     }
-    redirect("/dashboard");
+    redirect("/manuscripts");
   }
 
   return (
@@ -37,7 +37,7 @@ export default async function SignInPage() {
             Press Access
           </h2>
           <p className="font-serif text-lg italic text-muted-foreground">
-            "Please present your credentials to enter the newsroom."
+            &quot;Please present your credentials to enter the newsroom.&quot;
           </p>
         </div>
 

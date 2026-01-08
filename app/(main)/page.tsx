@@ -3,6 +3,7 @@ import { HeroCard } from "@/components/magazine/hero-card";
 import { GridCard } from "@/components/magazine/grid-card";
 import { ListCard } from "@/components/magazine/list-card";
 import { SidebarList } from "@/components/magazine/sidebar-list";
+import { Masthead } from "@/components/magazine/masthead";
 
 export const revalidate = 60;
 
@@ -17,14 +18,17 @@ export default async function FeedPage() {
 
   if (posts.length === 0) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
-        <h2 className="font-serif text-3xl font-bold text-muted-foreground">
-          No stories yet.
-        </h2>
-        <p className="mt-2 text-muted-foreground">
-          The printing presses are silent. Be the first to write.
-        </p>
-      </div>
+      <>
+        <Masthead />
+        <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
+          <h2 className="font-serif text-3xl font-bold text-muted-foreground">
+            No stories yet.
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            The printing presses are silent. Be the first to write.
+          </p>
+        </div>
+      </>
     );
   }
 
@@ -35,61 +39,55 @@ export default async function FeedPage() {
   const trendingPosts = posts.slice(0, 5); // Simulate trending with top posts
 
   return (
-    <div className="flex flex-col gap-12 pb-20">
-      {/* Hero Section */}
-      <section>
-        <HeroCard post={heroPost} />
-      </section>
-
-      {/* Grid Section (The Fold) */}
-      {gridPosts.length > 0 && (
-        <section className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-x-8 md:gap-y-12 md:divide-x md:divide-neutral-200 dark:md:divide-neutral-800">
-          {gridPosts.map((post) => (
-            <GridCard key={post.id} post={post} />
-          ))}
+    <>
+      <Masthead />
+      <div className="flex flex-col gap-12 pb-20">
+        {/* Hero Section */}
+        <section>
+          <HeroCard post={heroPost} />
         </section>
-      )}
 
-      {/* Archive & Sidebar Section */}
-      <section className="grid grid-cols-1 gap-12 border-t border-black pt-12 dark:border-white md:grid-cols-12">
-        {/* Main Feed (Left) */}
-        <div className="md:col-span-8 md:border-r md:border-neutral-200 md:pr-12 dark:md:border-neutral-800">
-          <div className="mb-6 flex items-center gap-4">
-            <div className="h-px flex-1 bg-black dark:bg-white" />
-            <span className="font-sans text-xs font-black uppercase tracking-widest text-muted-foreground">
-              Latest Stories
-            </span>
-            <div className="h-px flex-1 bg-black dark:bg-white" />
-          </div>
-          
-          <div className="flex flex-col gap-8 divide-y divide-neutral-200 dark:divide-neutral-800">
-            {mainListPosts.map((post) => (
-              <ListCard key={post.id} post={post} className="pt-8 first:pt-0" />
+        {/* Grid Section (The Fold) */}
+        {gridPosts.length > 0 && (
+          <section className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-x-8 md:gap-y-12 md:divide-x md:divide-neutral-200 dark:md:divide-neutral-800">
+            {gridPosts.map((post) => (
+              <GridCard key={post.id} post={post} />
             ))}
-            {mainListPosts.length === 0 && (
-              <p className="py-8 text-center font-serif text-muted-foreground italic">
-                No more stories to load.
-              </p>
-            )}
-          </div>
-        </div>
+          </section>
+        )}
 
-        {/* Sidebar (Right) */}
-        <div className="md:col-span-4">
-          <div className="sticky top-24 space-y-12">
-            <SidebarList title="Trending Now" posts={trendingPosts} />
+        {/* Archive & Sidebar Section */}
+        <section className="grid grid-cols-1 gap-12 border-t border-black pt-12 dark:border-white md:grid-cols-12">
+          {/* Main Feed (Left) */}
+          <div className="md:col-span-8 md:border-r md:border-neutral-200 md:pr-12 dark:md:border-neutral-800">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="h-px flex-1 bg-black dark:bg-white" />
+              <span className="font-sans text-xs font-black uppercase tracking-widest text-muted-foreground">
+                Latest Stories
+              </span>
+              <div className="h-px flex-1 bg-black dark:bg-white" />
+            </div>
             
-            {/* Newsletter Box Placeholder */}
-            <div className="border border-black p-6 text-center dark:border-white">
-              <h4 className="font-serif text-xl font-bold">The Daily Brief</h4>
-              <p className="mt-2 font-serif text-sm text-muted-foreground">
-                Sign up for our newsletter and never miss a story.
-              </p>
-              <div className="mt-4 h-10 w-full bg-neutral-100 dark:bg-neutral-800" />
+            <div className="flex flex-col gap-8 divide-y divide-neutral-200 dark:divide-neutral-800">
+              {mainListPosts.map((post) => (
+                <ListCard key={post.id} post={post} className="pt-8 first:pt-0" />
+              ))}
+              {mainListPosts.length === 0 && (
+                <p className="py-8 text-center font-serif text-muted-foreground italic">
+                  No more stories to load.
+                </p>
+              )}
             </div>
           </div>
-        </div>
-      </section>
-    </div>
+
+          {/* Sidebar (Right) */}
+          <div className="md:col-span-4">
+            <div className="sticky top-24">
+              <SidebarList title="Trending Now" posts={trendingPosts} />
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
   );
 }

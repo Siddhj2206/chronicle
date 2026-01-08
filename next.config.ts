@@ -9,11 +9,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "lh3.googleusercontent.com", // For Google Auth avatars
+        hostname: "lh3.googleusercontent.com",
       },
       {
         protocol: "https",
-        hostname: "pub-*.r2.dev", // Generic R2 pattern, might need adjustment based on specific R2 setup
+        hostname: "**.r2.cloudflarestorage.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.r2.dev",
       },
     ],
   },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -12,11 +12,25 @@ interface ImageUploadProps {
   onChange: (url: string) => void;
   className?: string;
   disabled?: boolean;
+  aspectRatio?: "video" | "square";
 }
 
-export function ImageUpload({ value, onChange, className, disabled }: ImageUploadProps) {
+export function ImageUpload({ 
+  value, 
+  onChange, 
+  className, 
+  disabled,
+  aspectRatio = "video" 
+}: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(value || null);
+
+  // Sync preview with value prop changes
+  useEffect(() => {
+    setPreview(value || null);
+  }, [value]);
+
+  const aspectClass = aspectRatio === "square" ? "aspect-square" : "aspect-video";
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -26,43 +40,27 @@ export function ImageUpload({ value, onChange, className, disabled }: ImageUploa
       setIsUploading(true);
 
       try {
-        // 1. Get Presigned URL
+        const formData = new FormData();
+        formData.append("file", file);
+
         const response = await fetch("/api/upload", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            filename: file.name,
-            contentType: file.type,
-          }),
+          body: formData,
         });
 
-        if (!response.ok) throw new Error("Failed to get upload URL");
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Upload failed");
+        }
 
-        const { presignedUrl, key } = await response.json();
-
-        // 2. Upload to R2
-        const uploadResponse = await fetch(presignedUrl, {
-          method: "PUT",
-          body: file,
-          headers: { "Content-Type": file.type },
-        });
-
-        if (!uploadResponse.ok) throw new Error("Upload failed");
-
-        // 3. Construct Public URL
-        const domain = process.env.NEXT_PUBLIC_R2_DOMAIN; 
-        // Fallback: if no domain, use the presigned URL without query params (not ideal for private buckets but works if public)
-        // Ideally NEXT_PUBLIC_R2_DOMAIN is set.
-        const url = domain 
-          ? `https://${domain}/${key}` 
-          : presignedUrl.split("?")[0]; 
+        const { url } = await response.json();
 
         setPreview(url);
         onChange(url);
         toast.success("Image uploaded");
       } catch (error) {
         console.error(error);
-        toast.error("Failed to upload image");
+        toast.error(error instanceof Error ? error.message : "Failed to upload image");
       } finally {
         setIsUploading(false);
       }
@@ -79,11 +77,20 @@ export function ImageUpload({ value, onChange, className, disabled }: ImageUploa
 
   if (preview) {
     return (
-      <div className={cn("group relative aspect-video w-full overflow-hidden rounded-md bg-muted", className)}>
+      <div 
+        {...getRootProps()}
+        className={cn(
+          "group relative w-full cursor-pointer overflow-hidden border-2 border-dashed border-neutral-300 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900", 
+          aspectClass,
+          className
+        )}
+      >
+        <input {...getInputProps()} />
         <Image
           src={preview}
-          alt="Cover"
+          alt="Upload preview"
           fill
+          unoptimized
           className="object-cover transition-opacity group-hover:opacity-75"
         />
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
@@ -109,7 +116,8 @@ export function ImageUpload({ value, onChange, className, disabled }: ImageUploa
     <div
       {...getRootProps()}
       className={cn(
-        "group relative flex aspect-video w-full cursor-pointer flex-col items-center justify-center border-2 border-dashed border-neutral-300 bg-neutral-50 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800",
+        "group relative flex w-full cursor-pointer flex-col items-center justify-center border-2 border-dashed border-neutral-300 bg-neutral-50 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800",
+        aspectClass,
         isDragActive && "border-black bg-neutral-100 dark:border-white dark:bg-neutral-800",
         className
       )}
@@ -121,7 +129,7 @@ export function ImageUpload({ value, onChange, className, disabled }: ImageUploa
         ) : (
           <>
              <div className="font-serif text-sm italic">
-              {isDragActive ? "Drop to upload" : "Add Cover Image"}
+              {isDragActive ? "Drop to upload" : aspectRatio === "square" ? "Add Photo" : "Add Cover Image"}
             </div>
             <div className="font-mono text-[10px] uppercase tracking-widest opacity-50">
               Drag & Drop or Click

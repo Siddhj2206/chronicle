@@ -1,8 +1,14 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+
 import { getPost } from "@/actions/posts";
+import { getLikeCount, hasUserLiked } from "@/actions/likes";
 import { PostContent } from "@/components/posts/post-content";
+import { LikeButton } from "@/components/posts/post-actions";
+import { CommentList } from "@/components/comments/comment-list";
+import { CommentForm } from "@/components/comments/comment-form";
+
 import type { Metadata } from "next";
 
 interface PostPageProps {
@@ -49,6 +55,12 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const { post, author } = result;
 
+  // Fetch like data
+  const [likeCount, userLiked] = await Promise.all([
+    getLikeCount(post.id),
+    hasUserLiked(post.id),
+  ]);
+
   return (
     <article className="mx-auto max-w-3xl pb-20">
       {/* Article Header */}
@@ -56,10 +68,6 @@ export default async function PostPage({ params }: PostPageProps) {
         <div className="mb-6 flex justify-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
           <Link href={`/@${author.username}`} className="hover:text-foreground hover:underline">
             {author.name}
-          </Link>
-          <span>•</span>
-          <Link href="/culture" className="hover:text-foreground hover:underline">
-            Culture
           </Link>
           <span>•</span>
           <time dateTime={post.publishedAt?.toISOString()}>
@@ -105,8 +113,17 @@ export default async function PostPage({ params }: PostPageProps) {
         <PostContent content={post.content} />
       </div>
 
+      {/* Post Actions */}
+      <div className="mt-12 flex items-center justify-center border-y border-border py-6">
+        <LikeButton
+          postId={post.id}
+          initialLiked={userLiked}
+          initialCount={likeCount}
+        />
+      </div>
+
       {/* Article Footer / Author Bio */}
-      <footer className="mt-16 border-t border-border pt-12">
+      <footer className="mt-12 border-b border-border pb-12">
         <div className="flex flex-col items-center gap-4 text-center">
           {author.image && (
             <div className="relative h-16 w-16 overflow-hidden rounded-full border border-border">
@@ -130,6 +147,17 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
         </div>
       </footer>
+
+      {/* Comments Section */}
+      <section className="mt-12">
+        <h2 className="mb-8 border-b-2 border-black pb-4 font-serif text-2xl font-bold uppercase tracking-wide dark:border-white">
+          Reader Comments
+        </h2>
+        <div className="mb-10">
+          <CommentForm postId={post.id} />
+        </div>
+        <CommentList postId={post.id} postAuthorId={author.id} />
+      </section>
     </article>
   );
 }

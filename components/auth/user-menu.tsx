@@ -49,17 +49,14 @@ export function UserMenu({ user }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/dashboard">My Posts</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/new">New Post</Link>
+          <Link href="/manuscripts">Manuscripts</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/settings">Settings</Link>
         </DropdownMenuItem>
         {user.username && (
           <DropdownMenuItem asChild>
-            <Link href={`/@${user.username}`}>View Profile</Link>
+            <Link href={`/@${user.username}`}>Profile</Link>
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />

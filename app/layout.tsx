@@ -7,6 +7,8 @@ import {
 
 import "./globals.css";
 
+import { Toaster } from "@/components/ui/sonner";
+
 const libreBaskerville = Libre_Baskerville({
   variable: "--font-sans",
   subsets: ["latin"],
@@ -41,6 +43,7 @@ export default function RootLayout({
         className={`${libreBaskerville.variable} ${lora.variable} ${ibmPlexMono.variable} antialiased`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

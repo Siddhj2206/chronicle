@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const publicRoutes = ["/", "/sign-in", "/search"];
 const authRoutes = ["/sign-in"];
 const onboardingRoute = "/onboarding";
 
@@ -26,16 +25,14 @@ export function proxy(request: NextRequest) {
   const isAuthRoute = authRoutes.includes(pathname);
   const isOnboarding = pathname === onboardingRoute;
   const isDashboard =
-    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/manuscripts") ||
     pathname === "/new" ||
     pathname.startsWith("/edit") ||
     pathname === "/settings";
-  const isPublicRoute =
-    publicRoutes.includes(pathname) || pathname.startsWith("/@");
 
   // Redirect logged-in users away from auth routes
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/manuscripts", request.url));
   }
 
   // Protect dashboard routes

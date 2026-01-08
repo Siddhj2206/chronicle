@@ -1,4 +1,5 @@
-import { Masthead } from "@/components/magazine/masthead";
+import { Navbar } from "@/components/magazine/navbar";
+import { Footer } from "@/components/magazine/footer";
 
 export default function MainLayout({
   children,
@@ -7,8 +8,9 @@ export default function MainLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col">
-      <Masthead />
+      <Navbar />
       <main className="flex-1 w-full mx-auto max-w-7xl px-4 py-8">{children}</main>
+      <Footer />
     </div>
   );
 }

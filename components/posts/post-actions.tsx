@@ -35,11 +35,14 @@ export function LikeButton({
   return (
     <Button
       variant={optimistic.liked ? "default" : "outline"}
-      size="sm"
       onClick={handleClick}
       disabled={isPending}
+      className="gap-2 font-semibold uppercase tracking-wide"
     >
-      {optimistic.liked ? "Liked" : "Like"} ({optimistic.count})
+      <span>{optimistic.liked ? "♥" : "♡"}</span>
+      <span>
+        {optimistic.count} {optimistic.count === 1 ? "Like" : "Likes"}
+      </span>
     </Button>
   );
 }

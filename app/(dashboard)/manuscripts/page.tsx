@@ -8,16 +8,10 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-5xl pb-20">
       {/* Header */}
-      <div className="mb-12 flex items-end justify-between border-b-4 border-black pb-4 dark:border-white">
+      <div className="mb-12 border-b-4 border-black pb-4 dark:border-white">
         <h1 className="font-serif text-5xl font-black tracking-tighter">
           Manuscripts
         </h1>
-        <Link 
-          href="/new"
-          className="font-mono text-sm font-bold uppercase tracking-widest hover:underline"
-        >
-          [+ New Entry]
-        </Link>
       </div>
 
       {posts.length === 0 ? (

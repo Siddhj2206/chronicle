@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { checkUsernameAvailable, setUsername } from "@/actions/users";
+import { ImageUpload } from "@/components/layout/image-upload";
+import { checkUsernameAvailable, setUsername, updateAvatar } from "@/actions/users";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [username, setUsernameValue] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
 
@@ -38,8 +40,12 @@ export default function OnboardingPage() {
     startTransition(async () => {
       const result = await setUsername(username);
       if (result.success) {
+        // Update avatar if one was uploaded
+        if (imageUrl) {
+          await updateAvatar(imageUrl);
+        }
         toast.success("Credentials Issued");
-        router.push("/dashboard");
+        router.push("/manuscripts");
         router.refresh();
       } else {
         setError(result.error || "Something went wrong");
@@ -58,7 +64,7 @@ export default function OnboardingPage() {
             Issue Credentials
           </h1>
           <p className="mt-2 font-serif text-sm italic text-muted-foreground">
-            "Select a handle for your byline."
+            &quot;Set up your byline and portrait.&quot;
           </p>
         </div>
 
@@ -67,8 +73,22 @@ export default function OnboardingPage() {
             e.preventDefault();
             handleSubmit();
           }}
-          className="space-y-12"
+          className="space-y-10"
         >
+          {/* Photo Upload */}
+          <div className="flex flex-col items-center gap-3">
+            <ImageUpload
+              value={imageUrl}
+              onChange={setImageUrl}
+              aspectRatio="square"
+              className="w-28"
+            />
+            <p className="text-center font-mono text-[10px] uppercase leading-tight text-muted-foreground">
+              Official Portrait
+            </p>
+          </div>
+
+          {/* Username Input */}
           <div className="space-y-2">
             <Label htmlFor="username" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Requested Handle

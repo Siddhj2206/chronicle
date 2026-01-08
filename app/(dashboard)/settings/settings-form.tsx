@@ -2,18 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUpload } from "@/components/layout/image-upload";
 import { updateProfile } from "@/actions/users";
 import { cn } from "@/lib/utils";
 
 interface SettingsFormProps {
   user: {
+    id: string;
     name: string | null;
     bio: string | null;
     image: string | null;
@@ -23,10 +24,12 @@ interface SettingsFormProps {
 export function SettingsForm({ user }: SettingsFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [imageUrl, setImageUrl] = useState(user.image || "");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    formData.set("image", imageUrl);
 
     startTransition(async () => {
       const result = await updateProfile(formData);
@@ -52,38 +55,19 @@ export function SettingsForm({ user }: SettingsFormProps) {
             Press Credentials
           </h1>
           <p className="mt-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            Chronicle ID: {Math.random().toString(36).substring(7).toUpperCase()}
+            Chronicle ID: {user.id.slice(-6).toUpperCase()}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-12 md:flex-row">
           {/* Left Column: Photo */}
           <div className="flex flex-col gap-4">
-            <div className="relative aspect-square w-32 overflow-hidden border-2 border-dashed border-neutral-300 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900">
-               {user.image ? (
-                <Image
-                  src={user.image}
-                  alt="Avatar"
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  No Photo
-                </div>
-              )}
-            </div>
-            <div className="w-32">
-              <Label htmlFor="image" className="sr-only">Avatar URL</Label>
-              <Input
-                id="image"
-                name="image"
-                type="url"
-                defaultValue={user.image || ""}
-                placeholder="IMG URL"
-                className="h-8 rounded-none border-0 border-b border-black px-0 font-mono text-xs focus-visible:ring-0 dark:border-white"
-              />
-            </div>
+            <ImageUpload
+              value={imageUrl}
+              onChange={setImageUrl}
+              aspectRatio="square"
+              className="w-32"
+            />
             <p className="w-32 text-center font-mono text-[10px] uppercase leading-tight text-muted-foreground">
               Official Portrait
             </p>

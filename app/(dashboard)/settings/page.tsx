@@ -27,9 +27,9 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-8 font-serif text-3xl font-semibold">Settings</h1>
       <SettingsForm
         user={{
+          id: userData.id,
           name: userData.name || null,
           bio: userData.bio || null,
           image: userData.image || null,

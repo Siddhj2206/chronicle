@@ -5,7 +5,6 @@ import type { Post, User } from "@/lib/db/schema";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
 } from "@/components/ui/card";
 

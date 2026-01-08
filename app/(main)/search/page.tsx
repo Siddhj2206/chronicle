@@ -18,7 +18,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </h1>
         {query && (
           <p className="mt-4 font-sans text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Showing results for <span className="text-foreground">"{query}"</span>
+            Showing results for <span className="text-foreground">&quot;{query}&quot;</span>
           </p>
         )}
       </div>
