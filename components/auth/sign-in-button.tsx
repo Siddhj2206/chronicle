@@ -15,6 +15,7 @@ export function SignInButton({ callbackURL = "/" }: SignInButtonProps) {
         authClient.signIn.social({
           provider: "google",
           callbackURL,
+          newUserCallbackURL: `/onboarding?callbackUrl=${encodeURIComponent(callbackURL)}`,
         })
       }
     >

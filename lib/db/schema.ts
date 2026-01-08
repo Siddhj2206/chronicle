@@ -1,6 +1,7 @@
 import {
   boolean,
   index,
+  integer,
   pgTable,
   primaryKey,
   text,
@@ -83,6 +84,7 @@ export const post = pgTable(
     content: text("content").notNull(),
     excerpt: text("excerpt"),
     coverImage: text("cover_image"),
+    viewCount: integer("view_count").default(0).notNull(),
     published: boolean("published").default(false).notNull(),
     publishedAt: timestamp("published_at", { mode: "date" }),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),

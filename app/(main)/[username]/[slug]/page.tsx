@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-import { getPost } from "@/actions/posts";
+import { getPost, incrementViewCount } from "@/actions/posts";
 import { getLikeCount, hasUserLiked } from "@/actions/likes";
 import { PostContent } from "@/components/posts/post-content";
 import { LikeButton } from "@/components/posts/post-actions";
@@ -54,6 +54,9 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const { post, author } = result;
+
+  // Track view (fire and forget - don't await)
+  incrementViewCount(post.id);
 
   // Fetch like data
   const [likeCount, userLiked] = await Promise.all([

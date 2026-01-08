@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, and, desc, like } from "drizzle-orm";
+import { eq, and, desc, asc, gte, notInArray, sql, like } from "drizzle-orm";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 
@@ -355,5 +355,163 @@ export async function getNewestPosts(limit = 10, offset = 0) {
   } catch (error) {
     console.error("Get newest posts error:", error);
     return [];
+  }
+}
+
+// Increment view count (fire and forget)
+export async function incrementViewCount(postId: string) {
+  try {
+    await db
+      .update(post)
+      .set({ viewCount: sql`${post.viewCount} + 1` })
+      .where(eq(post.id, postId));
+  } catch (error) {
+    console.error("Increment view count error:", error);
+  }
+}
+
+// Get trending posts (last 14 days by view count, backfill with all-time if needed)
+export async function getTrendingPosts(limit = 5) {
+  try {
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    // Get recent trending posts
+    const recentTrending = await db
+      .select({
+        post: post,
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          image: user.image,
+        },
+      })
+      .from(post)
+      .innerJoin(user, eq(post.authorId, user.id))
+      .where(
+        and(
+          eq(post.published, true),
+          gte(post.publishedAt, fourteenDaysAgo)
+        )
+      )
+      .orderBy(desc(post.viewCount))
+      .limit(limit);
+
+    // If we have enough recent posts, return them
+    if (recentTrending.length >= limit) {
+      return recentTrending;
+    }
+
+    // Backfill with all-time top viewed posts
+    const existingIds = recentTrending.map((p) => p.post.id);
+    
+    if (existingIds.length === 0) {
+      // No recent posts, get all-time trending
+      const allTimeTrending = await db
+        .select({
+          post: post,
+          author: {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            image: user.image,
+          },
+        })
+        .from(post)
+        .innerJoin(user, eq(post.authorId, user.id))
+        .where(eq(post.published, true))
+        .orderBy(desc(post.viewCount))
+        .limit(limit);
+
+      return allTimeTrending;
+    }
+
+    const backfill = await db
+      .select({
+        post: post,
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          image: user.image,
+        },
+      })
+      .from(post)
+      .innerJoin(user, eq(post.authorId, user.id))
+      .where(
+        and(
+          eq(post.published, true),
+          notInArray(post.id, existingIds)
+        )
+      )
+      .orderBy(desc(post.viewCount))
+      .limit(limit - recentTrending.length);
+
+    return [...recentTrending, ...backfill];
+  } catch (error) {
+    console.error("Get trending posts error:", error);
+    return [];
+  }
+}
+
+// Get all posts for archive page with pagination and sorting
+export async function getAllPosts(options: {
+  limit?: number;
+  page?: number;
+  sort?: "newest" | "trending" | "oldest";
+} = {}) {
+  const { limit = 10, page = 1, sort = "newest" } = options;
+  const offset = (page - 1) * limit;
+
+  try {
+    // Get total count
+    const countResult = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(post)
+      .where(eq(post.published, true));
+
+    const totalCount = countResult[0]?.count ?? 0;
+
+    // Determine sort order
+    const orderBy =
+      sort === "trending"
+        ? desc(post.viewCount)
+        : sort === "oldest"
+          ? asc(post.publishedAt)
+          : desc(post.publishedAt); // newest (default)
+
+    // Get posts
+    const posts = await db
+      .select({
+        post: post,
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          image: user.image,
+        },
+      })
+      .from(post)
+      .innerJoin(user, eq(post.authorId, user.id))
+      .where(eq(post.published, true))
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      posts,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+    };
+  } catch (error) {
+    console.error("Get all posts error:", error);
+    return {
+      posts: [],
+      totalCount: 0,
+      totalPages: 0,
+      currentPage: page,
+    };
   }
 }

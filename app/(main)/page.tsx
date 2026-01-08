@@ -1,4 +1,6 @@
-import { getNewestPosts } from "@/actions/posts";
+import Link from "next/link";
+
+import { getNewestPosts, getTrendingPosts } from "@/actions/posts";
 import { HeroCard } from "@/components/magazine/hero-card";
 import { GridCard } from "@/components/magazine/grid-card";
 import { ListCard } from "@/components/magazine/list-card";
@@ -36,7 +38,13 @@ export default async function FeedPage() {
   const heroPost = posts[0];
   const gridPosts = posts.slice(1, 4);
   const mainListPosts = posts.slice(4);
-  const trendingPosts = posts.slice(0, 5); // Simulate trending with top posts
+
+  // Get real trending posts (time-weighted by views)
+  const rawTrendingPosts = await getTrendingPosts(5);
+  const trendingPosts = rawTrendingPosts.map(({ post, author }) => ({
+    ...post,
+    author,
+  }));
 
   return (
     <>
@@ -66,6 +74,15 @@ export default async function FeedPage() {
                 Latest Stories
               </span>
               <div className="h-px flex-1 bg-black dark:bg-white" />
+            </div>
+
+            <div className="mb-8 text-center">
+              <Link
+                href="/archive"
+                className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground hover:underline"
+              >
+                View Full Archive →
+              </Link>
             </div>
             
             <div className="flex flex-col gap-8 divide-y divide-neutral-200 dark:divide-neutral-800">
