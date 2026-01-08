@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ImageUpload } from "@/components/layout/image-upload";
 import { checkUsernameAvailable, setUsername, updateAvatar } from "@/actions/users";
 import { useSession } from "@/lib/auth-client";
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -151,5 +152,21 @@ export default function OnboardingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function OnboardingFallback() {
+  return (
+    <div className="w-full max-w-md p-4">
+      <Skeleton className="h-[500px] w-full" />
+    </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<OnboardingFallback />}>
+      <OnboardingContent />
+    </Suspense>
   );
 }
