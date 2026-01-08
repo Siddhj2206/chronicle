@@ -162,8 +162,7 @@
   --destructive-foreground: oklch(1.0000 0 0);
   --radius: 0.25rem;
   --font-sans: Libre Baskerville, serif;
-  --font-serif: Lora, serif;
-  --font-mono: IBM Plex Mono, monospace;
+  --font-serif: Lora, serif;  --font-mono: IBM Plex Mono, monospace;
   --shadow-color: hsl(28 13% 20%);
   --shadow-opacity: 0.12;
   --shadow-blur: 5px;
@@ -193,193 +192,207 @@
 }
 
 /* ============================================
-   MD Editor (@uiw/react-md-editor) Theme
+   Lexical Editor Theme
    - Libre Baskerville font for body text
    - Lora (--font-serif) for headings
    - Theme colors (sepia/cream vintage look)
-   - height="100%" enables auto-expanding
    ============================================ */
-
-/* CSS Variables Override */
-.wmde-markdown-var,
-.w-md-editor {
-  --color-canvas-default: transparent !important;
-  --color-canvas-subtle: transparent !important;
-  --color-border-default: var(--border) !important;
-  --color-border-muted: var(--border) !important;
-  --color-fg-default: var(--foreground) !important;
-  --color-fg-muted: var(--muted-foreground) !important;
-  --color-fg-subtle: var(--muted-foreground) !important;
-  --color-neutral-muted: var(--muted) !important;
-  --color-accent-fg: var(--primary) !important;
-  --color-accent-emphasis: var(--primary) !important;
-  --color-attention-subtle: var(--accent) !important;
-  --color-danger-fg: var(--destructive) !important;
-}
 
 /* Editor Container */
-.w-md-editor {
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+.lexical-editor-container {
+  width: 100%;
 }
 
-/* Toolbar */
-.w-md-editor-toolbar {
-  background-color: transparent !important;
-  border-bottom: 1px solid var(--border) !important;
-  padding: 0.5rem 0 !important;
+/* Content Editable */
+.lexical-content-editable {
+  font-family: "Libre Baskerville", serif;
+  font-size: 1.25rem;
+  line-height: 1.875;
+  color: var(--foreground);
+  outline: none;
+  min-height: 300px;
+  position: relative;
 }
 
-.w-md-editor-toolbar li > button {
-  color: var(--muted-foreground) !important;
+/* Text Selection */
+.lexical-content-editable ::selection {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }
 
-.w-md-editor-toolbar li > button:hover {
-  color: var(--foreground) !important;
-  background-color: var(--accent) !important;
+.lexical-content-editable ::-moz-selection {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }
 
-/* Editor Content Area */
-.w-md-editor-content,
-.w-md-editor-area,
-.w-md-editor-text,
-.w-md-editor-text-container {
-  background-color: transparent !important;
+/* Placeholder */
+.lexical-placeholder {
+  font-family: "Libre Baskerville", serif;
+  font-size: 1.25rem;
+  line-height: 1.875;
+  color: var(--muted-foreground);
+  opacity: 0.5;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  user-select: none;
 }
 
-/* Editor Input - The actual textarea */
-.w-md-editor-text-input {
-  font-family: "Libre Baskerville", serif !important;
-  font-size: 1.25rem !important;
-  line-height: 1.875 !important;
-  color: var(--foreground) !important;
-  -webkit-text-fill-color: var(--foreground) !important;
-  caret-color: var(--foreground) !important;
+/* Paragraphs */
+.lexical-paragraph {
+  margin: 0 0 1em 0;
 }
 
-.w-md-editor-text-input::placeholder {
-  color: var(--muted-foreground) !important;
-  -webkit-text-fill-color: var(--muted-foreground) !important;
-  opacity: 0.6 !important;
+/* Headings */
+.lexical-h1,
+.lexical-h2,
+.lexical-h3,
+.lexical-h4,
+.lexical-h5,
+.lexical-h6 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--foreground);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
 }
 
-/* Syntax Highlight Layer - Hidden (using same font to prevent layout shift) */
-.w-md-editor-text-pre,
-.w-md-editor-text-pre > code {
-  font-family: "Libre Baskerville", serif !important;
-  font-size: 1.25rem !important;
-  line-height: 1.875 !important;
-  color: transparent !important;
+.lexical-h1 { font-size: 2.25rem; }
+.lexical-h2 { font-size: 1.75rem; }
+.lexical-h3 { font-size: 1.5rem; }
+.lexical-h4 { font-size: 1.25rem; }
+.lexical-h5 { font-size: 1.125rem; }
+.lexical-h6 { font-size: 1rem; }
+
+/* Text Formatting */
+.lexical-bold { font-weight: 700; }
+.lexical-italic { font-style: italic; }
+.lexical-strikethrough { text-decoration: line-through; }
+.lexical-underline { text-decoration: underline; }
+
+.lexical-code {
+  font-family: var(--font-mono);
+  background-color: var(--muted);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0;
+  font-size: 0.9em;
 }
 
-/* ============================================
-   Markdown Preview (.wmde-markdown)
-   ============================================ */
-
-.wmde-markdown {
-  background-color: transparent !important;
-  color: var(--foreground) !important;
-  font-family: "Libre Baskerville", serif !important;
-  font-size: 1.25rem !important;
-  line-height: 1.875 !important;
+/* Lists */
+.lexical-ul,
+.lexical-ol {
+  margin: 0 0 1em 0;
+  padding-left: 1.5em;
 }
 
-/* Body Text */
-.wmde-markdown p,
-.wmde-markdown li,
-.wmde-markdown td,
-.wmde-markdown th {
-  color: var(--foreground) !important;
-  font-family: "Libre Baskerville", serif !important;
-  font-size: 1.25rem !important;
-  line-height: 1.875 !important;
+.lexical-li {
+  margin-bottom: 0.25em;
 }
 
-/* Headings - Use Lora */
-.wmde-markdown h1,
-.wmde-markdown h2,
-.wmde-markdown h3,
-.wmde-markdown h4,
-.wmde-markdown h5,
-.wmde-markdown h6 {
-  color: var(--foreground) !important;
-  font-family: var(--font-serif) !important;
-  font-weight: 700 !important;
-  border-bottom: none !important;
-  margin-top: 1.5em !important;
-  margin-bottom: 0.5em !important;
+.lexical-nested-li {
+  list-style-type: circle;
 }
 
-.wmde-markdown h1 { font-size: 2.25rem !important; }
-.wmde-markdown h2 { font-size: 1.75rem !important; }
-.wmde-markdown h3 { font-size: 1.5rem !important; }
+/* Check Lists */
+.lexical-check-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0 0 1em 0;
+}
+
+.lexical-check-list-item-checked,
+.lexical-check-list-item-unchecked {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.25em;
+  position: relative;
+  padding-left: 1.75rem;
+}
+
+.lexical-check-list-item-checked::before,
+.lexical-check-list-item-unchecked::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--border);
+  background-color: var(--background);
+  cursor: pointer;
+}
+
+.lexical-check-list-item-checked::before {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.lexical-check-list-item-checked::after {
+  content: "";
+  position: absolute;
+  left: 0.35rem;
+  top: 0.35em;
+  width: 0.3rem;
+  height: 0.5rem;
+  border: solid var(--primary-foreground);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.lexical-check-list-item-checked {
+  text-decoration: line-through;
+  color: var(--muted-foreground);
+}
 
 /* Links */
-.wmde-markdown a {
-  color: var(--primary) !important;
-  text-decoration: underline !important;
+.lexical-link {
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
-.wmde-markdown a:hover {
-  color: var(--foreground) !important;
+.lexical-link:hover {
+  color: var(--foreground);
 }
 
 /* Blockquotes */
-.wmde-markdown blockquote {
-  color: var(--muted-foreground) !important;
-  border-left: 4px solid var(--border) !important;
-  background-color: transparent !important;
-  font-style: italic !important;
+.lexical-quote {
+  border-left: 4px solid var(--border);
+  margin: 1em 0;
+  padding-left: 1em;
+  color: var(--muted-foreground);
+  font-style: italic;
 }
 
 /* Code Blocks */
-.wmde-markdown pre {
-  background-color: var(--muted) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 0 !important;
+.lexical-code-block {
+  font-family: var(--font-mono);
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  margin: 1em 0;
+  overflow-x: auto;
+  font-size: 0.9em;
+  line-height: 1.5;
 }
 
-.wmde-markdown code {
-  font-family: var(--font-mono) !important;
-  color: var(--foreground) !important;
-  background-color: var(--muted) !important;
-  padding: 0.125rem 0.25rem !important;
-  border-radius: 0 !important;
+/* Horizontal Rule */
+.lexical-hr {
+  border: none;
+  height: 1px;
+  background-color: var(--border);
+  margin: 2em 0;
 }
 
-.wmde-markdown pre code {
-  background-color: transparent !important;
-  padding: 0 !important;
+/* Images */
+.editor-image {
+  display: block;
+  margin: 1em 0;
 }
 
-/* Tables */
-.wmde-markdown table { border-color: var(--border) !important; }
-.wmde-markdown table th,
-.wmde-markdown table td {
-  border-color: var(--border) !important;
-  background-color: transparent !important;
-}
-.wmde-markdown table tr {
-  background-color: transparent !important;
-  border-color: var(--border) !important;
-}
-.wmde-markdown table tr:nth-child(2n) {
-  background-color: var(--muted) !important;
-}
-
-/* Other Elements */
-.wmde-markdown hr {
-  background-color: var(--border) !important;
-  border: none !important;
-  height: 1px !important;
-}
-
-.wmde-markdown img {
-  border: 1px solid var(--border) !important;
-}
-
-.wmde-markdown ul,
-.wmde-markdown ol {
-  color: var(--foreground) !important;
+.editor-image img {
+  max-width: 100%;
+  border: 1px solid var(--border);
 }

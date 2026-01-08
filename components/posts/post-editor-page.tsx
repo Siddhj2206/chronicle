@@ -2,16 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import TextareaAutosize from "react-textarea-autosize";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { PostEditor } from "@/components/posts/post-editor";
-import { PostContent } from "@/components/posts/post-content";
+import { LexicalEditor } from "@/components/posts/lexical-editor";
 import { ImageUpload } from "@/components/layout/image-upload";
-import { ImageInsertDialog } from "@/components/posts/image-insert-dialog";
 import {
   createPost,
   updatePost,
@@ -43,12 +40,6 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   const [coverImage, setCoverImage] = useState(post?.coverImage || "");
   const [isPublished, setIsPublished] = useState(post?.published || false);
   const [currentSlug, setCurrentSlug] = useState(post?.slug || "");
-
-  // Image insert dialog
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
-
-  // Mobile view toggle
-  const [mobileView, setMobileView] = useState<"editor" | "preview">("editor");
 
   // Track if there are unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
@@ -190,13 +181,6 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
     }
   }, [currentSlug, router]);
 
-  const handleImageInsert = useCallback(
-    (markdown: string) => {
-      setContent((prev) => prev + "\n\n" + markdown + "\n\n");
-    },
-    []
-  );
-
   return (
     <div className="flex min-h-screen flex-col">
       {/* Sticky Header */}
@@ -264,155 +248,49 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
             </Button>
           </div>
         </div>
-
-        {/* Mobile View Toggle */}
-        <div className="flex border-t border-border lg:hidden">
-          <button
-            type="button"
-            onClick={() => setMobileView("editor")}
-            className={cn(
-              "flex-1 py-2 font-mono text-xs font-bold uppercase tracking-widest",
-              mobileView === "editor"
-                ? "bg-black text-white dark:bg-white dark:text-black"
-                : "text-muted-foreground"
-            )}
-          >
-            Editor
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileView("preview")}
-            className={cn(
-              "flex-1 py-2 font-mono text-xs font-bold uppercase tracking-widest",
-              mobileView === "preview"
-                ? "bg-black text-white dark:bg-white dark:text-black"
-                : "text-muted-foreground"
-            )}
-          >
-            Preview
-          </button>
-        </div>
       </header>
 
-      {/* Main Content - Side by Side */}
-      <div className="flex flex-1">
-        {/* Editor Pane */}
-        <div
-          className={cn(
-            "flex-1 border-r border-border p-6 md:p-8",
-            mobileView === "preview" ? "hidden lg:block" : "block"
-          )}
-        >
-          <div className="space-y-8">
-            {/* Cover Image Upload */}
-            <div className="space-y-2">
-              <label className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Cover Image
-              </label>
-              <ImageUpload
-                value={coverImage}
-                onChange={setCoverImage}
-                aspectRatio="video"
-              />
-            </div>
-
-            {/* Title */}
-            <TextareaAutosize
-              placeholder="Title"
-              className="w-full resize-none bg-transparent font-serif text-4xl font-black leading-tight tracking-tight placeholder:text-muted-foreground/30 focus:outline-none md:text-5xl"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              minRows={1}
+      {/* Main Content - Full Width WYSIWYG */}
+      <div className="flex-1 p-6 md:p-8 lg:px-16 xl:px-24">
+        <div className="mx-auto max-w-4xl space-y-8">
+          {/* Cover Image Upload */}
+          <div className="space-y-2">
+            <label className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Cover Image
+            </label>
+            <ImageUpload
+              value={coverImage}
+              onChange={setCoverImage}
+              aspectRatio="video"
             />
-
-            {/* Excerpt */}
-            <TextareaAutosize
-              placeholder="Write a brief excerpt or subtitle..."
-              className="w-full resize-none bg-transparent font-serif text-xl italic leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none"
-              value={excerpt}
-              onChange={(e) => setExcerpt(e.target.value)}
-              minRows={1}
-            />
-
-            {/* Content Editor */}
-            <div>
-              <PostEditor
-                initialContent={content}
-                onChange={setContent}
-                onImageInsertRequest={() => setImageDialogOpen(true)}
-              />
-            </div>
           </div>
-        </div>
 
-        {/* Preview Pane */}
-        <div
-          className={cn(
-            "flex-1 bg-muted/30 p-6 md:p-8",
-            mobileView === "editor" ? "hidden lg:block" : "block"
-          )}
-        >
-          <div>
-            {/* Preview Header */}
-            <div className="mb-8 border-b-2 border-black pb-4 dark:border-white">
-              <span className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Preview
-              </span>
-            </div>
+          {/* Title */}
+          <TextareaAutosize
+            placeholder="Title"
+            className="w-full resize-none bg-transparent font-serif text-4xl font-black leading-tight tracking-tight placeholder:text-muted-foreground/30 focus:outline-none md:text-5xl"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            minRows={1}
+          />
 
-            {/* Cover Image Preview */}
-            {coverImage && (
-              <figure className="mb-8">
-                <div className="relative aspect-video w-full overflow-hidden border border-border">
-                  <Image
-                    src={coverImage}
-                    alt={title || "Cover image"}
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                </div>
-              </figure>
-            )}
+          {/* Excerpt */}
+          <TextareaAutosize
+            placeholder="Write a brief excerpt or subtitle..."
+            className="w-full resize-none bg-transparent font-serif text-xl italic leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none"
+            value={excerpt}
+            onChange={(e) => setExcerpt(e.target.value)}
+            minRows={1}
+          />
 
-            {/* Title Preview */}
-            {title ? (
-              <h1 className="mb-4 font-serif text-4xl font-black leading-tight tracking-tight">
-                {title}
-              </h1>
-            ) : (
-              <h1 className="mb-4 font-serif text-4xl font-black leading-tight tracking-tight text-muted-foreground/30">
-                Untitled
-              </h1>
-            )}
-
-            {/* Excerpt Preview */}
-            {excerpt && (
-              <p className="mb-8 font-serif text-xl italic leading-relaxed text-muted-foreground">
-                {excerpt}
-              </p>
-            )}
-
-            {/* Content Preview */}
-            {content ? (
-              <div className="prose prose-lg prose-neutral dark:prose-invert font-serif prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-loose">
-                <PostContent content={content} />
-              </div>
-            ) : (
-              <p className="font-serif text-lg italic text-muted-foreground/50">
-                Start writing to see the preview...
-              </p>
-            )}
-          </div>
+          {/* Content Editor - Lexical WYSIWYG */}
+          <LexicalEditor
+            initialContent={content}
+            onChange={setContent}
+            placeholder="Begin your story..."
+          />
         </div>
       </div>
-
-      {/* Image Insert Dialog */}
-      <ImageInsertDialog
-        open={imageDialogOpen}
-        onClose={() => setImageDialogOpen(false)}
-        onInsert={handleImageInsert}
-      />
     </div>
   );
 }
