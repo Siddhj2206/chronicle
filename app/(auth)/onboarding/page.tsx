@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import { useSession } from "@/lib/auth-client";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const { data: session, refetch } = useSession();
   const [isPending, startTransition] = useTransition();
   const [username, setUsernameValue] = useState("");
@@ -55,7 +57,7 @@ export default function OnboardingPage() {
         }
         toast.success("Credentials Issued");
         await refetch();
-        router.push("/manuscripts");
+        router.push(callbackUrl);
         router.refresh();
       } else {
         setError(result.error || "Something went wrong");

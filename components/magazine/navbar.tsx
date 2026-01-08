@@ -64,7 +64,7 @@ export function Navbar({ className }: NavbarProps) {
                 asChild
                 className="h-7 text-xs font-bold uppercase tracking-widest"
               >
-                <Link href="/sign-in">Sign in</Link>
+                                <Link href={`/sign-in?callbackUrl=${encodeURIComponent(pathname)}`}>Sign in</Link>
               </Button>
             )}
           </div>

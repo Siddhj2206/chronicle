@@ -4,15 +4,20 @@ import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { SignInButton } from "@/components/auth/sign-in-button";
 
-export default async function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
   const session = await getSession();
+  const { callbackUrl = "/" } = await searchParams;
 
   if (session?.user) {
     const username = (session.user as { username?: string }).username;
     if (!username) {
-      redirect("/onboarding");
+      redirect(`/onboarding?callbackUrl=${encodeURIComponent(callbackUrl)}`);
     }
-    redirect("/manuscripts");
+    redirect(callbackUrl);
   }
 
   return (
@@ -41,7 +46,7 @@ export default async function SignInPage() {
           </p>
         </div>
 
-        <SignInButton />
+        <SignInButton callbackURL={callbackUrl} />
 
         <div className="mt-8 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           Authorized Personnel Only

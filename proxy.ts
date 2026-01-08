@@ -30,20 +30,28 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/edit") ||
     pathname === "/settings";
 
-  // Redirect logged-in users away from auth routes
+  // Redirect logged-in users away from auth routes (preserve callbackUrl)
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/manuscripts", request.url));
+    const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/";
+    return NextResponse.redirect(new URL(callbackUrl, request.url));
   }
 
-  // Protect dashboard routes
+  // Protect dashboard routes - redirect to sign-in with callbackUrl
   if (isDashboard && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(signInUrl);
   }
 
-  // Protect onboarding route
+  // Protect onboarding route - redirect to sign-in with callbackUrl
   if (isOnboarding && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(signInUrl);
   }
 
-  return NextResponse.next();
+  // Add pathname header for server components
+  const response = NextResponse.next();
+  response.headers.set("x-pathname", pathname);
+  return response;
 }
