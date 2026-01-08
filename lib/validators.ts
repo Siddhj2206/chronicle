@@ -53,7 +53,21 @@ export const profileSchema = z.object({
     .string()
     .min(1, "Name is required")
     .max(100, "Name must be at most 100 characters"),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be at most 20 characters")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores"
+    )
+    .refine(
+      (val) => !RESERVED_USERNAMES.includes(val.toLowerCase()),
+      "This username is reserved"
+    )
+    .optional(),
   bio: z.string().max(500, "Bio must be at most 500 characters").optional(),
+  image: z.string().url("Invalid image URL").optional().or(z.literal("")),
 });
 
 export type UsernameInput = z.infer<typeof usernameSchema>;

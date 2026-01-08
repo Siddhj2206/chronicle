@@ -31,6 +31,7 @@ export default async function SettingsPage() {
         user={{
           id: userData.id,
           name: userData.name || null,
+          username: userData.username || null,
           bio: userData.bio || null,
           image: userData.image || null,
         }}

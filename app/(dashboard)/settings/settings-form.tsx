@@ -8,14 +8,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ImageUpload } from "@/components/layout/image-upload";
-import { updateProfile } from "@/actions/users";
+import { updateProfile, deleteAccount } from "@/actions/users";
+import { useSession, signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 interface SettingsFormProps {
   user: {
     id: string;
     name: string | null;
+    username: string | null;
     bio: string | null;
     image: string | null;
   };
@@ -23,8 +36,11 @@ interface SettingsFormProps {
 
 export function SettingsForm({ user }: SettingsFormProps) {
   const router = useRouter();
+  const { refetch } = useSession();
   const [isPending, startTransition] = useTransition();
   const [imageUrl, setImageUrl] = useState(user.image || "");
+  const [confirmUsername, setConfirmUsername] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -38,9 +54,24 @@ export function SettingsForm({ user }: SettingsFormProps) {
         toast.error(result.error);
       } else {
         toast.success("Credentials updated");
+        await refetch();
         router.refresh();
       }
     });
+  }
+
+  async function handleDeleteAccount() {
+    setIsDeleting(true);
+    const result = await deleteAccount(confirmUsername);
+
+    if (result.error) {
+      toast.error(result.error);
+      setIsDeleting(false);
+    } else {
+      toast.success("Account deleted");
+      await signOut();
+      router.push("/");
+    }
   }
 
   return (
@@ -90,6 +121,22 @@ export function SettingsForm({ user }: SettingsFormProps) {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="username" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                Username
+              </Label>
+              <div className="flex items-center border-b-2 border-black dark:border-white">
+                <span className="font-mono text-lg text-muted-foreground">@</span>
+                <Input
+                  id="username"
+                  name="username"
+                  defaultValue={user.username || ""}
+                  className="h-auto rounded-none border-0 px-1 py-2 font-mono text-lg focus-visible:ring-0"
+                  placeholder="username"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="bio" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 Biography / Beat
               </Label>
@@ -126,6 +173,57 @@ export function SettingsForm({ user }: SettingsFormProps) {
             Auth: Valid
           </div>
         </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="mt-8 border-2 border-destructive/50 bg-destructive/5 p-6">
+        <h2 className="font-mono text-sm font-bold uppercase tracking-widest text-destructive">
+          Danger Zone
+        </h2>
+        <p className="mt-4 text-sm text-muted-foreground">
+          Once you delete your account, all your posts, comments, and data will be permanently removed.
+          This action cannot be undone.
+        </p>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="mt-4">
+              Delete Account
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete your account and all associated data including
+                posts, comments, and uploaded images. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="my-4">
+              <Label htmlFor="confirm-username">
+                Type your username <strong>@{user.username}</strong> to confirm:
+              </Label>
+              <Input
+                id="confirm-username"
+                value={confirmUsername}
+                onChange={(e) => setConfirmUsername(e.target.value)}
+                placeholder={user.username || ""}
+                className="mt-2"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setConfirmUsername("")}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteAccount}
+                disabled={confirmUsername.toLowerCase() !== user.username?.toLowerCase() || isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? "Deleting..." : "Delete Account"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

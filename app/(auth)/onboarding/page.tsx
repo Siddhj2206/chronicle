@@ -9,14 +9,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/layout/image-upload";
 import { checkUsernameAvailable, setUsername, updateAvatar } from "@/actions/users";
+import { useSession } from "@/lib/auth-client";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { data: session, refetch } = useSession();
   const [isPending, startTransition] = useTransition();
   const [username, setUsernameValue] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [customImageUrl, setCustomImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+
+  // Use custom image if set, otherwise fall back to Google avatar
+  const imageUrl = customImageUrl ?? session?.user?.image ?? "";
+
+  function handleImageChange(url: string) {
+    setCustomImageUrl(url);
+  }
 
   async function handleCheck() {
     if (!username) return;
@@ -45,6 +54,7 @@ export default function OnboardingPage() {
           await updateAvatar(imageUrl);
         }
         toast.success("Credentials Issued");
+        await refetch();
         router.push("/manuscripts");
         router.refresh();
       } else {
@@ -79,7 +89,7 @@ export default function OnboardingPage() {
           <div className="flex flex-col items-center gap-3">
             <ImageUpload
               value={imageUrl}
-              onChange={setImageUrl}
+              onChange={handleImageChange}
               aspectRatio="square"
               className="w-28"
             />
