@@ -19,13 +19,18 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode, AutoLinkNode, $isLinkNode } from "@lexical/link";
 import { CodeNode, CodeHighlightNode } from "@lexical/code";
-import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
+import {
+  HorizontalRuleNode,
+  $createHorizontalRuleNode,
+  $isHorizontalRuleNode,
+} from "@lexical/react/LexicalHorizontalRuleNode";
 import {
   $convertFromMarkdownString,
   $convertToMarkdownString,
   TRANSFORMERS,
   CHECK_LIST,
   type TextMatchTransformer,
+  type ElementTransformer,
 } from "@lexical/markdown";
 import {
   $getRoot,
@@ -196,8 +201,30 @@ const IMAGE_TRANSFORMER: TextMatchTransformer = {
   type: "text-match",
 };
 
+// ============================================
+// Horizontal Rule Transformer
+// ============================================
+
+const HR_TRANSFORMER: ElementTransformer = {
+  dependencies: [HorizontalRuleNode],
+  export: (node) => {
+    return $isHorizontalRuleNode(node) ? "***" : null;
+  },
+  regExp: /^(---|\*\*\*|___)\s?$/,
+  replace: (parentNode, _children, _match, isImport) => {
+    const line = $createHorizontalRuleNode();
+    if (isImport || parentNode.getNextSibling() != null) {
+      parentNode.replace(line);
+    } else {
+      parentNode.insertBefore(line);
+    }
+    line.selectNext();
+  },
+  type: "element",
+};
+
 // Image transformer should come first for proper parsing
-const ALL_TRANSFORMERS = [IMAGE_TRANSFORMER, ...TRANSFORMERS, CHECK_LIST];
+const ALL_TRANSFORMERS = [IMAGE_TRANSFORMER, HR_TRANSFORMER, ...TRANSFORMERS, CHECK_LIST];
 
 // ============================================
 // Block type definitions
