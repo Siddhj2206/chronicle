@@ -32,6 +32,11 @@ export const auth = betterAuth({
       },
     },
   },
+  account: {
+    // TODO: Remove this once a custom domain is configured
+    // This is a workaround for .vercel.app subdomains which are treated as public suffixes
+    skipStateCookieCheck: true,
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;
