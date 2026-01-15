@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import Link from "next/link";
 
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +18,32 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      if (!content.trim()) {
+        setError("Your letter cannot be empty");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.set("content", content);
+
+      startTransition(async () => {
+        const result = await addComment(postId, formData);
+
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setContent("");
+          setError(null);
+        }
+      });
+    },
+    [content, postId]
+  );
+
   if (!isLoggedIn) {
     return (
       <div className="border-2 border-dashed border-neutral-300 p-8 text-center dark:border-neutral-700">
@@ -29,29 +55,6 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
         </p>
       </div>
     );
-  }
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    if (!content.trim()) {
-      setError("Your letter cannot be empty");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.set("content", content);
-
-    startTransition(async () => {
-      const result = await addComment(postId, formData);
-
-      if (result.error) {
-        setError(result.error);
-      } else {
-        setContent("");
-        setError(null);
-      }
-    });
   }
 
   return (

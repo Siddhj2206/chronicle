@@ -25,18 +25,20 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       ? username.slice(1)
       : username;
 
-  const userData = await db
-    .select()
-    .from(user)
-    .where(eq(user.username, cleanUsername))
-    .limit(1)
-    .then((rows) => rows[0]);
+  // Fetch user data and posts in parallel to eliminate waterfall
+  const [userData, posts] = await Promise.all([
+    db
+      .select()
+      .from(user)
+      .where(eq(user.username, cleanUsername))
+      .limit(1)
+      .then((rows) => rows[0]),
+    getPostsByUser(cleanUsername),
+  ]);
 
   if (!userData) {
     notFound();
   }
-
-  const posts = await getPostsByUser(cleanUsername);
 
   return (
     <div className="mx-auto max-w-4xl pb-12">
@@ -50,6 +52,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               width={128}
               height={128}
               className="h-full w-full object-cover"
+              priority
             />
           </div>
         )}

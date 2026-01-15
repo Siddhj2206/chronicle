@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { getSession } from "@/lib/session";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PostContent } from "@/components/posts/post-content";
+import { CommentContent } from "@/components/comments/comment-content";
 import { getComments } from "@/actions/comments";
 import { DeleteCommentButton } from "./delete-comment-button";
 
@@ -83,7 +83,7 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps) {
             </header>
             <div className="prose prose-sm prose-neutral dark:prose-invert ml-16 font-serif italic">
               <span className="text-muted-foreground">&ldquo;</span>
-              <PostContent content={comment.content} />
+              <CommentContent content={comment.content} />
               <span className="text-muted-foreground">&rdquo;</span>
             </div>
             {index < comments.length - 1 && <div className="pb-8" />}

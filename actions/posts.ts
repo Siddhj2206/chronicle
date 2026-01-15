@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { eq, and, desc, asc, gte, notInArray, sql, like } from "drizzle-orm";
 import slugify from "slugify";
@@ -235,7 +236,9 @@ export async function unpublishPost(slug: string) {
 
 // Query functions
 
-export async function getPost(
+// Wrapped with React.cache() for per-request deduplication
+// This prevents duplicate DB queries when generateMetadata and page component both call getPost
+export const getPost = cache(async function getPost(
   username: string,
   slug: string
 ): Promise<{ post: Post; author: { id: string; name: string; username: string | null; image: string | null } } | null> {
@@ -264,7 +267,7 @@ export async function getPost(
     console.error("Get post error:", error);
     return null;
   }
-}
+});
 
 export async function getPostForEdit(slug: string): Promise<Post | null> {
   const session = await getSession();

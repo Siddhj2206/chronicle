@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 
 import { authClient } from "@/lib/auth-client";
@@ -32,6 +33,16 @@ export function UserMenu({ user }: UserMenuProps) {
     .toUpperCase()
     .slice(0, 2);
 
+  const handleSignOut = useCallback(() => {
+    authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = "/";
+        },
+      },
+    });
+  }, []);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -60,7 +71,7 @@ export function UserMenu({ user }: UserMenuProps) {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/" } } })}>
+        <DropdownMenuItem onClick={handleSignOut}>
           Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>

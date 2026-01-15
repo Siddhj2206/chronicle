@@ -24,6 +24,9 @@ import { updateProfile, deleteAccount } from "@/actions/users";
 import { useSession, signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
+// Hoisted to module scope to avoid recreation on every render
+const BARCODE_BARS = Array.from({ length: 12 }, (_, i) => i);
+
 interface SettingsFormProps {
   user: {
     id: string;
@@ -183,7 +186,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
         {/* Decorative Barcode or ID elements */}
         <div className="mt-12 flex justify-between border-t-2 border-black pt-4 font-mono text-[10px] dark:border-white">
           <div className="flex gap-1">
-            {[...Array(12)].map((_, i) => (
+            {BARCODE_BARS.map((i) => (
               <div
                 key={i}
                 className={cn(
