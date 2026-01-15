@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-import { getPost, incrementViewCount } from "@/actions/posts";
+import { getPost, getPostContent, incrementViewCount } from "@/actions/posts";
 import { getLikeCount, hasUserLiked } from "@/actions/likes";
 import { PostContent } from "@/components/posts/post-content";
 import { LikeButton } from "@/components/posts/post-actions";
@@ -55,14 +55,18 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const { post, author } = result;
 
-  // Track view (fire and forget - don't await)
-  incrementViewCount(post.id);
-
-  // Fetch like data
-  const [likeCount, userLiked] = await Promise.all([
+  // Fetch content from R2 and like data in parallel
+  const [content, likeCount, userLiked] = await Promise.all([
+    getPostContent(post.id),
     getLikeCount(post.id),
     hasUserLiked(post.id),
   ]);
+
+  // Track view (fire and forget - don't await)
+  incrementViewCount(post.id);
+
+  // Use R2 content, fallback to DB content if not available
+  const postContent = content || post.content;
 
   return (
     <article className="mx-auto max-w-3xl pb-20">
@@ -113,7 +117,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
       {/* Article Content */}
       <div className="prose prose-lg prose-neutral dark:prose-invert mx-auto font-serif prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-loose">
-        <PostContent content={post.content} />
+        <PostContent content={postContent} />
       </div>
 
       {/* Post Actions */}

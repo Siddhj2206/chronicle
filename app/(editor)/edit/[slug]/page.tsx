@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { getPostForEdit } from "@/actions/posts";
+import { getPostForEditWithContent } from "@/actions/posts";
 import { PostEditorPage } from "@/components/posts/post-editor-page";
 
 interface EditPostPageProps {
@@ -9,11 +9,17 @@ interface EditPostPageProps {
 
 export default async function EditPostPage({ params }: EditPostPageProps) {
   const { slug } = await params;
-  const post = await getPostForEdit(slug);
+  const result = await getPostForEditWithContent(slug);
 
-  if (!post) {
+  if (!result) {
     notFound();
   }
 
-  return <PostEditorPage mode="edit" post={post} />;
+  // Create a post object with the R2 content for the editor
+  const postWithContent = {
+    ...result.post,
+    content: result.content,
+  };
+
+  return <PostEditorPage mode="edit" post={postWithContent} />;
 }
