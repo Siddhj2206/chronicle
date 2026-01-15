@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import Link from "next/link";
 
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +18,32 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      if (!content.trim()) {
+        setError("Your letter cannot be empty");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.set("content", content);
+
+      startTransition(async () => {
+        const result = await addComment(postId, formData);
+
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setContent("");
+          setError(null);
+        }
+      });
+    },
+    [content, postId]
+  );
+
   if (!isLoggedIn) {
     return (
       <div className="border-2 border-dashed border-neutral-300 p-8 text-center dark:border-neutral-700">
@@ -31,29 +57,6 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
     );
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    if (!content.trim()) {
-      setError("Your letter cannot be empty");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.set("content", content);
-
-    startTransition(async () => {
-      const result = await addComment(postId, formData);
-
-      if (result.error) {
-        setError(result.error);
-      } else {
-        setContent("");
-        setError(null);
-      }
-    });
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-3">
@@ -63,14 +66,15 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
         >
           ━━━ Write to the Editor ━━━
         </Label>
-        <Textarea
-          id="comment"
-          placeholder="Share your thoughts on this article..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={4}
-          className="rounded-none border-2 border-black font-serif dark:border-white"
-        />
+          <Textarea
+            id="comment"
+            name="comment"
+            placeholder="Share your thoughts on this article…"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={4}
+            className="rounded-none border-2 border-black font-serif dark:border-white"
+          />
       </div>
       {error && (
         <p className="font-mono text-sm font-medium text-destructive">{error}</p>

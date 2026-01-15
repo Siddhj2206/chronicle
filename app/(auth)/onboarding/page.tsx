@@ -112,9 +112,12 @@ function OnboardingContent() {
               </span>
               <Input
                 id="username"
-                placeholder="editor"
+                name="username"
+                placeholder="editor…"
                 value={username}
-                className="h-auto rounded-none border-0 border-b-2 border-black py-2 pl-8 font-serif text-2xl font-bold focus-visible:ring-0 dark:border-white"
+                autoComplete="username"
+                spellCheck={false}
+                className="h-auto rounded-none border-0 border-b-2 border-black py-2 pl-8 font-serif text-2xl font-bold focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white"
                 onChange={(e) => {
                   setUsernameValue(e.target.value);
                   setIsAvailable(null);
@@ -133,7 +136,7 @@ function OnboardingContent() {
                 <p className="text-green-600 dark:text-green-400">Status: Available</p>
               )}
               {!error && !isAvailable && username && (
-                 <p className="text-muted-foreground">Status: Checking...</p>
+                 <p className="text-muted-foreground">Status: Checking…</p>
               )}
             </div>
           </div>

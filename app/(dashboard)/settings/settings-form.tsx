@@ -24,6 +24,9 @@ import { updateProfile, deleteAccount } from "@/actions/users";
 import { useSession, signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
+// Hoisted to module scope to avoid recreation on every render
+const BARCODE_BARS = Array.from({ length: 12 }, (_, i) => i);
+
 interface SettingsFormProps {
   user: {
     id: string;
@@ -121,8 +124,9 @@ export function SettingsForm({ user }: SettingsFormProps) {
                 name="name"
                 defaultValue={user.name || ""}
                 required
-                className="h-auto rounded-none border-0 border-b-2 border-black px-0 py-2 font-serif text-2xl font-bold focus-visible:ring-0 dark:border-white"
-                placeholder="YOUR NAME"
+                autoComplete="name"
+                className="h-auto rounded-none border-0 border-b-2 border-black px-0 py-2 font-serif text-2xl font-bold focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white"
+                placeholder="Your name…"
               />
             </div>
 
@@ -141,8 +145,10 @@ export function SettingsForm({ user }: SettingsFormProps) {
                   id="username"
                   name="username"
                   defaultValue={user.username || ""}
-                  className="h-auto rounded-none border-0 px-1 py-2 font-mono text-lg focus-visible:ring-0"
-                  placeholder="username"
+                  autoComplete="username"
+                  spellCheck={false}
+                  className="h-auto rounded-none border-0 px-1 py-2 font-mono text-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="username…"
                 />
               </div>
             </div>
@@ -158,9 +164,10 @@ export function SettingsForm({ user }: SettingsFormProps) {
                 id="bio"
                 name="bio"
                 defaultValue={user.bio || ""}
-                placeholder="What do you cover?"
+                autoComplete="off"
+                placeholder="What do you cover?…"
                 rows={4}
-                className="resize-none rounded-none border-0 border-b-2 border-black px-0 py-2 font-serif text-lg leading-relaxed focus-visible:ring-0 dark:border-white"
+                className="resize-none rounded-none border-0 border-b-2 border-black px-0 py-2 font-serif text-lg leading-relaxed focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white"
               />
             </div>
 
@@ -179,7 +186,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
         {/* Decorative Barcode or ID elements */}
         <div className="mt-12 flex justify-between border-t-2 border-black pt-4 font-mono text-[10px] dark:border-white">
           <div className="flex gap-1">
-            {[...Array(12)].map((_, i) => (
+            {BARCODE_BARS.map((i) => (
               <div
                 key={i}
                 className={cn(

@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { eq, and, desc, asc, gte, notInArray, sql, like } from "drizzle-orm";
 import slugify from "slugify";
@@ -9,6 +10,12 @@ import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
+import {
+  uploadContent,
+  deleteContent,
+  getContent,
+  revalidateContent,
+} from "@/lib/r2-content";
 
 import type { Post } from "@/lib/db/schema";
 
@@ -50,6 +57,37 @@ async function generateUniqueSlug(title: string, authorId: string): Promise<stri
   return `${baseSlug}-${nanoid(6)}`;
 }
 
+/**
+ * Generate search vector SQL for full-text search
+ * Title gets weight A (highest), excerpt gets B, content gets C
+ */
+function generateSearchVector(title: string, excerpt: string | null, content: string): string {
+  // Strip markdown for cleaner search
+  const cleanContent = content
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`[^`]+`/g, "")
+    .replace(/!\[.*?\]\(.*?\)/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[*_]{1,3}([^*_]+)[*_]{1,3}/g, "$1")
+    .replace(/^>\s+/gm, "")
+    .replace(/^[-*_]{3,}\s*$/gm, "")
+    .replace(/^[\s]*[-*+]\s+/gm, "")
+    .replace(/^[\s]*\d+\.\s+/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Combine with weights for PostgreSQL tsvector
+  const combined = [
+    title,
+    title, // Double weight for title
+    excerpt || "",
+    cleanContent,
+  ].join(" ");
+
+  return combined;
+}
+
 export async function createPost(formData: FormData) {
   const session = await getSession();
 
@@ -73,17 +111,29 @@ export async function createPost(formData: FormData) {
   // Generate unique slug (clean, only adds suffix on conflict)
   const slug = await generateUniqueSlug(title, session.user.id);
 
+  // Generate a temporary ID for the post (will be replaced by DB)
+  const tempId = crypto.randomUUID();
+
   try {
+    // Upload content to R2 first
+    const contentPath = await uploadContent(tempId, content);
+
+    // Generate search vector for full-text search
+    const searchVector = generateSearchVector(title, excerpt || null, content);
+
     const [newPost] = await db
       .insert(post)
       .values({
+        id: tempId, // Use the same ID we used for R2
         authorId: session.user.id,
         title,
         slug,
-        content,
+        content, // Keep in DB for now (migration period)
+        contentPath,
         excerpt: excerpt || null,
         coverImage: coverImage || null,
         published: false,
+        searchVector,
       })
       .returning();
 
@@ -92,6 +142,12 @@ export async function createPost(formData: FormData) {
     return { success: true, slug: newPost.slug };
   } catch (error) {
     console.error("Create post error:", error);
+    // Try to clean up R2 content if DB insert failed
+    try {
+      await deleteContent(tempId);
+    } catch {
+      // Ignore cleanup errors
+    }
     return { error: "Failed to create post" };
   }
 }
@@ -117,13 +173,34 @@ export async function updatePost(slug: string, formData: FormData) {
   const { title, content, excerpt, coverImage } = parsed.data;
 
   try {
+    // First get the post to get its ID
+    const existingPost = await db
+      .select({ id: post.id })
+      .from(post)
+      .where(and(eq(post.slug, slug), eq(post.authorId, session.user.id)))
+      .limit(1);
+
+    if (existingPost.length === 0) {
+      return { error: "Post not found" };
+    }
+
+    const postId = existingPost[0].id;
+
+    // Upload new content to R2
+    const contentPath = await uploadContent(postId, content);
+
+    // Generate updated search vector
+    const searchVector = generateSearchVector(title, excerpt || null, content);
+
     const [updatedPost] = await db
       .update(post)
       .set({
         title,
-        content,
+        content, // Keep in DB for now (migration period)
+        contentPath,
         excerpt: excerpt || null,
         coverImage: coverImage || null,
+        searchVector,
         updatedAt: new Date(),
       })
       .where(and(eq(post.slug, slug), eq(post.authorId, session.user.id)))
@@ -132,6 +209,9 @@ export async function updatePost(slug: string, formData: FormData) {
     if (!updatedPost) {
       return { error: "Post not found" };
     }
+
+    // Revalidate content cache
+    await revalidateContent(postId);
 
     revalidatePath("/manuscripts");
     revalidatePath(`/@${(session.user as { username?: string }).username}/${slug}`);
@@ -159,6 +239,9 @@ export async function deletePost(slug: string) {
     if (!deletedPost) {
       return { error: "Post not found" };
     }
+
+    // Delete content from R2
+    await deleteContent(deletedPost.id);
 
     revalidatePath("/manuscripts");
     revalidatePath("/");
@@ -235,7 +318,9 @@ export async function unpublishPost(slug: string) {
 
 // Query functions
 
-export async function getPost(
+// Wrapped with React.cache() for per-request deduplication
+// This prevents duplicate DB queries when generateMetadata and page component both call getPost
+export const getPost = cache(async function getPost(
   username: string,
   slug: string
 ): Promise<{ post: Post; author: { id: string; name: string; username: string | null; image: string | null } } | null> {
@@ -264,6 +349,32 @@ export async function getPost(
     console.error("Get post error:", error);
     return null;
   }
+});
+
+/**
+ * Get post content from R2
+ * Falls back to database content if R2 content not available (migration period)
+ */
+export async function getPostContent(postId: string): Promise<string | null> {
+  // Try to get from R2 first
+  const r2Content = await getContent(postId);
+  if (r2Content) {
+    return r2Content;
+  }
+
+  // Fallback to database content during migration
+  try {
+    const result = await db
+      .select({ content: post.content })
+      .from(post)
+      .where(eq(post.id, postId))
+      .limit(1);
+
+    return result[0]?.content || null;
+  } catch (error) {
+    console.error("Get post content fallback error:", error);
+    return null;
+  }
 }
 
 export async function getPostForEdit(slug: string): Promise<Post | null> {
@@ -283,6 +394,42 @@ export async function getPostForEdit(slug: string): Promise<Post | null> {
     return result[0] || null;
   } catch (error) {
     console.error("Get post for edit error:", error);
+    return null;
+  }
+}
+
+/**
+ * Get post for editing with content from R2
+ * Returns both post metadata and content
+ */
+export async function getPostForEditWithContent(slug: string): Promise<{ post: Post; content: string } | null> {
+  const session = await getSession();
+
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(post)
+      .where(and(eq(post.slug, slug), eq(post.authorId, session.user.id)))
+      .limit(1);
+
+    const postData = result[0];
+    if (!postData) {
+      return null;
+    }
+
+    // Get content from R2 (with fallback to DB)
+    const content = await getPostContent(postData.id);
+
+    return {
+      post: postData,
+      content: content || postData.content, // Fallback to DB content
+    };
+  } catch (error) {
+    console.error("Get post for edit with content error:", error);
     return null;
   }
 }

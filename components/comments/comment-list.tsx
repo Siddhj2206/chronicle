@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { getSession } from "@/lib/session";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PostContent } from "@/components/posts/post-content";
+import { CommentContent } from "@/components/comments/comment-content";
 import { getComments } from "@/actions/comments";
 import { DeleteCommentButton } from "./delete-comment-button";
 
@@ -54,7 +54,7 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps) {
             <header className="mb-4 flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12 rounded-none border border-neutral-300 dark:border-neutral-700">
-                  <AvatarImage src={author.image || undefined} />
+                  <AvatarImage src={author.image || undefined} alt={author.name || "User avatar"} />
                   <AvatarFallback className="rounded-none font-mono text-xs">
                     {initials || "U"}
                   </AvatarFallback>
@@ -83,7 +83,7 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps) {
             </header>
             <div className="prose prose-sm prose-neutral dark:prose-invert ml-16 font-serif italic">
               <span className="text-muted-foreground">&ldquo;</span>
-              <PostContent content={comment.content} />
+              <CommentContent content={comment.content} />
               <span className="text-muted-foreground">&rdquo;</span>
             </div>
             {index < comments.length - 1 && <div className="pb-8" />}

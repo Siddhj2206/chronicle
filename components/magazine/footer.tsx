@@ -1,8 +1,9 @@
 import Link from "next/link";
 
-export function Footer() {
-  const currentYear = new Date().getFullYear();
+// Hoisted to module scope - year won't change during session
+const CURRENT_YEAR = new Date().getFullYear();
 
+export function Footer() {
   return (
     <footer className="border-t-4 border-black bg-background dark:border-white">
       <div className="mx-auto max-w-6xl px-4 py-12">
@@ -70,7 +71,7 @@ export function Footer() {
         <div className="border-t border-border pt-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              &copy; {currentYear} The Chronicle. All rights reserved.
+              &copy; {CURRENT_YEAR} The Chronicle. All rights reserved.
             </p>
             <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
               Est. 2026

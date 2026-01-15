@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useCallback, useState, useRef } from "react";
+import { useEffect, useCallback, useState, useRef, useSyncExternalStore, useMemo } from "react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import type { InitialConfigType } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -165,6 +165,7 @@ export class ImageNode extends DecoratorNode<ReactNode> {
         alt={this.getAltText()}
         className="max-w-full border border-border"
         draggable={false}
+        loading="lazy"
       />
     );
   }
@@ -355,6 +356,34 @@ function IconMore() {
 }
 
 // ============================================
+// Toolbar State Type
+// ============================================
+
+interface ToolbarState {
+  canUndo: boolean;
+  canRedo: boolean;
+  isBold: boolean;
+  isItalic: boolean;
+  isStrikethrough: boolean;
+  isCode: boolean;
+  isLink: boolean;
+  blockType: BlockType;
+  linkUrl: string;
+}
+
+const initialToolbarState: ToolbarState = {
+  canUndo: true,
+  canRedo: true,
+  isBold: false,
+  isItalic: false,
+  isStrikethrough: false,
+  isCode: false,
+  isLink: false,
+  blockType: "paragraph",
+  linkUrl: "",
+};
+
+// ============================================
 // Toolbar Component
 // ============================================
 
@@ -364,39 +393,35 @@ interface ToolbarProps {
 
 function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
   const [editor] = useLexicalComposerContext();
-  const [canUndo, setCanUndo] = useState(false);
-  const [canRedo, setCanRedo] = useState(false);
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isStrikethrough, setIsStrikethrough] = useState(false);
-  const [isCode, setIsCode] = useState(false);
-  const [isLink, setIsLink] = useState(false);
-  const [blockType, setBlockType] = useState<BlockType>("paragraph");
-  const [linkUrl, setLinkUrl] = useState("");
+  // Consolidated state to reduce re-renders
+  const [state, setState] = useState<ToolbarState>(initialToolbarState);
   const [isLinkEditOpen, setIsLinkEditOpen] = useState(false);
+  const [linkInputUrl, setLinkInputUrl] = useState("");
 
   // Update toolbar state based on selection
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
     if ($isRangeSelection(selection)) {
-      // Text format state
-      setIsBold(selection.hasFormat("bold"));
-      setIsItalic(selection.hasFormat("italic"));
-      setIsStrikethrough(selection.hasFormat("strikethrough"));
-      setIsCode(selection.hasFormat("code"));
+      // Batch all state updates into a single setState call
+      const newState: Partial<ToolbarState> = {
+        isBold: selection.hasFormat("bold"),
+        isItalic: selection.hasFormat("italic"),
+        isStrikethrough: selection.hasFormat("strikethrough"),
+        isCode: selection.hasFormat("code"),
+      };
 
       // Link state
       const node = selection.anchor.getNode();
       const parent = node.getParent();
       if ($isLinkNode(parent)) {
-        setIsLink(true);
-        setLinkUrl(parent.getURL());
+        newState.isLink = true;
+        newState.linkUrl = parent.getURL();
       } else if ($isLinkNode(node)) {
-        setIsLink(true);
-        setLinkUrl(node.getURL());
+        newState.isLink = true;
+        newState.linkUrl = node.getURL();
       } else {
-        setIsLink(false);
-        setLinkUrl("");
+        newState.isLink = false;
+        newState.linkUrl = "";
       }
 
       // Block type state
@@ -408,24 +433,26 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
 
       if ($isHeadingNode(element)) {
         const tag = element.getTag();
-        setBlockType(tag as BlockType);
+        newState.blockType = tag as BlockType;
       } else if ($isListNode(element)) {
         const parentList = $getNearestNodeOfType(anchorNode, ListNodeClass);
         const listType = parentList ? parentList.getListType() : element.getListType();
         if (listType === "check") {
-          setBlockType("check");
+          newState.blockType = "check";
         } else if (listType === "number") {
-          setBlockType("number");
+          newState.blockType = "number";
         } else {
-          setBlockType("bullet");
+          newState.blockType = "bullet";
         }
       } else if ($isQuoteNode(element)) {
-        setBlockType("quote");
+        newState.blockType = "quote";
       } else if ($isCodeNode(element)) {
-        setBlockType("code");
+        newState.blockType = "code";
       } else {
-        setBlockType("paragraph");
+        newState.blockType = "paragraph";
       }
+
+      setState(prev => ({ ...prev, ...newState }));
     }
   }, []);
 
@@ -480,19 +507,17 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
       editor.getEditorState().read(() => {
         // We need to access the history plugin state
         // For now, we'll use a simple approach
-        setCanUndo(true); // Will be properly updated by history commands
-        setCanRedo(true);
+        setState(prev => ({ ...prev, canUndo: true, canRedo: true }));
       });
     });
   }, [editor]);
 
-  // Format handlers
-  const formatBold = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
-  const formatItalic = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic");
-  const formatStrikethrough = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough");
-  const formatCode = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code");
+  // Memoized format text handler - single function for all text formats
+  const formatText = useCallback((format: "bold" | "italic" | "strikethrough" | "code") => {
+    editor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
+  }, [editor]);
 
-  const formatBlock = (type: BlockType) => {
+  const formatBlock = useCallback((type: BlockType) => {
     editor.update(() => {
       const selection = $getSelection();
       if (!$isRangeSelection(selection)) return;
@@ -506,54 +531,54 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
       } else if (type === "code") {
         $setBlocksType(selection, () => $createCodeNode());
       } else if (type === "bullet") {
-        if (blockType === "bullet") {
+        if (state.blockType === "bullet") {
           editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
         } else {
           editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
         }
       } else if (type === "number") {
-        if (blockType === "number") {
+        if (state.blockType === "number") {
           editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
         } else {
           editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
         }
       } else if (type === "check") {
-        if (blockType === "check") {
+        if (state.blockType === "check") {
           editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
         } else {
           editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
         }
       }
     });
-  };
+  }, [editor, state.blockType]);
 
-  const insertLink = () => {
-    if (isLink) {
+  const insertLink = useCallback(() => {
+    if (state.isLink) {
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
     } else {
       setIsLinkEditOpen(true);
     }
-  };
+  }, [editor, state.isLink]);
 
-  const confirmLink = () => {
-    if (linkUrl) {
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, linkUrl);
+  const confirmLink = useCallback(() => {
+    if (linkInputUrl) {
+      editor.dispatchCommand(TOGGLE_LINK_COMMAND, linkInputUrl);
     }
     setIsLinkEditOpen(false);
-    setLinkUrl("");
-  };
+    setLinkInputUrl("");
+  }, [editor, linkInputUrl]);
 
-  const removeLink = () => {
+  const removeLink = useCallback(() => {
     editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
     setIsLinkEditOpen(false);
-    setLinkUrl("");
-  };
+    setLinkInputUrl("");
+  }, [editor]);
 
-  const insertHorizontalRule = () => {
+  const insertHorizontalRule = useCallback(() => {
     editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined);
-  };
+  }, [editor]);
 
-  const clearFormatting = () => {
+  const clearFormatting = useCallback(() => {
     editor.update(() => {
       const selection = $getSelection();
       if ($isRangeSelection(selection)) {
@@ -566,10 +591,10 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         });
       }
     });
-  };
+  }, [editor]);
 
-  const undo = () => editor.dispatchCommand(UNDO_COMMAND, undefined);
-  const redo = () => editor.dispatchCommand(REDO_COMMAND, undefined);
+  const undo = useCallback(() => editor.dispatchCommand(UNDO_COMMAND, undefined), [editor]);
+  const redo = useCallback(() => editor.dispatchCommand(REDO_COMMAND, undefined), [editor]);
 
   const toolbarButtonClass = (active: boolean = false) =>
     cn(
@@ -586,22 +611,24 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           variant="ghost"
           size="sm"
           onClick={undo}
-          disabled={!canUndo}
+          disabled={!state.canUndo}
           className={toolbarButtonClass()}
           title="Undo"
+          aria-label="Undo"
         >
-          <IconUndo />
+          <IconUndo aria-hidden="true" />
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={redo}
-          disabled={!canRedo}
+          disabled={!state.canRedo}
           className={toolbarButtonClass()}
           title="Redo"
+          aria-label="Redo"
         >
-          <IconRedo />
+          <IconRedo aria-hidden="true" />
         </Button>
       </div>
 
@@ -616,7 +643,7 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
             size="sm"
             className="h-8 gap-1 rounded-none px-2 font-mono text-xs hover:bg-accent/50"
           >
-            {BLOCK_TYPE_LABELS[blockType]}
+            {BLOCK_TYPE_LABELS[state.blockType]}
             <IconChevronDown />
           </Button>
         </DropdownMenuTrigger>
@@ -661,41 +688,49 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={formatBold}
-          className={toolbarButtonClass(isBold)}
+          onClick={() => formatText("bold")}
+          className={toolbarButtonClass(state.isBold)}
           title="Bold"
+          aria-label="Bold"
+          aria-pressed={state.isBold}
         >
-          <IconBold />
+          <IconBold aria-hidden="true" />
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          onClick={formatItalic}
-          className={toolbarButtonClass(isItalic)}
+          onClick={() => formatText("italic")}
+          className={toolbarButtonClass(state.isItalic)}
           title="Italic"
+          aria-label="Italic"
+          aria-pressed={state.isItalic}
         >
-          <IconItalic />
+          <IconItalic aria-hidden="true" />
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          onClick={formatStrikethrough}
-          className={toolbarButtonClass(isStrikethrough)}
+          onClick={() => formatText("strikethrough")}
+          className={toolbarButtonClass(state.isStrikethrough)}
           title="Strikethrough"
+          aria-label="Strikethrough"
+          aria-pressed={state.isStrikethrough}
         >
-          <IconStrikethrough />
+          <IconStrikethrough aria-hidden="true" />
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          onClick={formatCode}
-          className={toolbarButtonClass(isCode)}
+          onClick={() => formatText("code")}
+          className={toolbarButtonClass(state.isCode)}
           title="Inline Code"
+          aria-label="Inline Code"
+          aria-pressed={state.isCode}
         >
-          <IconCode />
+          <IconCode aria-hidden="true" />
         </Button>
 
         {/* Link with Popover */}
@@ -706,23 +741,26 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
               variant="ghost"
               size="sm"
               onClick={insertLink}
-              className={toolbarButtonClass(isLink)}
+              className={toolbarButtonClass(state.isLink)}
               title="Link"
+              aria-label="Insert Link"
+              aria-pressed={state.isLink}
             >
-              <IconLink />
+              <IconLink aria-hidden="true" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 rounded-none p-3" align="start">
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <label htmlFor="link-url-input" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   URL
                 </label>
                 <Input
+                  id="link-url-input"
                   type="url"
-                  placeholder="https://example.com"
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://…"
+                  value={linkInputUrl}
+                  onChange={(e) => setLinkInputUrl(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -739,9 +777,9 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
                   className="flex-1 rounded-none"
                   size="sm"
                 >
-                  {isLink ? "Update" : "Insert"}
+                  {state.isLink ? "Update" : "Insert"}
                 </Button>
-                {isLink && (
+                {state.isLink && (
                   <Button
                     type="button"
                     variant="destructive"
@@ -795,8 +833,9 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         onClick={clearFormatting}
         className={cn(toolbarButtonClass(), "hidden md:flex")}
         title="Clear Formatting"
+        aria-label="Clear Formatting"
       >
-        <IconClearFormatting />
+        <IconClearFormatting aria-hidden="true" />
       </Button>
 
       {/* Mobile More Menu - hidden on desktop */}
@@ -808,24 +847,25 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
               variant="ghost"
               size="sm"
               className={toolbarButtonClass()}
+              aria-label="More formatting options"
             >
-              <IconMore />
+              <IconMore aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-none">
-            <DropdownMenuItem onClick={formatBold}>
+            <DropdownMenuItem onClick={() => formatText("bold")}>
               <IconBold />
               <span className="ml-2">Bold</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={formatItalic}>
+            <DropdownMenuItem onClick={() => formatText("italic")}>
               <IconItalic />
               <span className="ml-2">Italic</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={formatStrikethrough}>
+            <DropdownMenuItem onClick={() => formatText("strikethrough")}>
               <IconStrikethrough />
               <span className="ml-2">Strikethrough</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={formatCode}>
+            <DropdownMenuItem onClick={() => formatText("code")}>
               <IconCode />
               <span className="ml-2">Code</span>
             </DropdownMenuItem>
@@ -1090,6 +1130,32 @@ const theme = {
 };
 
 // ============================================
+// Editor Config - Hoisted to module scope for performance
+// ============================================
+
+const EDITOR_NODES = [
+  HeadingNode,
+  QuoteNode,
+  ListNode,
+  ListItemNode,
+  LinkNode,
+  AutoLinkNode,
+  CodeNode,
+  CodeHighlightNode,
+  HorizontalRuleNode,
+  ImageNode,
+];
+
+const handleEditorError = (error: Error) => {
+  console.error("Lexical error:", error);
+};
+
+// useSyncExternalStore helpers for flicker-free hydration
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+// ============================================
 // Main Editor Component
 // ============================================
 
@@ -1104,33 +1170,17 @@ export function LexicalEditor({
   onChange,
   placeholder = "Begin your story...",
 }: LexicalEditorProps) {
-  const [isClient, setIsClient] = useState(false);
+  // Use useSyncExternalStore for flicker-free hydration detection
+  const isClient = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsClient(true);
-  }, []);
-
-  const initialConfig: InitialConfigType = {
+  // Memoize config to prevent recreation on every render
+  const initialConfig = useMemo<InitialConfigType>(() => ({
     namespace: "ChronicleEditor",
     theme,
-    onError: (error: Error) => {
-      console.error("Lexical error:", error);
-    },
-    nodes: [
-      HeadingNode,
-      QuoteNode,
-      ListNode,
-      ListItemNode,
-      LinkNode,
-      AutoLinkNode,
-      CodeNode,
-      CodeHighlightNode,
-      HorizontalRuleNode,
-      ImageNode,
-    ],
-  };
+    onError: handleEditorError,
+    nodes: EDITOR_NODES,
+  }), []);
 
   const handleChange = useCallback(
     (editorState: EditorState) => {

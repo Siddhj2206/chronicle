@@ -81,7 +81,8 @@ export const post = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     slug: text("slug").notNull(),
-    content: text("content").notNull(),
+    content: text("content").notNull(), // Will be removed after migration to R2
+    contentPath: text("content_path"), // R2 path: "content/{postId}.md"
     excerpt: text("excerpt"),
     coverImage: text("cover_image"),
     viewCount: integer("view_count").default(0).notNull(),
@@ -89,6 +90,8 @@ export const post = pgTable(
     publishedAt: timestamp("published_at", { mode: "date" }),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
+    // Search vector for full-text search (stored as text, cast to tsvector in queries)
+    searchVector: text("search_vector"),
   },
   (table) => [
     uniqueIndex("post_slug_idx").on(table.slug),

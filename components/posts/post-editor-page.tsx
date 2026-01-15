@@ -57,6 +57,15 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   // Track if there are unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
   const initialDataRef = useRef({ title, excerpt, content, coverImage });
+  
+  // Use ref to store form data for savePost to avoid recreation on every state change
+  const formDataRef = useRef({ title, excerpt, content, coverImage });
+  useEffect(() => {
+    formDataRef.current = { title, excerpt, content, coverImage };
+  }, [title, excerpt, content, coverImage]);
+
+  // Track last change time for optimized auto-save
+  const lastChangeTimeRef = useRef<number>(Date.now());
 
   // Check for changes
   useEffect(() => {
@@ -66,22 +75,29 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
       content !== initialDataRef.current.content ||
       coverImage !== initialDataRef.current.coverImage;
     setHasChanges(hasChanged);
+    if (hasChanged) {
+      lastChangeTimeRef.current = Date.now();
+    }
   }, [title, excerpt, content, coverImage]);
 
-  // Auto-save functionality (only in edit mode)
+  // Warn before navigation with unsaved changes
   useEffect(() => {
-    if (mode !== "edit" || !hasChanges || !currentSlug) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
 
-    const timer = setTimeout(async () => {
-      await savePost(true);
-    }, AUTO_SAVE_DELAY);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasChanges]);
 
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, excerpt, content, coverImage, mode, hasChanges, currentSlug]);
-
+  // Optimized savePost using refs to minimize dependency array
   const savePost = useCallback(
     async (isAutoSave = false) => {
+      const { title, content, excerpt, coverImage } = formDataRef.current;
+      
       if (!title.trim()) {
         if (!isAutoSave) toast.error("Title is required");
         return;
@@ -134,8 +150,25 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
         setIsSaving(false);
       }
     },
-    [title, content, excerpt, coverImage, mode, currentSlug, router]
+    [mode, currentSlug, router]
   );
+
+  // Optimized auto-save: check periodically instead of resetting timer on every keystroke
+  useEffect(() => {
+    if (mode !== "edit" || !currentSlug) return;
+
+    const checkAndSave = async () => {
+      const timeSinceLastChange = Date.now() - lastChangeTimeRef.current;
+      // Only auto-save if there are changes and enough time has passed since last change
+      if (hasChanges && timeSinceLastChange >= AUTO_SAVE_DELAY) {
+        await savePost(true);
+      }
+    };
+
+    // Check every 5 seconds if we should auto-save
+    const interval = setInterval(checkAndSave, 5000);
+    return () => clearInterval(interval);
+  }, [mode, hasChanges, currentSlug, savePost]);
 
   const handlePublish = useCallback(async () => {
     // Save first if there are changes
@@ -297,8 +330,10 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
 
           {/* Title */}
           <TextareaAutosize
-            placeholder="Title"
-            className="w-full resize-none bg-transparent font-serif text-4xl font-black leading-tight tracking-tight placeholder:text-muted-foreground/30 focus:outline-none md:text-5xl"
+            name="title"
+            aria-label="Post title"
+            placeholder="Title…"
+            className="w-full resize-none bg-transparent font-serif text-4xl font-black leading-tight tracking-tight placeholder:text-muted-foreground/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-5xl"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             minRows={1}
@@ -306,8 +341,10 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
 
           {/* Excerpt */}
           <TextareaAutosize
-            placeholder="Write a brief excerpt or subtitle..."
-            className="w-full resize-none bg-transparent font-serif text-xl italic leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none"
+            name="excerpt"
+            aria-label="Post excerpt"
+            placeholder="Write a brief excerpt or subtitle…"
+            className="w-full resize-none bg-transparent font-serif text-xl italic leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
             minRows={1}
@@ -317,7 +354,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           <LexicalEditor
             initialContent={content}
             onChange={setContent}
-            placeholder="Begin your story..."
+            placeholder="Begin your story…"
           />
         </div>
       </div>

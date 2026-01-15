@@ -44,11 +44,10 @@ function SearchInputContent() {
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <Input
           type="search"
-          placeholder="Search..."
+          placeholder="Search…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-32"
-          autoFocus
           onBlur={() => {
             if (!query.trim()) setIsOpen(false);
           }}
@@ -62,7 +61,7 @@ function SearchInputContent() {
     <form onSubmit={handleSubmit}>
       <Input
         type="search"
-        placeholder="Search posts..."
+        placeholder="Search posts…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="w-64"

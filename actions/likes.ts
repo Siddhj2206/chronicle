@@ -38,25 +38,20 @@ export async function toggleLike(postId: string) {
       });
     }
 
-    // Get post for revalidation
-    const postData = await db
-      .select({ slug: post.slug, authorId: post.authorId })
+    // Get post slug and author username in a single JOIN query for revalidation
+    const postWithAuthor = await db
+      .select({
+        slug: post.slug,
+        username: user.username,
+      })
       .from(post)
+      .innerJoin(user, eq(post.authorId, user.id))
       .where(eq(post.id, postId))
       .limit(1)
       .then((rows) => rows[0]);
 
-    if (postData) {
-      const author = await db
-        .select({ username: user.username })
-        .from(user)
-        .where(eq(user.id, postData.authorId))
-        .limit(1)
-        .then((rows) => rows[0]);
-
-      if (author?.username) {
-        revalidatePath(`/@${author.username}/${postData.slug}`);
-      }
+    if (postWithAuthor?.username) {
+      revalidatePath(`/@${postWithAuthor.username}/${postWithAuthor.slug}`);
     }
 
     revalidatePath("/");

@@ -71,7 +71,7 @@ export function Pagination({ currentPage, totalPages, sort }: PaginationProps) {
               key={`ellipsis-${i}`}
               className="px-2 text-muted-foreground"
             >
-              ...
+              …
             </span>
           ) : (
             <Link

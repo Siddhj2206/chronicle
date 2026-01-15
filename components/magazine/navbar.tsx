@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -18,18 +19,23 @@ export function Navbar({ className }: NavbarProps) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
 
-  const now = new Date();
-  const shortDate = now.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-  const fullDate = now.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  // Memoize date formatting to avoid recreation on every render
+  const { shortDate, fullDate } = useMemo(() => {
+    const now = new Date();
+    return {
+      shortDate: now.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+      fullDate: now.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    };
+  }, []);
 
   return (
     <div className={cn("border-b border-border py-2 bg-background", className)}>

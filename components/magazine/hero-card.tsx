@@ -21,6 +21,7 @@ export function HeroCard({ post, className }: HeroCardProps) {
                   src={post.coverImage}
                   alt={post.title}
                   fill
+                  sizes="(max-width: 768px) 100vw, 66vw"
                   className="object-cover"
                   priority
                 />

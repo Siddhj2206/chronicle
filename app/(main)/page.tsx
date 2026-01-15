@@ -10,10 +10,19 @@ import { Masthead } from "@/components/magazine/masthead";
 export const revalidate = 60;
 
 export default async function FeedPage() {
-  const rawPosts = await getNewestPosts(20);
-  
+  // Fetch both data sources in parallel to eliminate waterfall
+  const [rawPosts, rawTrendingPosts] = await Promise.all([
+    getNewestPosts(20),
+    getTrendingPosts(5),
+  ]);
+
   // Transform data to match component expectations (Post & { author: User })
   const posts = rawPosts.map(({ post, author }) => ({
+    ...post,
+    author,
+  }));
+
+  const trendingPosts = rawTrendingPosts.map(({ post, author }) => ({
     ...post,
     author,
   }));
@@ -38,13 +47,6 @@ export default async function FeedPage() {
   const heroPost = posts[0];
   const gridPosts = posts.slice(1, 4);
   const mainListPosts = posts.slice(4);
-
-  // Get real trending posts (time-weighted by views)
-  const rawTrendingPosts = await getTrendingPosts(5);
-  const trendingPosts = rawTrendingPosts.map(({ post, author }) => ({
-    ...post,
-    author,
-  }));
 
   return (
     <>
