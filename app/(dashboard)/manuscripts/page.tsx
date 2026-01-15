@@ -64,7 +64,7 @@ export default async function DashboardPage() {
                       </h3>
                     </Link>
                     <p className="mt-2 line-clamp-1 font-serif text-sm italic text-muted-foreground">
-                      {post.excerpt || "No excerpt..."}
+                      {post.excerpt || "No excerpt…"}
                     </p>
                   </td>
                   <td className="whitespace-nowrap py-6 text-right align-top font-mono text-xs font-bold uppercase tracking-widest">

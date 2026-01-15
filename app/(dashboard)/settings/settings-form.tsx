@@ -121,8 +121,9 @@ export function SettingsForm({ user }: SettingsFormProps) {
                 name="name"
                 defaultValue={user.name || ""}
                 required
-                className="h-auto rounded-none border-0 border-b-2 border-black px-0 py-2 font-serif text-2xl font-bold focus-visible:ring-0 dark:border-white"
-                placeholder="YOUR NAME"
+                autoComplete="name"
+                className="h-auto rounded-none border-0 border-b-2 border-black px-0 py-2 font-serif text-2xl font-bold focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white"
+                placeholder="Your name…"
               />
             </div>
 
@@ -141,8 +142,10 @@ export function SettingsForm({ user }: SettingsFormProps) {
                   id="username"
                   name="username"
                   defaultValue={user.username || ""}
-                  className="h-auto rounded-none border-0 px-1 py-2 font-mono text-lg focus-visible:ring-0"
-                  placeholder="username"
+                  autoComplete="username"
+                  spellCheck={false}
+                  className="h-auto rounded-none border-0 px-1 py-2 font-mono text-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="username…"
                 />
               </div>
             </div>
@@ -158,9 +161,10 @@ export function SettingsForm({ user }: SettingsFormProps) {
                 id="bio"
                 name="bio"
                 defaultValue={user.bio || ""}
-                placeholder="What do you cover?"
+                autoComplete="off"
+                placeholder="What do you cover?…"
                 rows={4}
-                className="resize-none rounded-none border-0 border-b-2 border-black px-0 py-2 font-serif text-lg leading-relaxed focus-visible:ring-0 dark:border-white"
+                className="resize-none rounded-none border-0 border-b-2 border-black px-0 py-2 font-serif text-lg leading-relaxed focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white"
               />
             </div>
 

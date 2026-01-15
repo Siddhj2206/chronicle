@@ -54,7 +54,7 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps) {
             <header className="mb-4 flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12 rounded-none border border-neutral-300 dark:border-neutral-700">
-                  <AvatarImage src={author.image || undefined} />
+                  <AvatarImage src={author.image || undefined} alt={author.name || "User avatar"} />
                   <AvatarFallback className="rounded-none font-mono text-xs">
                     {initials || "U"}
                   </AvatarFallback>

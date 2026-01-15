@@ -165,6 +165,7 @@ export class ImageNode extends DecoratorNode<ReactNode> {
         alt={this.getAltText()}
         className="max-w-full border border-border"
         draggable={false}
+        loading="lazy"
       />
     );
   }
@@ -589,8 +590,9 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           disabled={!canUndo}
           className={toolbarButtonClass()}
           title="Undo"
+          aria-label="Undo"
         >
-          <IconUndo />
+          <IconUndo aria-hidden="true" />
         </Button>
         <Button
           type="button"
@@ -600,8 +602,9 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           disabled={!canRedo}
           className={toolbarButtonClass()}
           title="Redo"
+          aria-label="Redo"
         >
-          <IconRedo />
+          <IconRedo aria-hidden="true" />
         </Button>
       </div>
 
@@ -664,8 +667,10 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           onClick={formatBold}
           className={toolbarButtonClass(isBold)}
           title="Bold"
+          aria-label="Bold"
+          aria-pressed={isBold}
         >
-          <IconBold />
+          <IconBold aria-hidden="true" />
         </Button>
         <Button
           type="button"
@@ -674,8 +679,10 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           onClick={formatItalic}
           className={toolbarButtonClass(isItalic)}
           title="Italic"
+          aria-label="Italic"
+          aria-pressed={isItalic}
         >
-          <IconItalic />
+          <IconItalic aria-hidden="true" />
         </Button>
         <Button
           type="button"
@@ -684,8 +691,10 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           onClick={formatStrikethrough}
           className={toolbarButtonClass(isStrikethrough)}
           title="Strikethrough"
+          aria-label="Strikethrough"
+          aria-pressed={isStrikethrough}
         >
-          <IconStrikethrough />
+          <IconStrikethrough aria-hidden="true" />
         </Button>
         <Button
           type="button"
@@ -694,8 +703,10 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           onClick={formatCode}
           className={toolbarButtonClass(isCode)}
           title="Inline Code"
+          aria-label="Inline Code"
+          aria-pressed={isCode}
         >
-          <IconCode />
+          <IconCode aria-hidden="true" />
         </Button>
 
         {/* Link with Popover */}
@@ -708,19 +719,22 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
               onClick={insertLink}
               className={toolbarButtonClass(isLink)}
               title="Link"
+              aria-label="Insert Link"
+              aria-pressed={isLink}
             >
-              <IconLink />
+              <IconLink aria-hidden="true" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 rounded-none p-3" align="start">
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <label htmlFor="link-url-input" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   URL
                 </label>
                 <Input
+                  id="link-url-input"
                   type="url"
-                  placeholder="https://example.com"
+                  placeholder="https://…"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   onKeyDown={(e) => {
@@ -795,8 +809,9 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         onClick={clearFormatting}
         className={cn(toolbarButtonClass(), "hidden md:flex")}
         title="Clear Formatting"
+        aria-label="Clear Formatting"
       >
-        <IconClearFormatting />
+        <IconClearFormatting aria-hidden="true" />
       </Button>
 
       {/* Mobile More Menu - hidden on desktop */}
@@ -808,8 +823,9 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
               variant="ghost"
               size="sm"
               className={toolbarButtonClass()}
+              aria-label="More formatting options"
             >
-              <IconMore />
+              <IconMore aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-none">

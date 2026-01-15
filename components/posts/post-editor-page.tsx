@@ -68,6 +68,19 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
     setHasChanges(hasChanged);
   }, [title, excerpt, content, coverImage]);
 
+  // Warn before navigation with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasChanges]);
+
   // Auto-save functionality (only in edit mode)
   useEffect(() => {
     if (mode !== "edit" || !hasChanges || !currentSlug) return;
@@ -297,8 +310,10 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
 
           {/* Title */}
           <TextareaAutosize
-            placeholder="Title"
-            className="w-full resize-none bg-transparent font-serif text-4xl font-black leading-tight tracking-tight placeholder:text-muted-foreground/30 focus:outline-none md:text-5xl"
+            name="title"
+            aria-label="Post title"
+            placeholder="Title…"
+            className="w-full resize-none bg-transparent font-serif text-4xl font-black leading-tight tracking-tight placeholder:text-muted-foreground/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-5xl"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             minRows={1}
@@ -306,8 +321,10 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
 
           {/* Excerpt */}
           <TextareaAutosize
-            placeholder="Write a brief excerpt or subtitle..."
-            className="w-full resize-none bg-transparent font-serif text-xl italic leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none"
+            name="excerpt"
+            aria-label="Post excerpt"
+            placeholder="Write a brief excerpt or subtitle…"
+            className="w-full resize-none bg-transparent font-serif text-xl italic leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
             minRows={1}
@@ -317,7 +334,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           <LexicalEditor
             initialContent={content}
             onChange={setContent}
-            placeholder="Begin your story..."
+            placeholder="Begin your story…"
           />
         </div>
       </div>

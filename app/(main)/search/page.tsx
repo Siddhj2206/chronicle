@@ -25,7 +25,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {!query ? (
         <div className="py-12 text-center font-serif text-lg italic text-muted-foreground">
-          Type above to search the archives...
+          Type above to search the archives…
         </div>
       ) : results.length === 0 ? (
         <div className="py-12 text-center font-serif text-lg italic text-muted-foreground">
