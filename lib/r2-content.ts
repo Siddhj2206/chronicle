@@ -1,6 +1,7 @@
 import { GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { unstable_cache, revalidateTag } from "next/cache";
 
+import { renderMarkdown } from "@/lib/markdown";
 import { getR2, R2_BUCKET_NAME } from "@/lib/r2";
 
 // Content path prefix in R2 bucket
@@ -57,11 +58,11 @@ export async function deleteContent(postId: string): Promise<void> {
 }
 
 /**
- * Fetch raw content from R2 (uncached)
+ * Fetch raw content from R2 and render to HTML (uncached)
  * @param postId - The post's unique ID
- * @returns The markdown content or null if not found
+ * @returns The rendered HTML content or null if not found
  */
-async function fetchContentFromR2(postId: string): Promise<string | null> {
+async function fetchAndRenderContent(postId: string): Promise<string | null> {
   const key = getContentKey(postId);
   const r2 = getR2();
 
@@ -78,8 +79,11 @@ async function fetchContentFromR2(postId: string): Promise<string | null> {
     }
 
     // Convert stream to string
-    const content = await response.Body.transformToString();
-    return content;
+    const markdown = await response.Body.transformToString();
+    
+    // Render markdown to HTML with syntax highlighting
+    const html = await renderMarkdown(markdown);
+    return html;
   } catch (error) {
     // Check if it's a "not found" error
     if (error instanceof Error && error.name === "NoSuchKey") {
@@ -91,15 +95,16 @@ async function fetchContentFromR2(postId: string): Promise<string | null> {
 }
 
 /**
- * Get content with Next.js caching
+ * Get rendered HTML content with Next.js caching
  * Uses unstable_cache with tag-based revalidation
+ * Markdown is rendered to HTML with syntax highlighting before caching
  * @param postId - The post's unique ID
- * @returns The markdown content or null if not found
+ * @returns The rendered HTML content or null if not found
  */
 export async function getContent(postId: string): Promise<string | null> {
-  // Create a cached version of the fetch function
+  // Create a cached version of the fetch and render function
   const getCachedContent = unstable_cache(
-    async () => fetchContentFromR2(postId),
+    async () => fetchAndRenderContent(postId),
     [`post-content-${postId}`],
     {
       tags: [`post-content-${postId}`],

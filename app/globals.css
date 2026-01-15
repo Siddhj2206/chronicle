@@ -396,3 +396,230 @@
   max-width: 100%;
   border: 1px solid var(--border);
 }
+
+/* ============================================
+   Prose/Article Styles for Server-Rendered Markdown
+   - Matches the existing PostContent component styling
+   - Used for post content rendered with unified/rehype
+   ============================================ */
+
+.prose-chronicle {
+  font-family: "Libre Baskerville", serif;
+  font-size: 1.25rem;
+  line-height: 1.875;
+  color: var(--foreground);
+}
+
+/* Headings */
+.prose-chronicle h1 {
+  font-family: var(--font-serif);
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-chronicle h2 {
+  font-family: var(--font-serif);
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-chronicle h3 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-chronicle h4 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-chronicle h5 {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-chronicle h6 {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Paragraphs */
+.prose-chronicle p {
+  margin-bottom: 1rem;
+}
+
+/* Links */
+.prose-chronicle a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.prose-chronicle a:hover {
+  color: var(--foreground);
+}
+
+/* Lists */
+.prose-chronicle ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose-chronicle ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose-chronicle li {
+  margin-bottom: 0.25rem;
+}
+
+/* Nested lists */
+.prose-chronicle ul ul,
+.prose-chronicle ol ul {
+  list-style-type: circle;
+  margin-bottom: 0;
+}
+
+/* Blockquotes */
+.prose-chronicle blockquote {
+  border-left: 4px solid var(--border);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.prose-chronicle blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Horizontal Rule */
+.prose-chronicle hr {
+  border: none;
+  height: 1px;
+  background-color: var(--border);
+  margin: 2rem 0;
+}
+
+/* Images */
+.prose-chronicle img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  margin: 1rem 0;
+}
+
+/* Inline Code */
+.prose-chronicle code:not(pre code) {
+  font-family: var(--font-mono);
+  background-color: var(--muted);
+  padding: 0.125rem 0.375rem;
+  font-size: 0.9em;
+}
+
+/* Code Blocks - Container */
+.prose-chronicle pre {
+  font-family: var(--font-mono);
+  background-color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+/* Shiki Code Blocks - Override container styles */
+.prose-chronicle pre:has(code[data-theme]) {
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.prose-chronicle pre code[data-theme] {
+  display: block;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+/* Shiki Dual Theme Support */
+.prose-chronicle pre code[data-theme],
+.prose-chronicle pre code[data-theme] span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+
+.dark .prose-chronicle pre code[data-theme],
+.dark .prose-chronicle pre code[data-theme] span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+
+/* Tables */
+.prose-chronicle table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  margin: 1rem 0;
+}
+
+.prose-chronicle thead {
+  background-color: var(--muted);
+}
+
+.prose-chronicle th {
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-weight: 700;
+}
+
+.prose-chronicle td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+}
+
+/* Task Lists (GFM) */
+.prose-chronicle input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+}
+
+.prose-chronicle li:has(input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.5rem;
+}
+
+/* Strong and Emphasis */
+.prose-chronicle strong {
+  font-weight: 700;
+}
+
+.prose-chronicle em {
+  font-style: italic;
+}
+
+/* Strikethrough */
+.prose-chronicle del {
+  text-decoration: line-through;
+}
