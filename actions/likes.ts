@@ -5,7 +5,7 @@ import { eq, and, count } from "drizzle-orm";
 
 import { getSession } from "@/lib/session";
 import { getVisiblePost } from "@/lib/post-visibility";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { like, post, user } from "@/lib/db/schema";
 
 export async function toggleLike(postId: string) {
@@ -16,6 +16,7 @@ export async function toggleLike(postId: string) {
   }
 
   try {
+    const db = await getDb();
     if (!(await getVisiblePost(postId))) {
       return { error: "Post not found" };
     }
@@ -68,6 +69,7 @@ export async function toggleLike(postId: string) {
 
 export async function getLikeCount(postId: string): Promise<number> {
   try {
+    const db = await getDb();
     if (!(await getVisiblePost(postId))) {
       return 0;
     }
@@ -92,6 +94,7 @@ export async function hasUserLiked(postId: string): Promise<boolean> {
   }
 
   try {
+    const db = await getDb();
     if (!(await getVisiblePost(postId))) {
       return false;
     }

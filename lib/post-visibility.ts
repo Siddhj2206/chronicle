@@ -1,6 +1,6 @@
 import { and, eq, or } from "drizzle-orm";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post } from "@/lib/db/schema";
 import { getSession } from "@/lib/session";
 
@@ -14,6 +14,7 @@ export function postVisibility(userId?: string): SQL {
 export async function getVisiblePost(
   postId: string,
 ): Promise<{ id: string } | null> {
+  const db = await getDb();
   const session = await getSession();
   const [result] = await db
     .select({ id: post.id })
