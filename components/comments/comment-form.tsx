@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useId } from "react";
 import Link from "next/link";
 
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +21,8 @@ export function CommentForm({
   isLoggedIn,
   articlePath,
 }: CommentFormProps): ReactElement {
+  const commentId = useId();
+  const errorId = `${commentId}-error`;
   const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -75,20 +77,20 @@ export function CommentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-3">
-        <Label htmlFor="comment">Leave a note</Label>
+        <Label htmlFor={commentId}>Leave a note</Label>
         <Textarea
-          id="comment"
+          id={commentId}
           name="comment"
           placeholder="Share your thoughts on this article…"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={4}
           aria-invalid={!!error}
-          aria-describedby={error ? "comment-error" : undefined}
+          aria-describedby={error ? errorId : undefined}
         />
       </div>
       {error && (
-        <p id="comment-error" role="alert" className="text-sm text-destructive">
+        <p id={errorId} role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
