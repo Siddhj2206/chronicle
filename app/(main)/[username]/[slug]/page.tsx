@@ -90,7 +90,7 @@ export default async function PostPage({ params }: PostPageProps) {
         <h1 className="mb-6 font-serif text-5xl font-black leading-tight tracking-tight md:text-6xl lg:text-7xl">
           {post.title}
         </h1>
-        <PostSummary post={{ ...post, content: postContent }} />
+        <PostSummary post={{ ...post, content: postContent }} variant="article" />
 
         {!post.subtitle && post.excerpt && (
           <p className="mx-auto max-w-2xl font-serif text-xl italic leading-relaxed text-muted-foreground md:text-2xl">
