@@ -33,7 +33,7 @@ export default async function SignInPage({
               The Chronicle
             </h1>
           </Link>
-          <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          <p className="mt-2 font-mono text-label uppercase tracking-widest text-muted-foreground">
             Est. 2026 • Worldwide
           </p>
         </div>
@@ -49,7 +49,7 @@ export default async function SignInPage({
 
         <SignInButton callbackURL={callbackUrl} />
 
-        <div className="mt-8 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="mt-8 font-mono text-label uppercase tracking-widest text-muted-foreground">
           Authorized Personnel Only
         </div>
       </div>

@@ -1,13 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useSession } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/auth/user-menu";
 import { SearchInput } from "@/components/layout/search-input";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { cn } from "@/lib/utils";
 import { safeCallbackUrl } from "@/lib/redirects";
 
@@ -15,81 +14,52 @@ interface NavbarProps {
   className?: string;
 }
 
-export function Navbar({ className }: NavbarProps) {
+export function Navbar({ className }: NavbarProps): React.JSX.Element {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const isHomePage = pathname === "/";
-
-  // Memoize date formatting to avoid recreation on every render
-  const { shortDate, fullDate } = useMemo(() => {
-    // oxlint-disable-next-line react/purity -- Preserve the existing mount-time masthead date.
-    const now = new Date();
-    return {
-      shortDate: now.toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      }),
-      fullDate: now.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    };
-  }, []);
 
   return (
-    <div className={cn("border-b border-border py-2 bg-background", className)}>
-      <div className="container mx-auto flex max-w-7xl items-center justify-between px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        <div className="flex items-center gap-4">
-          {isHomePage ? (
+    <header className={cn("site-header", className)}>
+      <div className="site-nav">
+        <Link href="/" className="site-brand">
+          Chronicle
+        </Link>
+        <nav aria-label="Main navigation" className="site-links">
+          <Link
+            href="/"
+            aria-current={pathname === "/" ? "page" : undefined}
+            className="hover:text-primary aria-[current=page]:text-foreground"
+          >
+            Journal
+          </Link>
+          <Link
+            href="/archive"
+            aria-current={pathname === "/archive" ? "page" : undefined}
+            className="hover:text-primary aria-[current=page]:text-foreground"
+          >
+            Archive
+          </Link>
+        </nav>
+        <div className="site-tools">
+          <SearchInput />
+          <ThemeToggle />
+          {session?.user ? (
             <>
-              <div className="md:hidden">{shortDate}</div>
-              <div className="hidden md:block">{fullDate}</div>
+              <Link href="/new" className="site-signin">
+                Write
+              </Link>
+              <UserMenu user={session.user} />
             </>
           ) : (
             <Link
-              href="/"
-              className="font-serif text-xl font-black tracking-tight text-foreground hover:opacity-80"
+              href={`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackUrl(pathname))}`}
+              className="site-signin"
             >
-              The Chronicle
+              Sign in
             </Link>
           )}
         </div>
-
-        <div className="flex items-center gap-4">
-          <SearchInput />
-          <div className="flex items-center gap-2">
-            {session?.user ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="h-7 text-xs font-bold uppercase tracking-widest"
-                >
-                  <Link href="/new">Write</Link>
-                </Button>
-                <UserMenu user={session.user} />
-              </>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="h-7 text-xs font-bold uppercase tracking-widest"
-              >
-                <Link
-                  href={`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackUrl(pathname))}`}
-                >
-                  Sign in
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
       </div>
-    </div>
+    </header>
   );
 }
