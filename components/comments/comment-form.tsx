@@ -57,11 +57,13 @@ export function CommentForm({ postId, isLoggedIn, articlePath }: CommentFormProp
         <p className="font-serif italic text-muted-foreground">
           Sign in to join the conversation.
         </p>
-        <Button asChild>
-          <Link href={`/sign-in?callbackUrl=${encodeURIComponent(articlePath)}`}>
-            Sign in
-          </Link>
-        </Button>
+        <div className="mt-4">
+          <Button asChild>
+            <Link href={`/sign-in?callbackUrl=${encodeURIComponent(articlePath)}`}>
+              Sign in
+            </Link>
+          </Button>
+        </div>
       </div>
     );
   }
