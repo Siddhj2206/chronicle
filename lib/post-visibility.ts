@@ -11,7 +11,9 @@ export function postVisibility(userId?: string): SQL {
   return userId ? or(published, eq(post.authorId, userId))! : published;
 }
 
-export async function getVisiblePost(postId: string): Promise<{ id: string } | null> {
+export async function getVisiblePost(
+  postId: string,
+): Promise<{ id: string } | null> {
   const db = await getDb();
   const session = await getSession();
   const [result] = await db

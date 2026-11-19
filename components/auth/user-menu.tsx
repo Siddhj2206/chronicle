@@ -49,7 +49,9 @@ export function UserMenu({ user }: UserMenuProps) {
         <Button variant="ghost" size="icon">
           <Avatar className="rounded-none border border-neutral-300 dark:border-neutral-700">
             <AvatarImage src={user.image || undefined} alt={user.name || ""} />
-            <AvatarFallback className="rounded-none">{initials || "U"}</AvatarFallback>
+            <AvatarFallback className="rounded-none">
+              {initials || "U"}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -71,9 +73,7 @@ export function UserMenu({ user }: UserMenuProps) {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          Sign out
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -13,14 +13,21 @@ interface RevalidatePostsOptions {
 
 export async function revalidatePosts(
   authorId: string,
-  options: RevalidatePostsOptions = {}
+  options: RevalidatePostsOptions = {},
 ): Promise<void> {
   try {
     const db = await getDb();
-    const [author] = await db.select({ username: user.username }).from(user)
-      .where(eq(user.id, authorId)).limit(1);
-    const posts = options.posts ?? await db.select({ id: post.id, slug: post.slug })
-      .from(post).where(eq(post.authorId, authorId));
+    const [author] = await db
+      .select({ username: user.username })
+      .from(user)
+      .where(eq(user.id, authorId))
+      .limit(1);
+    const posts =
+      options.posts ??
+      (await db
+        .select({ id: post.id, slug: post.slug })
+        .from(post)
+        .where(eq(post.authorId, authorId)));
     const usernames = new Set(options.usernames);
     if (author?.username) usernames.add(author.username);
 

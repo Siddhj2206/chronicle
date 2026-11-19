@@ -30,7 +30,8 @@ export default async function ArchivePage({ searchParams }: ArchivePageProps) {
         </h1>
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-sans text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            {totalCount} {totalCount === 1 ? "story" : "stories"} in the archives
+            {totalCount} {totalCount === 1 ? "story" : "stories"} in the
+            archives
           </p>
 
           {/* Sort Controls */}

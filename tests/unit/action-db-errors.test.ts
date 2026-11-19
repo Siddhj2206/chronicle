@@ -36,14 +36,18 @@ describe("database initialization failures", () => {
 
   it("returns empty search results when both database attempts fail", async () => {
     await expect(searchPosts({ query: "chronicle" })).resolves.toEqual({
-      posts: [], hasMore: false, nextCursor: null,
+      posts: [],
+      hasMore: false,
+      nextCursor: null,
     });
     expect(getDb).toHaveBeenCalledTimes(2);
   });
 
   it("does not initialize the database for an empty search", async () => {
     await expect(searchPosts({ query: "" })).resolves.toEqual({
-      posts: [], hasMore: false, nextCursor: null,
+      posts: [],
+      hasMore: false,
+      nextCursor: null,
     });
     expect(getDb).not.toHaveBeenCalled();
   });

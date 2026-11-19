@@ -8,7 +8,9 @@ import type { Post, User } from "@/lib/db/schema";
 export function assertTestDatabase(): void {
   const url = process.env.DATABASE_URL;
   if (!url || !new URL(url).pathname.endsWith("_test")) {
-    throw new Error("DATABASE_URL must point to a disposable database whose name ends in _test");
+    throw new Error(
+      "DATABASE_URL must point to a disposable database whose name ends in _test",
+    );
   }
 }
 
@@ -21,22 +23,39 @@ export async function resetDatabase(): Promise<void> {
 export async function createUser(overrides: Partial<User> = {}): Promise<User> {
   const db = await getDb();
   const id = crypto.randomUUID();
-  const [created] = await db.insert(user).values({
-    id, name: "Test Writer", email: `${id}@example.test`, emailVerified: true,
-    username: `u_${id.replaceAll("-", "").slice(0, 12)}`,
-    createdAt: new Date("2025-01-01"), updatedAt: new Date("2025-01-01"),
-    ...overrides,
-  }).returning();
+  const [created] = await db
+    .insert(user)
+    .values({
+      id,
+      name: "Test Writer",
+      email: `${id}@example.test`,
+      emailVerified: true,
+      username: `u_${id.replaceAll("-", "").slice(0, 12)}`,
+      createdAt: new Date("2025-01-01"),
+      updatedAt: new Date("2025-01-01"),
+      ...overrides,
+    })
+    .returning();
   return created;
 }
 
-export async function createPost(authorId: string, overrides: Partial<Post> = {}): Promise<Post> {
+export async function createPost(
+  authorId: string,
+  overrides: Partial<Post> = {},
+): Promise<Post> {
   const db = await getDb();
-  const [created] = await db.insert(post).values({
-    authorId, title: "Chronicle testing", slug: `post-${crypto.randomUUID()}`,
-    content: "A reproducible story for readers.", published: true,
-    publishedAt: new Date("2025-01-02"), ...overrides,
-  }).returning();
+  const [created] = await db
+    .insert(post)
+    .values({
+      authorId,
+      title: "Chronicle testing",
+      slug: `post-${crypto.randomUUID()}`,
+      content: "A reproducible story for readers.",
+      published: true,
+      publishedAt: new Date("2025-01-02"),
+      ...overrides,
+    })
+    .returning();
   return created;
 }
 

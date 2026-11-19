@@ -25,19 +25,26 @@ export const getDb = cache(async (): Promise<Database> => {
     }
   }
 
-  const hyperdrive = (context?.env as { HYPERDRIVE?: { connectionString: string } } | undefined)?.HYPERDRIVE;
+  const hyperdrive = (
+    context?.env as { HYPERDRIVE?: { connectionString: string } } | undefined
+  )?.HYPERDRIVE;
   if (isWorker) {
     if (!hyperdrive) throw new Error("Missing HYPERDRIVE binding");
-    const client = new Client({ connectionString: hyperdrive.connectionString });
+    const client = new Client({
+      connectionString: hyperdrive.connectionString,
+    });
     await client.connect();
     return drizzle(client, { schema });
   }
 
-  const connectionString = process.env.DATABASE_URL ?? hyperdrive?.connectionString;
+  const connectionString =
+    process.env.DATABASE_URL ?? hyperdrive?.connectionString;
   if (!connectionString) throw new Error("Missing DATABASE_URL");
   if (!nodeDb) {
     const pool = new Pool({ connectionString });
-    pool.on("error", (error) => console.error("Unexpected idle database client error:", error));
+    pool.on("error", (error) =>
+      console.error("Unexpected idle database client error:", error),
+    );
     nodeDb = drizzle(pool, { schema });
   }
   return nodeDb;

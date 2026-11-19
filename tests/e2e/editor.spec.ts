@@ -15,21 +15,27 @@ test.beforeAll(async () => {
   const db = await getDb();
   const now = new Date();
   await db.insert(session).values({
-    id: randomUUID(), token, userId: "seed-writer",
-    createdAt: now, updatedAt: now,
+    id: randomUUID(),
+    token,
+    userId: "seed-writer",
+    createdAt: now,
+    updatedAt: now,
     expiresAt: new Date(now.getTime() + 60 * 60 * 1000),
   });
 });
 
 test.beforeEach(async ({ context }) => {
   const secret = process.env.BETTER_AUTH_SECRET;
-  if (!secret) throw new Error("BETTER_AUTH_SECRET is required for editor tests");
+  if (!secret)
+    throw new Error("BETTER_AUTH_SECRET is required for editor tests");
   const signature = createHmac("sha256", secret).update(token).digest("base64");
-  await context.addCookies([{
-    name: "better-auth.session_token",
-    value: encodeURIComponent(`${token}.${signature}`),
-    url: "http://localhost:3000",
-  }]);
+  await context.addCookies([
+    {
+      name: "better-auth.session_token",
+      value: encodeURIComponent(`${token}.${signature}`),
+      url: "http://localhost:3000",
+    },
+  ]);
 });
 
 test.afterAll(async () => {
@@ -39,9 +45,11 @@ test.afterAll(async () => {
   await db.$client.end();
 });
 
-test("typing into an empty Lexical editor preserves character order", async ({ page }) => {
+test("typing into an empty Lexical editor preserves character order", async ({
+  page,
+}) => {
   const errors: string[] = [];
-  page.on("pageerror", error => errors.push(error.message));
+  page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/new");
   const editor = page.locator(editorSelector);
   await expect(editor).toBeVisible();
@@ -59,12 +67,19 @@ test("loads draft Markdown and allows further typing", async ({ page }) => {
   await editor.click();
   await editor.press("ControlOrMeta+End");
   await editor.pressSequentially(" More writing.");
-  await expect(editor).toHaveText("A reproducible story for readers. More writing.");
+  await expect(editor).toHaveText(
+    "A reproducible story for readers. More writing.",
+  );
 });
 
-test("redirects a signed-out editor visitor to sign-in", async ({ context, page }) => {
+test("redirects a signed-out editor visitor to sign-in", async ({
+  context,
+  page,
+}) => {
   await context.clearCookies();
   await page.goto("/new");
   await expect(page).toHaveURL(/\/sign-in\?callbackUrl=%2Fnew$/);
-  await expect(page.getByRole("heading", { name: "Press Access" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Press Access" }),
+  ).toBeVisible();
 });

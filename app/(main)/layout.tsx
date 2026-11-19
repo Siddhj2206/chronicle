@@ -9,7 +9,9 @@ export default function MainLayout({
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 w-full mx-auto max-w-7xl px-4 py-8">{children}</main>
+      <main className="flex-1 w-full mx-auto max-w-7xl px-4 py-8">
+        {children}
+      </main>
       <Footer />
     </div>
   );

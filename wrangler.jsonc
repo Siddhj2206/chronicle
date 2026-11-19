@@ -7,16 +7,14 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
-  "services": [
-    { "binding": "WORKER_SELF_REFERENCE", "service": "chronicle" }
-  ],
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "chronicle" }],
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
       "id": "00000000000000000000000000000000",
-      "localConnectionString": "postgres://chronicle:chronicle@localhost:5432/chronicle_test"
-    }
-  ]
+      "localConnectionString": "postgres://chronicle:chronicle@localhost:5432/chronicle_test",
+    },
+  ],
 }

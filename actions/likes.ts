@@ -33,9 +33,7 @@ export async function toggleLike(postId: string) {
       // Unlike
       await db
         .delete(like)
-        .where(
-          and(eq(like.postId, postId), eq(like.userId, session.user.id))
-        );
+        .where(and(eq(like.postId, postId), eq(like.userId, session.user.id)));
     } else {
       // Like
       await db.insert(like).values({
