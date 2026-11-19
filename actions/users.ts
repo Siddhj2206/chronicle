@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
-import { usernameSchema, profileSchema } from "@/lib/validators";
+import { usernameSchema, profileSchema, imageUrlSchema } from "@/lib/validators";
 import { deleteUserObjects } from "@/lib/r2";
 import { revalidatePosts } from "@/lib/revalidate-posts";
 
@@ -174,10 +174,15 @@ export async function updateAvatar(
       return { success: false, error: "Unauthorized" };
     }
 
+    const parsed = imageUrlSchema.safeParse(imageUrl);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
     await db
       .update(user)
       .set({
-        image: imageUrl,
+        image: parsed.data,
         updatedAt: new Date(),
       })
       .where(eq(user.id, session.user.id));
