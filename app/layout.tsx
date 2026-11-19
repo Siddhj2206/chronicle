@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Libre_Baskerville,
-  Lora,
-  IBM_Plex_Mono,
-} from "next/font/google";
+import { Libre_Baskerville, Lora, IBM_Plex_Mono } from "next/font/google";
 
 import "./globals.css";
 
@@ -40,8 +36,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark:color-scheme-dark" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+        <meta
+          name="theme-color"
+          content="#ffffff"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#000000"
+          media="(prefers-color-scheme: dark)"
+        />
         <style>{`html { color-scheme: light dark; }`}</style>
       </head>
       <body

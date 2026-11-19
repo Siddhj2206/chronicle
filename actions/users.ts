@@ -5,21 +5,28 @@ import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
-import { usernameSchema, profileSchema, imageUrlSchema } from "@/lib/validators";
+import {
+  usernameSchema,
+  profileSchema,
+  imageUrlSchema,
+} from "@/lib/validators";
 import { deleteUserObjects } from "@/lib/r2";
 import { revalidatePosts } from "@/lib/revalidate-posts";
 
 function isUsernameConflict(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   if (
-    "code" in error && error.code === "23505" &&
-    "constraint_name" in error && error.constraint_name === "user_username_unique"
-  ) return true;
+    "code" in error &&
+    error.code === "23505" &&
+    "constraint_name" in error &&
+    error.constraint_name === "user_username_unique"
+  )
+    return true;
   return "cause" in error && isUsernameConflict(error.cause);
 }
 
 export async function checkUsernameAvailable(
-  username: string
+  username: string,
 ): Promise<{ available: boolean; error?: string }> {
   try {
     const parsed = usernameSchema.safeParse(username);
@@ -40,7 +47,7 @@ export async function checkUsernameAvailable(
 }
 
 export async function setUsername(
-  username: string
+  username: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await getSession();
@@ -80,13 +87,17 @@ export async function setUsername(
     return { success: true };
   } catch (error) {
     console.error("Set username error:", error);
-    return { success: false, error: isUsernameConflict(error)
-      ? "Username is already taken" : "Failed to set username" };
+    return {
+      success: false,
+      error: isUsernameConflict(error)
+        ? "Username is already taken"
+        : "Failed to set username",
+    };
   }
 }
 
 export async function updateProfile(
-  formData: FormData
+  formData: FormData,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await getSession();
@@ -155,17 +166,23 @@ export async function updateProfile(
         .where(eq(user.id, session.user.id));
     }
 
-    await revalidatePosts(session.user.id, { usernames: oldUsername ? [oldUsername] : [] });
+    await revalidatePosts(session.user.id, {
+      usernames: oldUsername ? [oldUsername] : [],
+    });
     return { success: true };
   } catch (error) {
     console.error("Update profile error:", error);
-    return { success: false, error: isUsernameConflict(error)
-      ? "Username is already taken" : "Failed to update profile" };
+    return {
+      success: false,
+      error: isUsernameConflict(error)
+        ? "Username is already taken"
+        : "Failed to update profile",
+    };
   }
 }
 
 export async function updateAvatar(
-  imageUrl: string
+  imageUrl: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await getSession();
@@ -197,7 +214,7 @@ export async function updateAvatar(
 }
 
 export async function deleteAccount(
-  confirmationUsername: string
+  confirmationUsername: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await getSession();
@@ -220,13 +237,21 @@ export async function deleteAccount(
       return { success: false, error: "Username does not match" };
     }
 
-    const posts = await db.select({ id: post.id, slug: post.slug, contentPath: post.contentPath })
-      .from(post).where(eq(post.authorId, session.user.id));
+    const posts = await db
+      .select({ id: post.id, slug: post.slug, contentPath: post.contentPath })
+      .from(post)
+      .where(eq(post.authorId, session.user.id));
     // Delete user from database (cascades handle related records)
-    const [deletedUser] = await db.delete(user).where(eq(user.id, session.user.id)).returning();
+    const [deletedUser] = await db
+      .delete(user)
+      .where(eq(user.id, session.user.id))
+      .returning();
     if (!deletedUser) return { success: false, error: "User not found" };
 
-    await deleteUserObjects(session.user.id, posts.flatMap(({ contentPath }) => contentPath ? [contentPath] : []));
+    await deleteUserObjects(
+      session.user.id,
+      posts.flatMap(({ contentPath }) => (contentPath ? [contentPath] : [])),
+    );
     await revalidatePosts(session.user.id, {
       posts,
       usernames: currentUser.username ? [currentUser.username] : [],

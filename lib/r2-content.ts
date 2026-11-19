@@ -1,4 +1,8 @@
-import { GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import { unstable_cache, updateTag } from "next/cache";
 import { nanoid } from "nanoid";
 
@@ -20,7 +24,10 @@ export function getContentKey(postId: string): string {
  * @param markdown - The markdown content to store
  * @returns The R2 path where content was stored
  */
-export async function uploadContent(postId: string, markdown: string): Promise<string> {
+export async function uploadContent(
+  postId: string,
+  markdown: string,
+): Promise<string> {
   const key = getContentKey(postId);
   const r2 = getR2();
 
@@ -30,7 +37,7 @@ export async function uploadContent(postId: string, markdown: string): Promise<s
       Key: key,
       Body: markdown,
       ContentType: "text/markdown; charset=utf-8",
-    })
+    }),
   );
 
   return key;
@@ -47,7 +54,7 @@ export async function deleteContent(contentPath: string): Promise<void> {
       new DeleteObjectCommand({
         Bucket: R2_BUCKET_NAME,
         Key: contentPath,
-      })
+      }),
     );
   } catch (error) {
     // Best-effort cleanup can leave orphan objects after an outage or process exit.
@@ -67,7 +74,7 @@ async function fetchContentFromR2(contentPath: string): Promise<string | null> {
       new GetObjectCommand({
         Bucket: R2_BUCKET_NAME,
         Key: contentPath,
-      })
+      }),
     );
 
     if (!response.Body) {
@@ -92,7 +99,10 @@ async function fetchContentFromR2(contentPath: string): Promise<string | null> {
  * @param postId - The post's unique ID
  * @returns The markdown content or null if not found
  */
-export async function getContent(postId: string, contentPath: string): Promise<string | null> {
+export async function getContent(
+  postId: string,
+  contentPath: string,
+): Promise<string | null> {
   // Create a cached version of the fetch function
   const getCachedContent = unstable_cache(
     async () => fetchContentFromR2(contentPath),
@@ -100,7 +110,7 @@ export async function getContent(postId: string, contentPath: string): Promise<s
     {
       tags: [`post-content-${postId}`],
       revalidate: false, // Only revalidate via tag
-    }
+    },
   );
 
   try {
@@ -124,16 +134,20 @@ export async function revalidateContent(postId: string): Promise<void> {
  * Generate a search vector string from post content
  * This creates a weighted tsvector for PostgreSQL full-text search
  * Title gets weight A (highest), excerpt gets B, content gets C
- * 
+ *
  * @param title - Post title
  * @param excerpt - Post excerpt (can be null)
  * @param content - Post markdown content
  * @returns SQL-ready tsvector expression
  */
-export function generateSearchVectorSQL(title: string, excerpt: string | null, content: string): string {
+export function generateSearchVectorSQL(
+  title: string,
+  excerpt: string | null,
+  content: string,
+): string {
   // Escape single quotes for SQL safety
   const escapeSQL = (str: string) => str.replace(/'/g, "''");
-  
+
   const safeTitle = escapeSQL(title);
   const safeExcerpt = escapeSQL(excerpt || "");
   // Strip markdown syntax for cleaner text search
@@ -150,27 +164,29 @@ export function generateSearchVectorSQL(title: string, excerpt: string | null, c
  * Strip common markdown syntax for cleaner search indexing
  */
 function stripMarkdown(markdown: string): string {
-  return markdown
-    // Remove code blocks
-    .replace(/```[\s\S]*?```/g, "")
-    // Remove inline code
-    .replace(/`[^`]+`/g, "")
-    // Remove images
-    .replace(/!\[.*?\]\(.*?\)/g, "")
-    // Remove links but keep text
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    // Remove headers markers
-    .replace(/^#{1,6}\s+/gm, "")
-    // Remove bold/italic markers
-    .replace(/[*_]{1,3}([^*_]+)[*_]{1,3}/g, "$1")
-    // Remove blockquote markers
-    .replace(/^>\s+/gm, "")
-    // Remove horizontal rules
-    .replace(/^[-*_]{3,}\s*$/gm, "")
-    // Remove list markers
-    .replace(/^[\s]*[-*+]\s+/gm, "")
-    .replace(/^[\s]*\d+\.\s+/gm, "")
-    // Collapse whitespace
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    markdown
+      // Remove code blocks
+      .replace(/```[\s\S]*?```/g, "")
+      // Remove inline code
+      .replace(/`[^`]+`/g, "")
+      // Remove images
+      .replace(/!\[.*?\]\(.*?\)/g, "")
+      // Remove links but keep text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      // Remove headers markers
+      .replace(/^#{1,6}\s+/gm, "")
+      // Remove bold/italic markers
+      .replace(/[*_]{1,3}([^*_]+)[*_]{1,3}/g, "$1")
+      // Remove blockquote markers
+      .replace(/^>\s+/gm, "")
+      // Remove horizontal rules
+      .replace(/^[-*_]{3,}\s*$/gm, "")
+      // Remove list markers
+      .replace(/^[\s]*[-*+]\s+/gm, "")
+      .replace(/^[\s]*\d+\.\s+/gm, "")
+      // Collapse whitespace
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }

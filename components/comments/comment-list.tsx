@@ -34,8 +34,7 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps) {
           .slice(0, 2);
 
         const canDelete =
-          session?.user?.id === author.id ||
-          session?.user?.id === postAuthorId;
+          session?.user?.id === author.id || session?.user?.id === postAuthorId;
 
         const formattedDate = new Date(comment.createdAt).toLocaleDateString(
           "en-US",
@@ -43,18 +42,25 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps) {
             month: "long",
             day: "numeric",
             year: "numeric",
-          }
+          },
         );
 
         return (
           <article
             key={comment.id}
-            className={index > 0 ? "border-t border-neutral-300 pt-8 dark:border-neutral-700" : ""}
+            className={
+              index > 0
+                ? "border-t border-neutral-300 pt-8 dark:border-neutral-700"
+                : ""
+            }
           >
             <header className="mb-4 flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12 rounded-none border border-neutral-300 dark:border-neutral-700">
-                  <AvatarImage src={author.image || undefined} alt={author.name || "User avatar"} />
+                  <AvatarImage
+                    src={author.image || undefined}
+                    alt={author.name || "User avatar"}
+                  />
                   <AvatarFallback className="rounded-none font-mono text-xs">
                     {initials || "U"}
                   </AvatarFallback>
