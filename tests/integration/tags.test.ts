@@ -117,10 +117,13 @@ describe("post topics", () => {
     expect(await updatePost(created.slug!, data(["Science"]))).toHaveProperty("error");
     failure.mockRestore();
     expect((await getPostForEditWithContent(created.slug!))?.post.tags?.map((tag) => tag.slug)).toEqual(["gardens"]);
-    const query = vi.spyOn(db, "select").mockImplementationOnce(() => { throw new Error("Unavailable"); });
-    expect(await getTagPosts("gardens")).toHaveProperty("error");
-    query.mockRestore();
-    log.mockRestore();
+    const query = vi.spyOn(db, "selectDistinct").mockImplementationOnce(() => { throw new Error("Unavailable"); });
+    try {
+      expect(await getTagPosts("gardens")).toHaveProperty("error");
+    } finally {
+      query.mockRestore();
+      log.mockRestore();
+    }
   });
 
   it("stores distinct programming topics and looks up published Unicode topics", async () => {
