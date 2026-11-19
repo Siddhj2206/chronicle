@@ -4,12 +4,14 @@ import { db } from "@/lib/db";
 import { post } from "@/lib/db/schema";
 import { getSession } from "@/lib/session";
 
-export function postVisibility(userId?: string) {
+import type { SQL } from "drizzle-orm";
+
+export function postVisibility(userId?: string): SQL {
   const published = eq(post.published, true);
   return userId ? or(published, eq(post.authorId, userId))! : published;
 }
 
-export async function getVisiblePost(postId: string) {
+export async function getVisiblePost(postId: string): Promise<{ id: string } | null> {
   const session = await getSession();
   const [result] = await db
     .select({ id: post.id })
