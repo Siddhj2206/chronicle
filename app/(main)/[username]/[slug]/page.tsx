@@ -5,11 +5,14 @@ import Link from "next/link";
 import { getPost, getPostContent, incrementViewCount } from "@/actions/posts";
 import { getLikeCount, hasUserLiked } from "@/actions/likes";
 import { PostContent } from "@/components/posts/post-content";
+import { TagChips } from "@/components/posts/tag-chips";
+import { ArticleContents } from "@/components/posts/article-contents";
+import { ReadingProgress } from "@/components/posts/reading-progress";
 import { LikeButton } from "@/components/posts/post-actions";
 import { CommentList } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
 import { getSession } from "@/lib/session";
-import { TagChips } from "@/components/posts/tag-chips";
+import { analyzeReading } from "@/lib/reading";
 
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
@@ -75,12 +78,14 @@ export default async function PostPage({
 
   // Use R2 content, fallback to DB content if not available
   const postContent = content || post.content;
+  const { minutes, headings } = analyzeReading(postContent);
 
   return (
     <article className="reader">
+      <ReadingProgress />
       {/* Article Header */}
-      <header className="reader-header">
-        <div className="reader-meta">
+      <header className="grid gap-x-12 gap-y-6 py-10 md:grid-cols-[1fr_3fr] md:py-16">
+        <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-[13px] leading-relaxed text-muted-foreground md:col-start-2">
           <Link
             href={`/@${author.username}`}
             className="hover:text-foreground hover:underline"
@@ -94,13 +99,20 @@ export default async function PostPage({
               year: "numeric",
             })}
           </time>
+          <span>{minutes} min read</span>
         </div>
 
-        <h1 className="reader-title">{post.title}</h1>
+        <h1 className="max-w-[900px] font-serif text-[40px] leading-[1.02] tracking-tight [overflow-wrap:anywhere] md:col-start-2 md:text-[72px]">
+          {post.title}
+        </h1>
 
-        {post.excerpt && <p className="reader-deck">{post.excerpt}</p>}
+        {post.excerpt && (
+          <p className="max-w-[680px] text-lg leading-relaxed text-muted-foreground md:col-start-2 md:text-xl">
+            {post.excerpt}
+          </p>
+        )}
         {!!post.tags?.length && (
-          <div className="reader-deck">
+          <div className="md:col-start-2">
             <TagChips tags={post.tags} />
           </div>
         )}
@@ -108,8 +120,8 @@ export default async function PostPage({
 
       {/* Cover Image (if exists) */}
       {post.coverImage && (
-        <figure className="reader-cover">
-          <div className="story-cover">
+        <figure className="mb-12 md:mb-20 md:ml-[8.333%]">
+          <div className="story-cover !aspect-[2/1]">
             <Image
               src={post.coverImage}
               alt={post.title}
@@ -119,7 +131,9 @@ export default async function PostPage({
               priority
             />
           </div>
-          <figcaption>Image Credit: {author.name}</figcaption>
+          <figcaption className="mt-3 text-xs leading-relaxed text-muted-foreground">
+            Image credit: {author.name}
+          </figcaption>
         </figure>
       )}
 
@@ -133,54 +147,59 @@ export default async function PostPage({
       )}
 
       {/* Article Content */}
-      <div className="reader-column">
-        <PostContent content={postContent} />
-      </div>
+      <div className="grid xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-12">
+        <ArticleContents headings={headings} />
+        <div className="min-w-0 xl:col-start-2">
+          <div data-reading-body className="max-w-[680px]">
+            <PostContent content={postContent} />
+          </div>
 
-      {/* Post Actions */}
-      <div className="reader-actions reader-column">
-        <LikeButton
-          postId={post.id}
-          initialLiked={userLiked}
-          initialCount={likeCount}
-        />
-      </div>
-
-      {/* Article Footer / Author Bio */}
-      <footer className="reader-author reader-column">
-        {author.image && (
-          <div className="reader-author-image">
-            <Image
-              src={author.image}
-              alt={author.name}
-              fill
-              sizes="64px"
-              className="object-cover"
+          {/* Post Actions */}
+          <div className="mt-12 max-w-[680px] border-y border-border py-6">
+            <LikeButton
+              postId={post.id}
+              initialLiked={userLiked}
+              initialCount={likeCount}
             />
           </div>
-        )}
-        <div>
-          <div className="reader-author-label">Written By</div>
-          <h2>
-            <Link href={`/@${author.username}`} className="hover:underline">
-              {author.name}
-            </Link>
-          </h2>
-        </div>
-      </footer>
 
-      {/* Comments Section */}
-      <section className="reader-comments reader-column">
-        <h2>Reader notes</h2>
-        <div className="mb-10">
-          <CommentForm
-            postId={post.id}
-            isLoggedIn={!!session?.user?.id}
-            articlePath={`/@${encodeURIComponent(decodedUsername)}/${encodeURIComponent(slug)}`}
-          />
+          {/* Article Footer / Author Bio */}
+          <footer className="reader-author max-w-[680px]">
+            {author.image && (
+              <div className="reader-author-image">
+                <Image
+                  src={author.image}
+                  alt={author.name}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
+              </div>
+            )}
+            <div>
+              <div className="reader-author-label">Written By</div>
+              <h2>
+                <Link href={`/@${author.username}`} className="hover:underline">
+                  {author.name}
+                </Link>
+              </h2>
+            </div>
+          </footer>
+
+          {/* Comments Section */}
+          <section className="reader-comments max-w-[680px]">
+            <h2>Reader notes</h2>
+            <div className="mb-10">
+              <CommentForm
+                postId={post.id}
+                isLoggedIn={!!session?.user?.id}
+                articlePath={`/@${encodeURIComponent(decodedUsername)}/${encodeURIComponent(slug)}`}
+              />
+            </div>
+            <CommentList postId={post.id} postAuthorId={author.id} />
+          </section>
         </div>
-        <CommentList postId={post.id} postAuthorId={author.id} />
-      </section>
+      </div>
     </article>
   );
 }

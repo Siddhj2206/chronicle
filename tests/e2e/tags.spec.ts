@@ -31,12 +31,12 @@ async function capture(page: Page, surface: string): Promise<void> {
     });
   }
   await page.setViewportSize({ width: 1280, height: 900 });
-  if (surface === "editor-tags")
+  if (surface === "article-chips")
     await captureThemes(
       page,
       directory,
       surface,
-      page.getByRole("textbox", { name: "Topics", exact: true }),
+      page.locator("article header"),
     );
 }
 
