@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { cn } from "@/lib/utils";
+
 import type { User } from "@/lib/db/schema";
 
 type ArticleAuthor = Pick<User, "name" | "username" | "image" | "bio">;
@@ -14,7 +16,10 @@ function AuthorPortrait({
 }): React.JSX.Element {
   return (
     <span
-      className={`relative flex shrink-0 items-center justify-center overflow-hidden bg-muted font-serif ${small ? "size-10 text-2xl" : "size-16 text-4xl"}`}
+      className={cn(
+        "relative flex shrink-0 items-center justify-center overflow-hidden bg-muted font-serif",
+        small ? "size-10 text-2xl" : "size-16 text-4xl",
+      )}
     >
       {author.image ? (
         <Image

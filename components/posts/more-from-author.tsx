@@ -1,4 +1,5 @@
 import { StoryCard } from "@/components/magazine/story-card";
+import { cn } from "@/lib/utils";
 
 import type { Post, User } from "@/lib/db/schema";
 
@@ -23,9 +24,7 @@ export function MoreFromAuthor({
           <StoryCard
             key={post.id}
             post={{ ...post, author }}
-            className={
-              index === 0 && posts.length > 1 ? "md:row-span-2" : undefined
-            }
+            className={cn(index === 0 && posts.length > 1 && "md:row-span-2")}
           />
         ))}
       </div>
