@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 
 import type { Post, User } from "@/lib/db/schema";
@@ -15,11 +15,13 @@ export function assertTestDatabase(): void {
 }
 
 export async function resetDatabase(): Promise<void> {
+  const db = await getDb();
   assertTestDatabase();
   await db.execute(sql`TRUNCATE TABLE "user", verification CASCADE`);
 }
 
 export async function createUser(overrides: Partial<User> = {}): Promise<User> {
+  const db = await getDb();
   const id = crypto.randomUUID();
   const [created] = await db
     .insert(user)
@@ -41,6 +43,7 @@ export async function createPost(
   authorId: string,
   overrides: Partial<Post> = {},
 ): Promise<Post> {
+  const db = await getDb();
   const [created] = await db
     .insert(post)
     .values({

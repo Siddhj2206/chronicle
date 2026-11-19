@@ -7,7 +7,7 @@ import { nanoid } from "nanoid";
 
 import { getSession } from "@/lib/session";
 import { getVisiblePost, postVisibility } from "@/lib/post-visibility";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
 import { readingTimeMinutes } from "@/lib/reading-time";
@@ -18,6 +18,7 @@ import type { Post } from "@/lib/db/schema";
 
 // Generate a unique slug - tries clean slug first, then adds suffix only if needed
 async function generateUniqueSlug(title: string): Promise<string> {
+  const db = await getDb();
   const baseSlug = slugify(title, { lower: true, strict: true });
 
   if (!baseSlug) {
@@ -59,8 +60,8 @@ function isSlugConflict(error: unknown): boolean {
   if (
     "code" in error &&
     error.code === "23505" &&
-    "constraint_name" in error &&
-    error.constraint_name === "post_slug_idx"
+    "constraint" in error &&
+    error.constraint === "post_slug_idx"
   ) {
     return true;
   }
@@ -129,6 +130,7 @@ export async function createPost(formData: FormData) {
   let committed = false;
 
   try {
+    const db = await getDb();
     let slug = await generateUniqueSlug(title);
 
     // Upload content to R2 first
@@ -200,6 +202,7 @@ export async function updatePost(slug: string, formData: FormData) {
   let contentPath: string | undefined;
   let committed = false;
   try {
+    const db = await getDb();
     // First get the post to get its ID
     const existingPost = await db
       .select({ id: post.id, contentPath: post.contentPath })
@@ -265,6 +268,7 @@ export async function deletePost(slug: string) {
   }
 
   try {
+    const db = await getDb();
     const [existingPost] = await db
       .select({ contentPath: post.contentPath })
       .from(post)
@@ -304,6 +308,7 @@ export async function publishPost(slug: string) {
   }
 
   try {
+    const db = await getDb();
     const [publishedPost] = await db
       .update(post)
       .set({
@@ -335,6 +340,7 @@ export async function unpublishPost(slug: string) {
   }
 
   try {
+    const db = await getDb();
     const [unpublishedPost] = await db
       .update(post)
       .set({
@@ -374,6 +380,7 @@ export const getPost = cache(async function getPost(
   };
 } | null> {
   try {
+    const db = await getDb();
     const session = await getSession();
     const result = await db
       .select({
@@ -413,6 +420,7 @@ export const getPost = cache(async function getPost(
  */
 export async function getPostContent(postId: string): Promise<string | null> {
   try {
+    const db = await getDb();
     if (!(await getVisiblePost(postId))) {
       return null;
     }
@@ -443,6 +451,7 @@ export async function getPostForEdit(slug: string): Promise<Post | null> {
   }
 
   try {
+    const db = await getDb();
     const result = await db
       .select()
       .from(post)
@@ -470,6 +479,7 @@ export async function getPostForEditWithContent(
   }
 
   try {
+    const db = await getDb();
     const result = await db
       .select()
       .from(post)
@@ -496,6 +506,7 @@ export async function getPostForEditWithContent(
 
 export async function getPostsByUser(username: string) {
   try {
+    const db = await getDb();
     const result = await db
       .select({
         post: post,
@@ -526,6 +537,7 @@ export async function getMyPosts() {
   }
 
   try {
+    const db = await getDb();
     const result = await db
       .select()
       .from(post)
@@ -541,6 +553,7 @@ export async function getMyPosts() {
 
 export async function getNewestPosts(limit = 10, offset = 0) {
   try {
+    const db = await getDb();
     const result = await db
       .select({
         post: post,
@@ -568,6 +581,7 @@ export async function getNewestPosts(limit = 10, offset = 0) {
 // Increment view count (fire and forget)
 export async function incrementViewCount(postId: string) {
   try {
+    const db = await getDb();
     await db
       .update(post)
       .set({ viewCount: sql`${post.viewCount} + 1` })
@@ -580,6 +594,7 @@ export async function incrementViewCount(postId: string) {
 // Get trending posts (last 14 days by view count, backfill with all-time if needed)
 export async function getTrendingPosts(limit = 5) {
   try {
+    const db = await getDb();
     const fourteenDaysAgo = new Date();
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
@@ -666,6 +681,7 @@ export async function getAllPosts(
   const offset = (page - 1) * limit;
 
   try {
+    const db = await getDb();
     // Get total count
     const countResult = await db
       .select({ count: sql<number>`count(*)::int` })

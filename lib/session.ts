@@ -1,9 +1,9 @@
 import { headers } from "next/headers";
 
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 
 export async function getSession() {
-  return auth.api.getSession({
+  return (await getAuth()).api.getSession({
     headers: await headers(),
   });
 }

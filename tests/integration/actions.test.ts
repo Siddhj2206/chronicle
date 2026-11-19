@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { sql } from "drizzle-orm";
 
 import { addComment, deleteComment, getComments } from "@/actions/comments";
 import { getLikeCount, hasUserLiked, toggleLike } from "@/actions/likes";
@@ -9,8 +10,8 @@ import {
   updatePost,
 } from "@/actions/posts";
 import { searchPosts } from "@/actions/search";
-import { updateProfile } from "@/actions/users";
-import { db } from "@/lib/db";
+import { setUsername, updateProfile } from "@/actions/users";
+import { getDb } from "@/lib/db";
 import { uploadContent } from "@/lib/r2-content";
 import {
   createPost as seedPost,
@@ -98,6 +99,7 @@ describe("posts", () => {
   });
 
   it("prevents editing, publishing or deleting another author's post", async () => {
+    const db = await getDb();
     const owner = await createUser();
     const article = await seedPost(owner.id);
     mockSession(await createUser());
@@ -112,6 +114,7 @@ describe("posts", () => {
   });
 
   it("creates a draft, updates, publishes and deletes it", async () => {
+    const db = await getDb();
     const owner = await createUser();
     mockSession(owner);
     const result = await createPost(validPost());
@@ -140,6 +143,7 @@ describe("posts", () => {
   });
 
   it("rejects empty input and reports storage errors without inserting a post", async () => {
+    const db = await getDb();
     mockSession(await createUser());
     expect(
       await createPost(formData({ title: "", content: "" })),
@@ -153,6 +157,35 @@ describe("posts", () => {
     });
     expect(await db.query.post.findMany()).toEqual([]);
     log.mockRestore();
+  });
+
+  it("retries a raced slug conflict using pg constraint metadata", async () => {
+    mockSession(await createUser());
+    let uploads = 0;
+    let release!: () => void;
+    const ready = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await vi.mocked(uploadContent).withImplementation(
+      async (id: string) => {
+        if (++uploads === 2) release();
+        await ready;
+        return `content/${id}.md`;
+      },
+      async () => {
+        const results = await Promise.all([
+          createPost(validPost()),
+          createPost(validPost()),
+        ]);
+        expect(results.every((result) => result.success)).toBe(true);
+        expect(results.map((result) => result.slug)).toEqual(
+          expect.arrayContaining([
+            "testing-chronicle",
+            expect.stringMatching(/^testing-chronicle-[\w-]{6}$/),
+          ]),
+        );
+      },
+    );
   });
 });
 
@@ -215,6 +248,36 @@ describe("comments and likes", () => {
 });
 
 describe("search and profiles", () => {
+  it("reports a raced username conflict using pg constraint metadata", async () => {
+    const db = await getDb();
+    await createUser({ username: "taken_name" });
+    mockSession(await createUser());
+    const lookup = vi
+      .spyOn(db.query.user, "findFirst")
+      .mockResolvedValueOnce(undefined);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      expect(await setUsername("taken_name")).toEqual({
+        success: false,
+        error: "Username is already taken",
+      });
+    } finally {
+      lookup.mockRestore();
+      log.mockRestore();
+    }
+  });
+
+  it("preserves pg execute rows and timestamp values", async () => {
+    const db = await getDb();
+    const owner = await createUser();
+    const article = await seedPost(owner.id);
+    expect(article.publishedAt).toEqual(new Date("2025-01-02T00:00:00.000Z"));
+    const result = await db.execute<{ id: string }>(
+      sql`select ${article.id}::text as id`,
+    );
+    expect(result.rows).toEqual([{ id: article.id }]);
+  });
+
   it("finds published content with a basic query and handles empty and unmatched queries", async () => {
     const owner = await createUser();
     const article = await seedPost(owner.id, { title: "Astronomy journal" });
@@ -231,6 +294,7 @@ describe("search and profiles", () => {
   });
 
   it("validates profile updates and persists valid changes", async () => {
+    const db = await getDb();
     expect(await updateProfile(formData({ name: "Reader" }))).toEqual({
       success: false,
       error: "Unauthorized",
