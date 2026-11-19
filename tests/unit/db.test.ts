@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { context, pool, client, connect, drizzle } = vi.hoisted(() => ({
+const { context, pool, on, client, connect, drizzle } = vi.hoisted(() => ({
   context: vi.fn(),
-  pool: vi.fn(function (options: unknown) { return { options }; }),
+  pool: vi.fn(function (options: unknown) { return { options, on }; }),
+  on: vi.fn(),
   client: vi.fn(function (options: unknown) { return { options, connect }; }),
   connect: vi.fn(),
   drizzle: vi.fn((client: unknown) => ({ client })),
@@ -25,12 +26,27 @@ beforeEach(() => {
   vi.stubEnv("NEXT_PHASE", "");
   context.mockReset().mockImplementation(() => { throw new Error("No context"); });
   pool.mockClear();
+  on.mockClear();
   client.mockClear();
   connect.mockReset().mockResolvedValue(undefined);
   drizzle.mockClear();
 });
 
 describe("database lifecycle", () => {
+  it("logs idle Node pool errors", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { getDb } = await import("@/lib/db");
+      await getDb();
+      const error = new Error("Idle connection lost");
+      expect(on).toHaveBeenCalledWith("error", expect.any(Function));
+      on.mock.calls[0][1](error);
+      expect(log).toHaveBeenCalledWith("Unexpected idle database client error:", error);
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   it("reuses one Node pool when no Cloudflare context is available", async () => {
     const { getDb } = await import("@/lib/db");
     expect(await getDb()).toBe(await getDb());

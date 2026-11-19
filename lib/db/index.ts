@@ -35,6 +35,10 @@ export const getDb = cache(async (): Promise<Database> => {
 
   const connectionString = process.env.DATABASE_URL ?? hyperdrive?.connectionString;
   if (!connectionString) throw new Error("Missing DATABASE_URL");
-  nodeDb ??= drizzle(new Pool({ connectionString }), { schema });
+  if (!nodeDb) {
+    const pool = new Pool({ connectionString });
+    pool.on("error", (error) => console.error("Unexpected idle database client error:", error));
+    nodeDb = drizzle(pool, { schema });
+  }
   return nodeDb;
 });
