@@ -125,6 +125,32 @@ describe("distribution URLs and metadata", () => {
 });
 
 describe("RSS serialization", () => {
+  it("keeps post GUIDs stable when the author username or article slug changes", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://stories.example");
+    const original = renderRss([row]);
+    const renamed = renderRss([
+      {
+        ...row,
+        post: { ...row.post, slug: "renamed-story" },
+        author: { ...row.author, username: "renamed_writer" },
+      },
+    ]);
+    const guid = '<guid isPermaLink="false">chronicle:post:post</guid>';
+    expect(original).toContain(guid);
+    expect(renamed).toContain(guid);
+    expect(original).toContain(
+      "<link>https://stories.example/@writer/caf%C3%A9%20%26%20notes</link>",
+    );
+    expect(renamed).toContain(
+      "<link>https://stories.example/@renamed_writer/renamed-story</link>",
+    );
+    expect(
+      renderRss([{ ...row, post: { ...row.post, id: "post&other" } }]),
+    ).toContain(
+      '<guid isPermaLink="false">chronicle:post:post&amp;other</guid>',
+    );
+  });
+
   it("escapes XML text and attributes and preserves valid Unicode", () => {
     expect(escapeXml(`&<>"' 東京🙂`)).toBe("&amp;&lt;&gt;&quot;&apos; 東京🙂");
     expect(escapeXml("before\u0000after\u000b")).toBe("beforeafter");

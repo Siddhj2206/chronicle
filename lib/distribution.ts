@@ -153,7 +153,7 @@ export function renderRss(
   const items = rows
     .map(({ post, author }) => {
       const url = escapeXml(siteUrl(articlePath(author.username, post.slug)));
-      return `<item><title>${escapeXml(post.title)}</title><link>${url}</link><guid isPermaLink="true">${url}</guid><description>${escapeXml(post.excerpt || post.title)}</description><dc:creator>${escapeXml(author.name)}</dc:creator><pubDate>${(post.publishedAt ?? post.createdAt).toUTCString()}</pubDate></item>`;
+      return `<item><title>${escapeXml(post.title)}</title><link>${url}</link><guid isPermaLink="false">chronicle:post:${escapeXml(post.id)}</guid><description>${escapeXml(post.excerpt || post.title)}</description><dc:creator>${escapeXml(author.name)}</dc:creator><pubDate>${(post.publishedAt ?? post.createdAt).toUTCString()}</pubDate></item>`;
     })
     .join("");
   return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/"><channel><title>${escapeXml(title)}</title><link>${escapeXml(siteUrl(path))}</link><description>Stories and ideas on Chronicle.</description><language>en</language><atom:link href="${escapeXml(self)}" rel="self" type="application/rss+xml"/>${items}</channel></rss>`;
