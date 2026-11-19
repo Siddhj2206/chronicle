@@ -87,6 +87,6 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
     await expect(page.getByRole("heading", { name: /404/ })).toBeVisible();
   } finally {
     await deleteTestUser(writer.id);
-    await db.delete(tag).where(inArray(tag.slug, ["community", "gardens"]));
+    await db.delete(tag).where(inArray(tag.slug, ["community", "gardens", "東京", "c-plus-plus", "c-sharp"]));
   }
 });

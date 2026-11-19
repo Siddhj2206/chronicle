@@ -8,7 +8,13 @@ export default async function TagPage({ params, searchParams }: {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  const { slug } = await params;
+  const { slug: encodedSlug } = await params;
+  let slug: string;
+  try {
+    slug = decodeURIComponent(encodedSlug);
+  } catch {
+    notFound();
+  }
   const { page: rawPage } = await searchParams;
   const page = Math.max(1, Math.min(100000, parseInt(rawPage || "1", 10) || 1));
   const result = await getTagPosts(slug, page);
