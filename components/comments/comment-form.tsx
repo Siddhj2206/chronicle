@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { addComment } from "@/actions/comments";
 
+import type { ReactElement } from "react";
+
 interface CommentFormProps {
   postId: string;
-  isLoggedIn?: boolean;
+  isLoggedIn: boolean;
+  articlePath: string;
 }
 
-export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
+export function CommentForm({ postId, isLoggedIn, articlePath }: CommentFormProps): ReactElement {
   const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +37,11 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
         const result = await addComment(postId, formData);
 
         if (result.error) {
-          setError(result.error);
+          setError(
+            result.error === "Unauthorized"
+              ? "Your session has expired. Please sign in again to submit your letter."
+              : result.error
+          );
         } else {
           setContent("");
           setError(null);
@@ -48,11 +55,13 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
     return (
       <div className="border-2 border-dashed border-neutral-300 p-8 text-center dark:border-neutral-700">
         <p className="font-serif italic text-muted-foreground">
-          <Link href="/sign-in" className="underline hover:text-foreground">
-            Sign in
-          </Link>{" "}
-          to write to the editor.
+          Sign in to join the conversation.
         </p>
+        <Button asChild>
+          <Link href={`/sign-in?callbackUrl=${encodeURIComponent(articlePath)}`}>
+            Sign in
+          </Link>
+        </Button>
       </div>
     );
   }
