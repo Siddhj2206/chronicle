@@ -20,11 +20,12 @@ export function PostSummary({
     <div
       className={cn(
         "space-y-2 text-muted-foreground",
-        variant === "article" ? "reader-deck" : "my-2",
+        variant === "article" && "reader-deck",
+        variant !== "article" && "my-2",
       )}
     >
       {variant !== "compact" && description && (
-        <p className={variant === "article" ? undefined : "story-excerpt"}>
+        <p className={cn(variant !== "article" && "story-excerpt")}>
           {description}
         </p>
       )}
