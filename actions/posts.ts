@@ -489,7 +489,8 @@ export async function getPostForEditWithContent(
     const content = await getPostContent(postData.id);
 
     return {
-      post: (await withPostTags([{ post: postData }]))[0].post,
+      post: (await withPostTags([{ post: postData }], { required: true }))[0]
+        .post,
       content: content || postData.content, // Fallback to DB content
     };
   } catch (error) {

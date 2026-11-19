@@ -210,6 +210,34 @@ describe("post topics", () => {
     }
   });
 
+  it("fails editor loads when tags are unavailable and preserves the saved tag set", async () => {
+    const writer = await createUser();
+    mockSession(writer);
+    const created = await createPost(data(["Gardens"]));
+    const select = db.select.bind(db);
+    const failure = new Error("Tags unavailable");
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const lookup = vi.spyOn(db, "select");
+    for (let index = 0; index < 3; index++)
+      lookup.mockImplementationOnce(select);
+    lookup.mockImplementationOnce(() => {
+      throw failure;
+    });
+    try {
+      expect(await getPostForEditWithContent(created.slug!)).toBeNull();
+      expect(log).toHaveBeenCalledWith("Post tags lookup error:", failure);
+    } finally {
+      lookup.mockRestore();
+      log.mockRestore();
+    }
+    expect(await db.select().from(postTag)).toHaveLength(1);
+    expect(
+      (await getPostForEditWithContent(created.slug!))?.post.tags?.map(
+        (tag) => tag.slug,
+      ),
+    ).toEqual(["gardens"]);
+  });
+
   it("stores distinct programming topics and looks up published Unicode topics", async () => {
     const writer = await createUser();
     mockSession(writer);

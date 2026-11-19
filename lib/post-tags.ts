@@ -28,6 +28,7 @@ export async function replacePostTags(
 
 export async function withPostTags<T extends { post: Post }>(
   rows: T[],
+  options: { required?: boolean } = {},
 ): Promise<T[]> {
   if (!rows.length) return rows;
   const grouped = new Map<string, Tag[]>();
@@ -47,6 +48,7 @@ export async function withPostTags<T extends { post: Post }>(
       grouped.set(row.postId, [...(grouped.get(row.postId) ?? []), row.tag]);
   } catch (error) {
     console.error("Post tags lookup error:", error);
+    if (options.required) throw error;
   }
   return rows.map((row) => ({
     ...row,
