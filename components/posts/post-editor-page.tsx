@@ -68,7 +68,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   }, [title, subtitle, excerpt, content, coverImage]);
 
   // Track last change time for optimized auto-save
-  const lastChangeTimeRef = useRef<number>(Date.now());
+  const lastChangeTimeRef = useRef<number>(0);
 
   // Check for changes
   useEffect(() => {
