@@ -5,11 +5,13 @@ import { getFollowingPosts } from "@/actions/follows";
 import { Pagination } from "@/components/archive/pagination";
 import { ListCard } from "@/components/magazine/list-card";
 
+import type { ReactElement } from "react";
+
 interface FollowingPageProps {
   searchParams: Promise<{ page?: string }>;
 }
 
-export default async function FollowingPage({ searchParams }: FollowingPageProps) {
+export default async function FollowingPage({ searchParams }: FollowingPageProps): Promise<ReactElement> {
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Math.min(100000, parseInt(pageParam || "1", 10) || 1));
   const result = await getFollowingPosts({ page });

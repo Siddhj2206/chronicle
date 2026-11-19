@@ -9,13 +9,15 @@ import { toast } from "sonner";
 import { toggleFollow } from "@/actions/follows";
 import { Button } from "@/components/ui/button";
 
+import type { ReactElement } from "react";
+
 interface FollowButtonProps {
   authorId: string;
   viewerId: string | null;
   initialFollowing: boolean;
 }
 
-export function FollowButton({ authorId, viewerId, initialFollowing }: FollowButtonProps) {
+export function FollowButton({ authorId, viewerId, initialFollowing }: FollowButtonProps): ReactElement | null {
   const pathname = usePathname();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
