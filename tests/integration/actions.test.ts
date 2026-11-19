@@ -31,6 +31,7 @@ beforeEach(async () => {
 
 describe("posts", () => {
   it("stores subtitle and calculated reading time on create and update", async () => {
+    const db = await getDb();
     mockSession(await createUser());
     const result = await createPost(
       formData({
@@ -67,6 +68,7 @@ describe("posts", () => {
   });
 
   it("rejects overlong subtitles without uploading or changing a post", async () => {
+    const db = await getDb();
     const owner = await createUser();
     mockSession(owner);
     const article = await seedPost(owner.id);
