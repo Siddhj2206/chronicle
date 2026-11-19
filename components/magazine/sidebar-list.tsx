@@ -1,12 +1,8 @@
 import Link from "next/link";
+
 import { cn } from "@/lib/utils";
+
 import type { Post, User } from "@/lib/db/schema";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 interface SidebarListProps {
   title: string;
@@ -16,33 +12,22 @@ interface SidebarListProps {
   className?: string;
 }
 
-export function SidebarList({ title, posts, className }: SidebarListProps) {
+export function SidebarList({ title, posts, className }: SidebarListProps): React.JSX.Element {
   return (
-    <Card className={cn("rounded-none border-0 bg-transparent shadow-none", className)}>
-      <CardHeader className="border-b border-black px-0 pb-2 dark:border-white">
-        <CardTitle className="font-sans text-xs font-black uppercase tracking-widest">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6 px-0 pt-6">
-        {posts.map((post, i) => (
-          <div key={post.id} className="group flex flex-col gap-1">
-            <span className="font-mono text-xs text-muted-foreground/50">
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <Link href={`/@${post.author.username}/${post.slug}`} className="group-hover:text-neutral-700 dark:group-hover:text-neutral-300">
-              <h4 className="font-serif text-base font-bold leading-snug">
-                {post.title}
-              </h4>
+    <aside className={cn("rounded-lg bg-card p-6", className)}>
+      <h2 className="mb-6 font-sans text-sm font-medium text-muted-foreground">{title}</h2>
+      <div className="flex flex-col gap-7">
+        {posts.map((post) => (
+          <div key={post.id}>
+            <Link href={`/@${post.author.username}/${post.slug}`} className="hover:text-primary">
+              <h3 className="font-serif text-xl font-normal leading-snug">{post.title}</h3>
             </Link>
-            <div className="flex items-center gap-2 text-label font-medium uppercase tracking-wider text-muted-foreground">
-              <Link href={`/@${post.author.username}`} className="hover:underline">
-                {post.author.name}
-              </Link>
-            </div>
+            <Link href={`/@${post.author.username}`} className="mt-2 inline-block font-sans text-label text-muted-foreground hover:text-primary">
+              {post.author.name}
+            </Link>
           </div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </aside>
   );
 }

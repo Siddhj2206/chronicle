@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import {
-  Libre_Baskerville,
-  Lora,
-  IBM_Plex_Mono,
+  Inter,
+  Source_Serif_4,
 } from "next/font/google";
 
 import "./globals.css";
@@ -10,22 +9,15 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const libreBaskerville = Libre_Baskerville({
-  variable: "--font-sans",
+const inter = Inter({
+  variable: "--font-ui",
   subsets: ["latin"],
-  weight: ["400", "700"],
 });
 
-const lora = Lora({
-  variable: "--font-serif",
+const sourceSerif = Source_Serif_4({
+  variable: "--font-reading",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -39,14 +31,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${sourceSerif.variable}`} suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
       </head>
-      <body
-        className={`${libreBaskerville.variable} ${lora.variable} ${ibmPlexMono.variable} antialiased`}
-      >
+      <body className="antialiased">
         <ThemeProvider>
           <a
             href="#main-content"

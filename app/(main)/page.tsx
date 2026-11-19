@@ -36,7 +36,7 @@ export default async function FeedPage() {
             No stories yet.
           </h2>
           <p className="mt-2 text-muted-foreground">
-            The printing presses are silent. Be the first to write.
+            There’s room for your perspective. Be the first to write.
           </p>
         </div>
       </>
@@ -51,7 +51,7 @@ export default async function FeedPage() {
   return (
     <>
       <Masthead />
-      <div className="flex flex-col gap-12 pb-20">
+      <div className="flex flex-col gap-12 pb-16 md:gap-20">
         {/* Hero Section */}
         <section>
           <HeroCard post={heroPost} />
@@ -59,7 +59,7 @@ export default async function FeedPage() {
 
         {/* Grid Section (The Fold) */}
         {gridPosts.length > 0 && (
-          <section className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-x-8 md:gap-y-12 md:divide-x md:divide-neutral-200 dark:md:divide-neutral-800">
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {gridPosts.map((post) => (
               <GridCard key={post.id} post={post} />
             ))}
@@ -67,33 +67,26 @@ export default async function FeedPage() {
         )}
 
         {/* Archive & Sidebar Section */}
-        <section className="grid grid-cols-1 gap-12 border-t border-black pt-12 dark:border-white md:grid-cols-12">
+        <section className="grid grid-cols-1 gap-12 md:grid-cols-12">
           {/* Main Feed (Left) */}
-          <div className="md:col-span-8 md:border-r md:border-neutral-200 md:pr-12 dark:md:border-neutral-800">
-            <div className="mb-6 flex items-center gap-4">
-              <div className="h-px flex-1 bg-black dark:bg-white" />
-              <span className="font-sans text-xs font-black uppercase tracking-widest text-muted-foreground">
-                Latest Stories
-              </span>
-              <div className="h-px flex-1 bg-black dark:bg-white" />
-            </div>
-
-            <div className="mb-8 text-center">
+          <div className="md:col-span-8 md:pr-8">
+            <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
+              <h2 className="font-serif text-3xl font-normal">Latest stories</h2>
               <Link
                 href="/archive"
-                className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground hover:underline"
+                className="font-sans text-sm text-muted-foreground hover:text-primary"
               >
-                View Full Archive →
+                View archive →
               </Link>
             </div>
             
-            <div className="flex flex-col gap-8 divide-y divide-neutral-200 dark:divide-neutral-800">
+            <div className="flex flex-col gap-12">
               {mainListPosts.map((post) => (
-                <ListCard key={post.id} post={post} className="pt-8 first:pt-0" />
+                <ListCard key={post.id} post={post} />
               ))}
               {mainListPosts.length === 0 && (
-                <p className="py-8 text-center font-serif text-muted-foreground italic">
-                  No more stories to load.
+                <p className="py-8 font-serif text-muted-foreground">
+                  You’re all caught up.
                 </p>
               )}
             </div>
@@ -102,7 +95,7 @@ export default async function FeedPage() {
           {/* Sidebar (Right) */}
           <div className="md:col-span-4">
             <div className="sticky top-24">
-              <SidebarList title="Trending Now" posts={trendingPosts} />
+              <SidebarList title="Worth a read" posts={trendingPosts} />
             </div>
           </div>
         </section>

@@ -1,19 +1,12 @@
-import Link from "next/link";
-
-export function Masthead() {
+export function Masthead(): React.JSX.Element {
   return (
-    <header className="border-b border-border bg-background text-foreground">
-      {/* Main Logo Area */}
-      <div className="py-8 text-center md:py-12">
-        <Link href="/" className="inline-block">
-          <h1 className="font-serif text-5xl font-black tracking-tighter md:text-7xl lg:text-8xl">
-            The Chronicle
-          </h1>
-        </Link>
-        <p className="mt-2 font-serif text-sm italic text-muted-foreground">
-          &quot;All the news that fits in the viewport.&quot;
-        </p>
-      </div>
+    <header className="mx-auto max-w-2xl py-12 text-center md:py-20">
+      <h1 className="font-serif text-4xl font-normal leading-tight md:text-6xl">
+        A little room for perspective.
+      </h1>
+      <p className="mx-auto mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">
+        Stories, ideas, and the things worth noticing.
+      </p>
     </header>
   );
 }

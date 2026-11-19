@@ -37,7 +37,7 @@ const codeTagStyle = {
 };
 
 const articleStyle = {
-  fontFamily: "Libre Baskerville, serif",
+  fontFamily: "var(--font-serif)",
   fontSize: "1.25rem",
   lineHeight: 1.875,
 };
