@@ -111,6 +111,35 @@ Wrangler's Node binding proxy can warn that internal Durable Objects are not
 available during builds or `next dev`; the built Worker exports `DOQueueHandler`
 and runs it in Wrangler preview instead of through that Node proxy.
 
+### Workers image optimization
+
+The [OpenNext Images binding integration](https://opennext.js.org/cloudflare/howtos/image)
+serves Next's `/_next/image` API through `IMAGES` in `wrangler.jsonc`. This keeps
+Next's default loader and `remotePatterns` validation, unlike a custom
+`/cdn-cgi/image` loader, and leaves `next dev` and Vercel's optimizer unchanged.
+Local `/public` images continue to work; SVGs use Next's normal unoptimized path.
+Existing allowed remote origins and the HTTPS host/port from
+`NEXT_PUBLIC_R2_DOMAIN` are shared by Next and upload/profile validation. Set that
+public variable at **build time** as well as runtime, and rebuild when changing
+the R2 domain.
+
+The Images binding is enabled per Worker; use the Cloudflare account's **Images**
+dashboard to review the plan/usage and deploy with the binding above. There is no
+need to upload the R2 originals into Images storage or enable zone URL transforms
+for this approach. If switching to `/cdn-cgi/image` later, first enable
+**Images → Transformations** for the `chronicle.siddhant.foo` zone and restrict
+its allowed source origins. See [binding setup](https://developers.cloudflare.com/images/optimization/binding/)
+and [zone setup](https://developers.cloudflare.com/images/optimization/transformations/overview/).
+
+[Images pricing](https://developers.cloudflare.com/images/pricing/) applies:
+Free includes 5,000 unique transformations/month; additional new transforms fail
+after that limit rather than incurring charges. Paid includes 5,000 then charges
+$0.50/1,000 unique transformations/month. Each source/size combination is counted;
+quality/format variations do not add unique transformations. R2/Workers charges
+remain separate. The adapter does not support `minimumCacheTTL`; it treats
+originals as immutable or not, so retain versioned upload/content keys. Test the
+built Worker with `bun run preview` (Wrangler simulates Images locally).
+
 # Chronicle
 
 A writing and publishing workspace for long-form manuscripts. Chronicle separates
