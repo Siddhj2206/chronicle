@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, and, desc, sql, gte, lt } from "drizzle-orm";
+import { eq, and, desc, sql, gte } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
@@ -17,7 +17,7 @@ export interface SearchParams {
   query: string;
   author?: string;          // Filter by username
   datePreset?: DatePreset;  // Quick date presets
-  cursor?: string;          // Post ID for cursor pagination
+  cursor?: string;          // Encoded sort tuple for cursor pagination
   limit?: number;           // Results per page (default 10)
 }
 
@@ -88,14 +88,38 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
   const { query, author, datePreset, cursor, limit = 10 } = params;
 
   // Empty query returns empty results
-  if (!query || query.trim().length === 0) {
+  if (!query || !/[\p{L}\p{N}]/u.test(query)) {
     return { posts: [], hasMore: false, nextCursor: null };
   }
 
   const searchTerm = query.trim();
   const likePattern = `%${searchTerm}%`;
+  const empty: SearchResult = { posts: [], hasMore: false, nextCursor: null };
+  let after: { rank: string; publishedAt: string; id: string; fallback: boolean } | undefined;
+  if (cursor) {
+    try {
+      after = JSON.parse(Buffer.from(cursor, "base64url").toString());
+      if (!after || typeof after.rank !== "string" || !Number.isFinite(Number(after.rank)) ||
+          typeof after.publishedAt !== "string" ||
+          (after.publishedAt !== "infinity" && !Number.isFinite(Date.parse(after.publishedAt))) ||
+          typeof after.id !== "string" || typeof after.fallback !== "boolean") return empty;
+    } catch {
+      return empty;
+    }
+  }
+  // Preserve PostgreSQL's microseconds and DESC NULLS FIRST ordering.
+  const publishedAt = sql`COALESCE(${post.publishedAt}, 'infinity'::timestamp)`;
+  const rank = sql`CASE
+    WHEN plainto_tsquery('english', ${searchTerm}) != ''::tsquery
+    THEN ts_rank(
+      to_tsvector('english', COALESCE(${post.searchVector}, ${post.title})),
+      plainto_tsquery('english', ${searchTerm})
+    )
+    ELSE 0::real
+  END`;
 
   try {
+    if (after?.fallback) throw new Error("Continue fallback pagination");
     // Build WHERE conditions dynamically
     // Hybrid approach: full-text search with ILIKE fallback for stop words
     // When plainto_tsquery returns empty (e.g., searching "where"), we fall back to ILIKE
@@ -123,11 +147,9 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
       conditions.push(gte(post.publishedAt, threshold));
     }
 
-    // Add cursor condition for pagination (fetch posts with ID less than cursor)
-    // This works because we're ordering by rank DESC, then publishedAt DESC
-    // For stable pagination, we use the post ID as cursor
-    if (cursor) {
-      conditions.push(lt(post.id, cursor));
+    if (after) {
+      conditions.push(sql`(${rank}, ${publishedAt}, ${post.id}) <
+        (${after.rank}::real, ${after.publishedAt}::text::timestamp, ${after.id})`);
     }
 
     // Execute query with all conditions
@@ -140,22 +162,15 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
           username: user.username,
           image: user.image,
         },
-        // Calculate relevance rank for sorting
-        // Use CASE to handle empty tsquery (stop words only) - fall back to 0 rank
-        rank: sql<number>`CASE
-          WHEN plainto_tsquery('english', ${searchTerm}) != ''::tsquery
-          THEN ts_rank(
-            to_tsvector('english', COALESCE(${post.searchVector}, ${post.title})),
-            plainto_tsquery('english', ${searchTerm})
-          )
-          ELSE 0
-        END`.as("rank"),
+        // Round-trip the real value as PostgreSQL text, not a JavaScript float.
+        rank: sql<string>`(${rank})::text`,
+        cursorDate: sql<string>`${publishedAt}::text`,
       })
       .from(post)
       .innerJoin(user, eq(post.authorId, user.id))
       .where(and(...conditions))
       // Order by relevance rank (descending), then by publish date, then by ID for stable cursor
-      .orderBy(sql`rank DESC`, desc(post.publishedAt), desc(post.id))
+      .orderBy(desc(rank), desc(publishedAt), desc(post.id))
       // Fetch one extra to determine if there are more results
       .limit(limit + 1);
 
@@ -165,14 +180,15 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
     // Trim to requested limit
     const posts = result.slice(0, limit).map(({ post, author }) => ({ post, author }));
     
-    // Get cursor for next page (last post's ID)
+    const last = result[posts.length - 1];
     const nextCursor = hasMore && posts.length > 0 
-      ? posts[posts.length - 1].post.id 
+      ? Buffer.from(JSON.stringify({ rank: last.rank, publishedAt: last.cursorDate, id: last.post.id, fallback: false })).toString("base64url")
       : null;
 
     return { posts, hasMore, nextCursor };
   } catch (error) {
-    console.error("Search posts error:", error);
+    if (!after?.fallback) console.error("Search posts error:", error);
+    if (after && !after.fallback) return empty;
     
     // Fallback: Simple ILIKE search without full-text
     try {
@@ -194,13 +210,15 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
         fallbackConditions.push(gte(post.publishedAt, threshold));
       }
 
-      if (cursor) {
-        fallbackConditions.push(lt(post.id, cursor));
+      if (after) {
+        fallbackConditions.push(sql`(${publishedAt}, ${post.id}) <
+          (${after.publishedAt}::text::timestamp, ${after.id})`);
       }
 
       const result = await db
         .select({
           post: post,
+          cursorDate: sql<string>`${publishedAt}::text`,
           author: {
             id: user.id,
             name: user.name,
@@ -211,13 +229,14 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
         .from(post)
         .innerJoin(user, eq(post.authorId, user.id))
         .where(and(...fallbackConditions))
-        .orderBy(desc(post.publishedAt), desc(post.id))
+        .orderBy(desc(publishedAt), desc(post.id))
         .limit(limit + 1);
 
       const hasMore = result.length > limit;
-      const posts = result.slice(0, limit);
+      const posts = result.slice(0, limit).map(({ post, author }) => ({ post, author }));
+      const last = result[posts.length - 1];
       const nextCursor = hasMore && posts.length > 0 
-        ? posts[posts.length - 1].post.id 
+        ? Buffer.from(JSON.stringify({ rank: "0", publishedAt: last.cursorDate, id: last.post.id, fallback: true })).toString("base64url")
         : null;
 
       return { posts, hasMore, nextCursor };
