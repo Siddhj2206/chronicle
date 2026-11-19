@@ -35,7 +35,7 @@ export function SidebarList({ title, posts, className }: SidebarListProps) {
                 {post.title}
               </h4>
             </Link>
-            <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center gap-2 text-label font-medium uppercase tracking-wider text-muted-foreground">
               <Link href={`/@${post.author.username}`} className="hover:underline">
                 {post.author.name}
               </Link>

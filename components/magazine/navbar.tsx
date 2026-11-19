@@ -8,6 +8,7 @@ import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/auth/user-menu";
 import { SearchInput } from "@/components/layout/search-input";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { cn } from "@/lib/utils";
 
 interface NavbarProps {
@@ -40,7 +41,7 @@ export function Navbar({ className }: NavbarProps) {
   return (
     <div className={cn("border-b border-border py-2 bg-background", className)}>
       <div className="container mx-auto flex max-w-7xl items-center justify-between px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {isHomePage ? (
             <>
               <div className="md:hidden">{shortDate}</div>
@@ -53,7 +54,8 @@ export function Navbar({ className }: NavbarProps) {
           )}
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <ThemeToggle />
           <SearchInput />
           <div className="flex items-center gap-2">
             {session?.user ? (

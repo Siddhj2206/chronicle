@@ -105,7 +105,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
               aspectRatio="square"
               className="w-32"
             />
-            <p className="w-32 text-center font-mono text-[10px] uppercase leading-tight text-muted-foreground">
+            <p className="w-32 text-center font-mono text-label uppercase leading-tight text-muted-foreground">
               Official Portrait
             </p>
           </div>

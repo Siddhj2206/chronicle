@@ -37,7 +37,7 @@ export function ListCard({ post, className }: ListCardProps) {
         </Link>
       </div>
       <CardContent className="flex-1 p-0">
-        <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <div className="mb-2 flex items-center gap-2 text-label font-bold uppercase tracking-widest text-muted-foreground">
           <Link href={`/@${post.author.username}`} className="hover:text-foreground hover:underline">
             {post.author.name}
           </Link>

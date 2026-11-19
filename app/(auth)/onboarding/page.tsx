@@ -96,7 +96,7 @@ function OnboardingContent() {
               aspectRatio="square"
               className="w-28"
             />
-            <p className="text-center font-mono text-[10px] uppercase leading-tight text-muted-foreground">
+            <p className="text-center font-mono text-label uppercase leading-tight text-muted-foreground">
               Official Portrait
             </p>
           </div>
@@ -128,7 +128,7 @@ function OnboardingContent() {
             </div>
             
             {/* Status Messages */}
-            <div className="h-6 pt-2 font-mono text-[10px] uppercase tracking-widest">
+            <div className="h-6 pt-2 font-mono text-label uppercase tracking-widest">
               {error && (
                 <p className="text-destructive">Error: {error}</p>
               )}
@@ -150,7 +150,7 @@ function OnboardingContent() {
           </Button>
         </form>
 
-        <div className="mt-8 border-t-2 border-black pt-4 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground dark:border-white">
+        <div className="mt-8 border-t-2 border-black pt-4 text-center font-mono text-label uppercase tracking-widest text-muted-foreground dark:border-white">
           Chronicle ID System v1.0
         </div>
       </div>

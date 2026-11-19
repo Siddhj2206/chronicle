@@ -38,7 +38,7 @@ export function GridCard({ post, className }: GridCardProps) {
         </Link>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 p-0 pt-4">
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <div className="flex items-center gap-2 text-label font-bold uppercase tracking-widest text-muted-foreground">
           <Link href={`/@${post.author.username}`} className="hover:text-foreground hover:underline">
             {post.author.name}
           </Link>
