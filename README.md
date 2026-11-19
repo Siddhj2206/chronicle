@@ -14,7 +14,7 @@ BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=dummy-google-client
 GOOGLE_CLIENT_SECRET=dummy-google-secret
-NEXT_PUBLIC_R2_DOMAIN=http://127.0.0.1:9
+NEXT_PUBLIC_R2_DOMAIN=media.example.test
 ```
 
 ```bash
@@ -238,7 +238,7 @@ Open [http://localhost:3000](http://localhost:3000).
 Useful scripts:
 
 ```bash
-bunx tsx scripts/seed-posts.ts --local                       # seed sample manuscripts
+bunx tsx scripts/seed-posts.ts --local               # seed local sample manuscripts
 bunx tsx scripts/migrate-content-to-r2.ts --dry-run  # preview the R2 move
 ```
 
