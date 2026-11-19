@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { eq } from "drizzle-orm";
 
-import { createPost, getPost, getPostForEditWithContent, publishPost, unpublishPost, updatePost } from "@/actions/posts";
+import { createPost, getNewestPosts, getPost, getPostForEditWithContent, getPostsByUser, getTrendingPosts, publishPost, unpublishPost, updatePost } from "@/actions/posts";
 import { getTagPosts, getTagsWithPosts, suggestTags } from "@/actions/tags";
 import { searchPosts } from "@/actions/search";
 import { db } from "@/lib/db";
@@ -121,5 +121,52 @@ describe("post topics", () => {
     expect(await getTagPosts("gardens")).toHaveProperty("error");
     query.mockRestore();
     log.mockRestore();
+  });
+
+  it("keeps feed posts when tag enrichment fails, including every trending branch", async () => {
+    expect(await tagStorage.withPostTags([])).toEqual([]);
+    const writer = await createUser();
+    mockSession(writer);
+    const recent = await createPost(data(["Gardens"]));
+    const older = await createPost(data(["Gardens"]));
+    await publishPost(recent.slug!);
+    await publishPost(older.slug!);
+    await db.update(post).set({ publishedAt: new Date("2020-01-01") }).where(eq(post.slug, older.slug!));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const select = db.select.bind(db);
+    const failure = new Error("Tag storage unavailable");
+    try {
+      for (const [query, baseQueries, expectedCount] of [
+        [() => getNewestPosts(), 1, 2],
+        [() => getPostsByUser(writer.username!), 1, 2],
+        [() => getTrendingPosts(1), 1, 1],
+        [() => getTrendingPosts(2), 2, 2],
+        [() => getTrendingPosts(3), 2, 2],
+      ] as const) {
+        const lookup = vi.spyOn(db, "select");
+        for (let index = 0; index < baseQueries; index++) lookup.mockImplementationOnce(select);
+        lookup.mockImplementationOnce(() => { throw failure; });
+        try {
+          const rows = await query();
+          expect(rows).toHaveLength(expectedCount);
+          expect(rows.every(({ post }) => post.tags?.length === 0)).toBe(true);
+          expect(log).toHaveBeenLastCalledWith("Post tags lookup error:", failure);
+        } finally {
+          lookup.mockRestore();
+        }
+      }
+      await db.update(post).set({ publishedAt: new Date("2020-01-01") });
+      const lookup = vi.spyOn(db, "select").mockImplementationOnce(select).mockImplementationOnce(select)
+        .mockImplementationOnce(() => { throw failure; });
+      try {
+        expect(await getTrendingPosts(2)).toMatchObject([
+          { post: { tags: [] } }, { post: { tags: [] } },
+        ]);
+      } finally {
+        lookup.mockRestore();
+      }
+    } finally {
+      log.mockRestore();
+    }
   });
 });

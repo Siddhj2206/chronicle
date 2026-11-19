@@ -18,10 +18,14 @@ export async function replacePostTags(tx: Transaction, postId: string, tags: { n
 
 export async function withPostTags<T extends { post: Post }>(rows: T[]): Promise<T[]> {
   if (!rows.length) return rows;
-  const tags = await db.select({ postId: postTag.postId, tag }).from(postTag)
-    .innerJoin(tag, eq(tag.id, postTag.tagId)).where(inArray(postTag.postId, rows.map(({ post }) => post.id)))
-    .orderBy(asc(tag.name));
   const grouped = new Map<string, Tag[]>();
-  for (const row of tags) grouped.set(row.postId, [...(grouped.get(row.postId) ?? []), row.tag]);
+  try {
+    const tags = await db.select({ postId: postTag.postId, tag }).from(postTag)
+      .innerJoin(tag, eq(tag.id, postTag.tagId)).where(inArray(postTag.postId, rows.map(({ post }) => post.id)))
+      .orderBy(asc(tag.name));
+    for (const row of tags) grouped.set(row.postId, [...(grouped.get(row.postId) ?? []), row.tag]);
+  } catch (error) {
+    console.error("Post tags lookup error:", error);
+  }
   return rows.map((row) => ({ ...row, post: { ...row.post, tags: grouped.get(row.post.id) ?? [] } }));
 }
