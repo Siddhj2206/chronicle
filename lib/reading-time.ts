@@ -1,10 +1,10 @@
 export function readingTimeMinutes(markdown: string): number {
   const withoutCode = markdown
-    .replace(/^\s*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\s*\1\s*$/gm, " ")
+    .replace(/^\s*((`|~)\2{2,})[^\n]*\n[\s\S]*?^\s*\1\2*\s*$/gm, " ")
     .replace(/`+([^`]*?)`+/g, "$1");
   let images = 0;
   const text = withoutCode
-    .replace(/!\[[^\]]*\](?:\([^\n]*?\)|\[[^\]]*\])/g, () => {
+    .replace(/!\[[^\]]*\](?:\([^\n]*?\)|\[[^\]]*\])?/g, () => {
       images++;
       return " ";
     })
