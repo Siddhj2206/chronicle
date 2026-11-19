@@ -28,7 +28,13 @@ export function SearchResults({
 }: SearchResultsProps) {
   return (
     <SearchResultsList
-      key={JSON.stringify([searchParams.query, searchParams.author, searchParams.datePreset, searchParams.limit, searchParams.tag])}
+      key={JSON.stringify([
+        searchParams.query,
+        searchParams.author,
+        searchParams.datePreset,
+        searchParams.limit,
+        searchParams.tag,
+      ])}
       initialResults={initialResults}
       searchParams={searchParams}
     />

@@ -12,9 +12,12 @@ describe("highlightCode", () => {
   });
 
   it("renders unknown languages as escaped plain text", () => {
-    expect(highlightCode('<script>alert("x")</script>', "not-a-language"))
-      .toBe(highlightCode('<script>alert("x")</script>', "text"));
-    expect(highlightCode("<script>", "not-a-language")).toContain("&#x3C;script>");
+    expect(highlightCode('<script>alert("x")</script>', "not-a-language")).toBe(
+      highlightCode('<script>alert("x")</script>', "text"),
+    );
+    expect(highlightCode("<script>", "not-a-language")).toContain(
+      "&#x3C;script>",
+    );
   });
 
   it("renders code without a language as plain text", () => {

@@ -10,11 +10,7 @@ import { getVisiblePost, postVisibility } from "@/lib/post-visibility";
 import { db } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
-import {
-  uploadContent,
-  deleteContent,
-  getContent,
-} from "@/lib/r2-content";
+import { uploadContent, deleteContent, getContent } from "@/lib/r2-content";
 import { revalidatePosts } from "@/lib/revalidate-posts";
 import { replacePostTags, withPostTags } from "@/lib/post-tags";
 
@@ -23,7 +19,7 @@ import type { Post } from "@/lib/db/schema";
 // Generate a unique slug - tries clean slug first, then adds suffix only if needed
 async function generateUniqueSlug(title: string): Promise<string> {
   const baseSlug = slugify(title, { lower: true, strict: true });
-  
+
   if (!baseSlug) {
     // Fallback for titles that slugify to empty string
     return nanoid(10);
@@ -61,8 +57,10 @@ async function generateUniqueSlug(title: string): Promise<string> {
 function isSlugConflict(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   if (
-    "code" in error && error.code === "23505" &&
-    "constraint_name" in error && error.constraint_name === "post_slug_idx"
+    "code" in error &&
+    error.code === "23505" &&
+    "constraint_name" in error &&
+    error.constraint_name === "post_slug_idx"
   ) {
     return true;
   }
@@ -73,7 +71,11 @@ function isSlugConflict(error: unknown): boolean {
  * Generate search vector SQL for full-text search
  * Title gets weight A (highest), excerpt gets B, content gets C
  */
-function generateSearchVector(title: string, excerpt: string | null, content: string): string {
+function generateSearchVector(
+  title: string,
+  excerpt: string | null,
+  content: string,
+): string {
   // Strip markdown for cleaner search
   const cleanContent = content
     .replace(/```[\s\S]*?```/g, "")
@@ -158,7 +160,10 @@ export async function createPost(formData: FormData) {
         });
 
         committed = true;
-        await revalidatePosts(session.user.id, { posts: [newPost], contentChanged: true });
+        await revalidatePosts(session.user.id, {
+          posts: [newPost],
+          contentChanged: true,
+        });
 
         return { success: true, slug: newPost.slug };
       } catch (error) {
@@ -241,8 +246,12 @@ export async function updatePost(slug: string, formData: FormData) {
 
     committed = true;
     const previousPath = existingPost[0].contentPath;
-    if (previousPath && previousPath !== contentPath) await deleteContent(previousPath);
-    await revalidatePosts(session.user.id, { posts: [updatedPost], contentChanged: true });
+    if (previousPath && previousPath !== contentPath)
+      await deleteContent(previousPath);
+    await revalidatePosts(session.user.id, {
+      posts: [updatedPost],
+      contentChanged: true,
+    });
 
     return { success: true, slug: updatedPost.slug };
   } catch (error) {
@@ -260,8 +269,11 @@ export async function deletePost(slug: string) {
   }
 
   try {
-    const [existingPost] = await db.select({ contentPath: post.contentPath })
-      .from(post).where(and(eq(post.slug, slug), eq(post.authorId, session.user.id))).limit(1);
+    const [existingPost] = await db
+      .select({ contentPath: post.contentPath })
+      .from(post)
+      .where(and(eq(post.slug, slug), eq(post.authorId, session.user.id)))
+      .limit(1);
     if (!existingPost) return { error: "Post not found" };
 
     const [deletedPost] = await db
@@ -276,7 +288,10 @@ export async function deletePost(slug: string) {
     // Delete content from R2
     if (deletedPost.contentPath) await deleteContent(deletedPost.contentPath);
 
-    await revalidatePosts(session.user.id, { posts: [deletedPost], contentChanged: true });
+    await revalidatePosts(session.user.id, {
+      posts: [deletedPost],
+      contentChanged: true,
+    });
 
     return { success: true };
   } catch (error) {
@@ -352,8 +367,16 @@ export async function unpublishPost(slug: string) {
 // This prevents duplicate DB queries when generateMetadata and page component both call getPost
 export const getPost = cache(async function getPost(
   username: string,
-  slug: string
-): Promise<{ post: Post; author: { id: string; name: string; username: string | null; image: string | null } } | null> {
+  slug: string,
+): Promise<{
+  post: Post;
+  author: {
+    id: string;
+    name: string;
+    username: string | null;
+    image: string | null;
+  };
+} | null> {
   try {
     const session = await getSession();
     const result = await db
@@ -368,7 +391,13 @@ export const getPost = cache(async function getPost(
       })
       .from(post)
       .innerJoin(user, eq(post.authorId, user.id))
-      .where(and(eq(post.slug, slug), eq(user.username, username), postVisibility(session?.user?.id)))
+      .where(
+        and(
+          eq(post.slug, slug),
+          eq(user.username, username),
+          postVisibility(session?.user?.id),
+        ),
+      )
       .limit(1);
 
     if (result.length === 0) {
@@ -399,7 +428,10 @@ export async function getPostContent(postId: string): Promise<string | null> {
       .limit(1);
 
     if (!result[0]) return null;
-    const r2Content = await getContent(postId, result[0].contentPath ?? `content/${postId}.md`);
+    const r2Content = await getContent(
+      postId,
+      result[0].contentPath ?? `content/${postId}.md`,
+    );
     return r2Content ?? result[0].content;
   } catch (error) {
     console.error("Get post content fallback error:", error);
@@ -432,7 +464,9 @@ export async function getPostForEdit(slug: string): Promise<Post | null> {
  * Get post for editing with content from R2
  * Returns both post metadata and content
  */
-export async function getPostForEditWithContent(slug: string): Promise<{ post: Post; content: string } | null> {
+export async function getPostForEditWithContent(
+  slug: string,
+): Promise<{ post: Post; content: string } | null> {
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -567,10 +601,7 @@ export async function getTrendingPosts(limit = 5) {
       .from(post)
       .innerJoin(user, eq(post.authorId, user.id))
       .where(
-        and(
-          eq(post.published, true),
-          gte(post.publishedAt, fourteenDaysAgo)
-        )
+        and(eq(post.published, true), gte(post.publishedAt, fourteenDaysAgo)),
       )
       .orderBy(desc(post.viewCount))
       .limit(limit);
@@ -582,7 +613,7 @@ export async function getTrendingPosts(limit = 5) {
 
     // Backfill with all-time top viewed posts
     const existingIds = recentTrending.map((p) => p.post.id);
-    
+
     if (existingIds.length === 0) {
       // No recent posts, get all-time trending
       const allTimeTrending = await db
@@ -616,12 +647,7 @@ export async function getTrendingPosts(limit = 5) {
       })
       .from(post)
       .innerJoin(user, eq(post.authorId, user.id))
-      .where(
-        and(
-          eq(post.published, true),
-          notInArray(post.id, existingIds)
-        )
-      )
+      .where(and(eq(post.published, true), notInArray(post.id, existingIds)))
       .orderBy(desc(post.viewCount))
       .limit(limit - recentTrending.length);
 
@@ -633,11 +659,13 @@ export async function getTrendingPosts(limit = 5) {
 }
 
 // Get all posts for archive page with pagination and sorting
-export async function getAllPosts(options: {
-  limit?: number;
-  page?: number;
-  sort?: "newest" | "trending" | "oldest";
-} = {}) {
+export async function getAllPosts(
+  options: {
+    limit?: number;
+    page?: number;
+    sort?: "newest" | "trending" | "oldest";
+  } = {},
+) {
   const { limit = 10, page = 1, sort = "newest" } = options;
   const offset = (page - 1) * limit;
 

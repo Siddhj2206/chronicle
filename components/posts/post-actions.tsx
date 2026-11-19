@@ -23,7 +23,7 @@ export function LikeButton({
     (state, newLiked: boolean) => ({
       liked: newLiked,
       count: state.count + (newLiked ? 1 : -1),
-    })
+    }),
   );
 
   function handleClick() {
@@ -50,7 +50,7 @@ export function LikeButton({
         "hover:bg-neutral-100 dark:hover:bg-neutral-900",
         "disabled:cursor-not-allowed disabled:opacity-50",
         optimistic.liked && "bg-black text-white dark:bg-white dark:text-black",
-        optimistic.liked && "hover:bg-neutral-800 dark:hover:bg-neutral-200"
+        optimistic.liked && "hover:bg-neutral-800 dark:hover:bg-neutral-200",
       )}
     >
       <span className="text-base">{optimistic.liked ? "♥" : "♡"}</span>

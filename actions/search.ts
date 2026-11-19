@@ -18,10 +18,10 @@ export type DatePreset = "week" | "month" | "year";
 export interface SearchParams {
   tag?: string;
   query: string;
-  author?: string;          // Filter by username
-  datePreset?: DatePreset;  // Quick date presets
-  cursor?: string;          // Encoded sort tuple for cursor pagination
-  limit?: number;           // Results per page (default 10)
+  author?: string; // Filter by username
+  datePreset?: DatePreset; // Quick date presets
+  cursor?: string; // Encoded sort tuple for cursor pagination
+  limit?: number; // Results per page (default 10)
 }
 
 export interface AuthorInfo {
@@ -76,21 +76,25 @@ function getDateThreshold(preset: DatePreset): Date {
 
 const searchCursorSchema = z.object({
   rank: z.string().refine((value) => Number.isFinite(Number(value))),
-  publishedAt: z.string().refine((value) => value === "infinity" || Number.isFinite(Date.parse(value))),
+  publishedAt: z
+    .string()
+    .refine(
+      (value) => value === "infinity" || Number.isFinite(Date.parse(value)),
+    ),
   id: z.string(),
   fallback: z.boolean(),
 });
 
 /**
  * Search posts with full-text search, pagination, and filters
- * 
+ *
  * Features:
  * - Full-text search across title, excerpt, and content (via searchVector)
  * - Relevance ranking with ts_rank
  * - Author filtering by username
  * - Date preset filtering (last week/month/year)
  * - Cursor-based pagination for "Load More" UX
- * 
+ *
  * @param params - Search parameters
  * @returns Paginated search results
  */
@@ -187,20 +191,30 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
 
     // Determine if there are more results
     const hasMore = result.length > limit;
-    
+
     // Trim to requested limit
-    const posts = result.slice(0, limit).map(({ post, author }) => ({ post, author }));
-    
+    const posts = result
+      .slice(0, limit)
+      .map(({ post, author }) => ({ post, author }));
+
     const last = result[posts.length - 1];
-    const nextCursor = hasMore && posts.length > 0 
-      ? Buffer.from(JSON.stringify({ rank: last.rank, publishedAt: last.cursorDate, id: last.post.id, fallback: false })).toString("base64url")
-      : null;
+    const nextCursor =
+      hasMore && posts.length > 0
+        ? Buffer.from(
+            JSON.stringify({
+              rank: last.rank,
+              publishedAt: last.cursorDate,
+              id: last.post.id,
+              fallback: false,
+            }),
+          ).toString("base64url")
+        : null;
 
     return { posts: await withPostTags(posts), hasMore, nextCursor };
   } catch (error) {
     if (!after?.fallback) console.error("Search posts error:", error);
     if (after && !after.fallback) return empty;
-    
+
     // Fallback: Simple ILIKE search without full-text
     try {
       const likePattern = `%${searchTerm}%`;
@@ -244,11 +258,21 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
         .limit(limit + 1);
 
       const hasMore = result.length > limit;
-      const posts = result.slice(0, limit).map(({ post, author }) => ({ post, author }));
+      const posts = result
+        .slice(0, limit)
+        .map(({ post, author }) => ({ post, author }));
       const last = result[posts.length - 1];
-      const nextCursor = hasMore && posts.length > 0 
-        ? Buffer.from(JSON.stringify({ rank: "0", publishedAt: last.cursorDate, id: last.post.id, fallback: true })).toString("base64url")
-        : null;
+      const nextCursor =
+        hasMore && posts.length > 0
+          ? Buffer.from(
+              JSON.stringify({
+                rank: "0",
+                publishedAt: last.cursorDate,
+                id: last.post.id,
+                fallback: true,
+              }),
+            ).toString("base64url")
+          : null;
 
       return { posts: await withPostTags(posts), hasMore, nextCursor };
     } catch (fallbackError) {
@@ -265,7 +289,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
 /**
  * Get list of authors who have published posts
  * Used for the author filter autocomplete/combobox
- * 
+ *
  * @returns Array of authors with their post counts, sorted by post count
  */
 export async function getAuthorsWithPosts(): Promise<AuthorWithPosts[]> {

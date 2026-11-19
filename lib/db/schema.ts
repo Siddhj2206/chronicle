@@ -97,7 +97,7 @@ export const post = pgTable(
     uniqueIndex("post_slug_idx").on(table.slug),
     index("post_author_idx").on(table.authorId),
     index("post_published_idx").on(table.published, table.publishedAt),
-  ]
+  ],
 );
 
 export const comment = pgTable(
@@ -116,7 +116,7 @@ export const comment = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
   },
-  (table) => [index("comment_post_idx").on(table.postId)]
+  (table) => [index("comment_post_idx").on(table.postId)],
 );
 
 export const like = pgTable(
@@ -133,7 +133,7 @@ export const like = pgTable(
   (table) => [
     primaryKey({ columns: [table.userId, table.postId] }),
     index("like_post_idx").on(table.postId),
-  ]
+  ],
 );
 
 export const tag = pgTable("tag", {

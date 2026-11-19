@@ -13,7 +13,8 @@ export default async function DashboardLayout({
 }) {
   const session = await getSession();
   const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
+  const pathname =
+    headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
 
   if (!session?.user) {
     const callbackUrl = encodeURIComponent(safeCallbackUrl(pathname));
@@ -29,7 +30,9 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar className="sticky top-0 z-50" />
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
+        {children}
+      </main>
       <Footer />
     </div>
   );

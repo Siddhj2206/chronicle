@@ -61,7 +61,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   // Track if there are unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
   const initialDataRef = useRef({ title, excerpt, content, coverImage, tags });
-  
+
   // Use ref to store form data for savePost to avoid recreation on every state change
   const formDataRef = useRef({ title, excerpt, content, coverImage, tags });
   useEffect(() => {
@@ -102,7 +102,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   const savePost = useCallback(
     async (isAutoSave = false): Promise<SaveResult> => {
       const { title, content, excerpt, coverImage, tags } = formDataRef.current;
-      
+
       if (!title.trim()) {
         if (!isAutoSave) toast.error("Title is required");
         return { ok: false };
@@ -159,7 +159,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
         setIsSaving(false);
       }
     },
-    [mode, currentSlug, router]
+    [mode, currentSlug, router],
   );
 
   // Optimized auto-save: check periodically instead of resetting timer on every keystroke
@@ -257,7 +257,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
                 "hidden rounded-none border px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-widest md:inline-block",
                 isPublished
                   ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                  : "border-neutral-400 text-neutral-500"
+                  : "border-neutral-400 text-neutral-500",
               )}
             >
               {isPublished ? "Published" : "Draft"}

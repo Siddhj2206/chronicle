@@ -22,6 +22,7 @@ export function Navbar({ className }: NavbarProps) {
 
   // Memoize date formatting to avoid recreation on every render
   const { shortDate, fullDate } = useMemo(() => {
+    // oxlint-disable-next-line react/purity -- Preserve the existing mount-time masthead date.
     const now = new Date();
     return {
       shortDate: now.toLocaleDateString("en-US", {
@@ -48,12 +49,15 @@ export function Navbar({ className }: NavbarProps) {
               <div className="hidden md:block">{fullDate}</div>
             </>
           ) : (
-            <Link href="/" className="font-serif text-xl font-black tracking-tight text-foreground hover:opacity-80">
+            <Link
+              href="/"
+              className="font-serif text-xl font-black tracking-tight text-foreground hover:opacity-80"
+            >
               The Chronicle
             </Link>
           )}
         </div>
-        
+
         <div className="flex items-center gap-4">
           <SearchInput />
           <div className="flex items-center gap-2">
@@ -76,7 +80,11 @@ export function Navbar({ className }: NavbarProps) {
                 asChild
                 className="h-7 text-xs font-bold uppercase tracking-widest"
               >
-                                <Link href={`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackUrl(pathname))}`}>Sign in</Link>
+                <Link
+                  href={`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackUrl(pathname))}`}
+                >
+                  Sign in
+                </Link>
               </Button>
             )}
           </div>

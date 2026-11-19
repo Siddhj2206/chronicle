@@ -64,7 +64,7 @@ export function SearchFilters({
 }: SearchFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // State
   const [authors, setAuthors] = useState<AuthorWithPosts[]>([]);
   const [tags, setTags] = useState<{ name: string; slug: string }[]>([]);
@@ -113,7 +113,7 @@ export function SearchFilters({
 
       return `/search?${params.toString()}`;
     },
-    [searchParams, query]
+    [searchParams, query],
   );
 
   // Handle author selection
@@ -172,7 +172,10 @@ export function SearchFilters({
           </PopoverTrigger>
           <PopoverContent className="w-[250px] rounded-none p-0" align="start">
             <Command className="rounded-none">
-              <CommandInput placeholder="Search authors..." className="rounded-none" />
+              <CommandInput
+                placeholder="Search authors..."
+                className="rounded-none"
+              />
               <CommandList>
                 <CommandEmpty>
                   {isLoading ? "Loading authors..." : "No authors found."}
@@ -202,7 +205,7 @@ export function SearchFilters({
                           "mr-2 h-4 w-4",
                           currentAuthor === author.username
                             ? "opacity-100"
-                            : "opacity-0"
+                            : "opacity-0",
                         )}
                       />
                       <Avatar className="mr-2 h-6 w-6">
@@ -213,7 +216,8 @@ export function SearchFilters({
                       </Avatar>
                       <span className="flex-1">{author.name}</span>
                       <span className="text-muted-foreground">
-                        {author.postCount} {author.postCount === 1 ? "post" : "posts"}
+                        {author.postCount}{" "}
+                        {author.postCount === 1 ? "post" : "posts"}
                       </span>
                     </CommandItem>
                   ))}
@@ -240,7 +244,7 @@ export function SearchFilters({
                 "rounded-none font-mono text-xs",
                 currentDate === preset.value
                   ? "bg-black text-white dark:bg-white dark:text-black"
-                  : "border-2 border-black dark:border-white"
+                  : "border-2 border-black dark:border-white",
               )}
             >
               {preset.label}
@@ -290,7 +294,8 @@ export function SearchFilters({
               variant="outline"
               className={cn(
                 "w-full justify-between rounded-none border-2 border-black font-mono text-xs dark:border-white",
-                hasFilters && "bg-black text-white dark:bg-white dark:text-black"
+                hasFilters &&
+                  "bg-black text-white dark:bg-white dark:text-black",
               )}
             >
               <span className="flex items-center gap-2">
@@ -313,9 +318,7 @@ export function SearchFilters({
 
       {/* Desktop: Always visible filters */}
       <div className="hidden sm:block">
-        <div className="border-b border-border pb-4">
-          {filterContent}
-        </div>
+        <div className="border-b border-border pb-4">{filterContent}</div>
       </div>
     </div>
   );

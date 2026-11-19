@@ -18,14 +18,26 @@ let highlighter: ReturnType<typeof createHighlighterCoreSync> | undefined;
 export function highlightCode(code: string, language?: string): string {
   highlighter ??= createHighlighterCoreSync({
     engine: createJavaScriptRegexEngine(),
-    langs: [bash, css, html, javascript, json, jsx, python, sql, tsx, typescript],
+    langs: [
+      bash,
+      css,
+      html,
+      javascript,
+      json,
+      jsx,
+      python,
+      sql,
+      tsx,
+      typescript,
+    ],
     themes: [githubLight, githubDark],
   });
 
   const lang = language?.toLowerCase();
 
   return highlighter.codeToHtml(code, {
-    lang: lang && highlighter.getLoadedLanguages().includes(lang) ? lang : "text",
+    lang:
+      lang && highlighter.getLoadedLanguages().includes(lang) ? lang : "text",
     themes: { light: "github-light", dark: "github-dark" },
     defaultColor: false,
   });
