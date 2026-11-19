@@ -108,12 +108,7 @@ const markdownComponents: Components = {
   ),
   input: ({ type, checked }) => {
     if (type === "checkbox") {
-      return (
-        <Checkbox
-          checked={checked}
-          disabled
-        />
-      );
+      return <Checkbox checked={checked} disabled />;
     }
     return null;
   },

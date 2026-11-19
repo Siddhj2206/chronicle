@@ -4,10 +4,7 @@ export function Footer(): React.JSX.Element {
   return (
     <footer className="site-footer-wrap">
       <div className="site-footer">
-        <Link
-          href="/"
-          className="text-foreground"
-        >
+        <Link href="/" className="text-foreground">
           Chronicle
         </Link>
         <nav

@@ -11,16 +11,15 @@ interface CommentListProps {
   postAuthorId: string;
 }
 
-export async function CommentList({ postId, postAuthorId }: CommentListProps): Promise<React.JSX.Element> {
+export async function CommentList({
+  postId,
+  postAuthorId,
+}: CommentListProps): Promise<React.JSX.Element> {
   const session = await getSession();
   const comments = await getComments(postId);
 
   if (comments.length === 0) {
-    return (
-      <p className="comment-empty">
-        The conversation starts here.
-      </p>
-    );
+    return <p className="comment-empty">The conversation starts here.</p>;
   }
 
   return (
@@ -46,10 +45,7 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps): P
         );
 
         return (
-          <article
-            key={comment.id}
-            className="comment-entry"
-          >
+          <article key={comment.id} className="comment-entry">
             <header>
               <div className="flex items-start gap-4">
                 <Avatar>
@@ -57,9 +53,7 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps): P
                     src={author.image || undefined}
                     alt={author.name || "User avatar"}
                   />
-                  <AvatarFallback>
-                    {initials || "U"}
-                  </AvatarFallback>
+                  <AvatarFallback>{initials || "U"}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
                   <div className="comment-byline">
@@ -69,13 +63,9 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps): P
                     >
                       {author.name}
                     </Link>
-                    <span>
-                      @{author.username}
-                    </span>
+                    <span>@{author.username}</span>
                   </div>
-                  <time
-                    dateTime={comment.createdAt.toISOString()}
-                  >
+                  <time dateTime={comment.createdAt.toISOString()}>
                     {formattedDate}
                   </time>
                 </div>

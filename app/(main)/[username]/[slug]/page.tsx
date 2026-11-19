@@ -95,15 +95,9 @@ export default async function PostPage({
           </time>
         </div>
 
-        <h1 className="reader-title">
-          {post.title}
-        </h1>
+        <h1 className="reader-title">{post.title}</h1>
 
-        {post.excerpt && (
-          <p className="reader-deck">
-            {post.excerpt}
-          </p>
-        )}
+        {post.excerpt && <p className="reader-deck">{post.excerpt}</p>}
       </header>
 
       {/* Cover Image (if exists) */}
@@ -119,13 +113,18 @@ export default async function PostPage({
               priority
             />
           </div>
-          <figcaption>
-            Image Credit: {author.name}
-          </figcaption>
+          <figcaption>Image Credit: {author.name}</figcaption>
         </figure>
       )}
 
-      {!post.coverImage && <div className="reader-cover-initial" aria-hidden="true"><span className="title-initial">{Array.from(post.title.trim())[0]?.toLocaleUpperCase("en-US") || "C"}</span></div>}
+      {!post.coverImage && (
+        <div className="reader-cover-initial" aria-hidden="true">
+          <span className="title-initial">
+            {Array.from(post.title.trim())[0]?.toLocaleUpperCase("en-US") ||
+              "C"}
+          </span>
+        </div>
+      )}
 
       {/* Article Content */}
       <div className="reader-column">
@@ -143,34 +142,30 @@ export default async function PostPage({
 
       {/* Article Footer / Author Bio */}
       <footer className="reader-author reader-column">
-          {author.image && (
-            <div className="reader-author-image">
-              <Image
-                src={author.image}
-                alt={author.name}
-                fill
-                sizes="64px"
-                className="object-cover"
-              />
-            </div>
-          )}
-          <div>
-            <div className="reader-author-label">
-              Written By
-            </div>
-            <h2>
-              <Link href={`/@${author.username}`} className="hover:underline">
-                {author.name}
-              </Link>
-            </h2>
+        {author.image && (
+          <div className="reader-author-image">
+            <Image
+              src={author.image}
+              alt={author.name}
+              fill
+              sizes="64px"
+              className="object-cover"
+            />
           </div>
+        )}
+        <div>
+          <div className="reader-author-label">Written By</div>
+          <h2>
+            <Link href={`/@${author.username}`} className="hover:underline">
+              {author.name}
+            </Link>
+          </h2>
+        </div>
       </footer>
 
       {/* Comments Section */}
       <section className="reader-comments reader-column">
-        <h2>
-          Reader notes
-        </h2>
+        <h2>Reader notes</h2>
         <div className="mb-10">
           <CommentForm
             postId={post.id}

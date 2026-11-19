@@ -14,15 +14,34 @@ export default async function FeedPage(): Promise<React.JSX.Element> {
     getTrendingPosts(5),
   ]);
   const posts = rawPosts.map(({ post, author }) => ({ ...post, author }));
-  const trendingPosts = rawTrendingPosts.map(({ post, author }) => ({ ...post, author }));
+  const trendingPosts = rawTrendingPosts.map(({ post, author }) => ({
+    ...post,
+    author,
+  }));
 
-  return <div className="catalogue">
-    <Masthead />
-    {posts.length === 0 ? <div className="catalogue-empty"><h2>No stories yet.</h2><p>There’s room for your perspective. Be the first to write.</p></div> : <>
-      <HeroCard post={posts[0]} />
-      <div className="catalogue-section"><h2>Selected works</h2><Link href="/archive">View the archive ↗</Link></div>
-      <div className="catalogue-entries">{posts.slice(1).map(post => <ListCard key={post.id} post={post} />)}</div>
-      <SidebarList title="Worth a read" posts={trendingPosts} />
-    </>}
-  </div>;
+  return (
+    <div className="catalogue">
+      <Masthead />
+      {posts.length === 0 ? (
+        <div className="catalogue-empty">
+          <h2>No stories yet.</h2>
+          <p>There’s room for your perspective. Be the first to write.</p>
+        </div>
+      ) : (
+        <>
+          <HeroCard post={posts[0]} />
+          <div className="catalogue-section">
+            <h2>Selected works</h2>
+            <Link href="/archive">View the archive ↗</Link>
+          </div>
+          <div className="catalogue-entries">
+            {posts.slice(1).map((post) => (
+              <ListCard key={post.id} post={post} />
+            ))}
+          </div>
+          <SidebarList title="Worth a read" posts={trendingPosts} />
+        </>
+      )}
+    </div>
+  );
 }

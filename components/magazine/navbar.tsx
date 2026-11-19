@@ -21,16 +21,10 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
   return (
     <header className={cn("site-header", className)}>
       <div className="site-nav">
-        <Link
-          href="/"
-          className="site-brand"
-        >
+        <Link href="/" className="site-brand">
           Chronicle
         </Link>
-        <nav
-          aria-label="Main navigation"
-          className="site-links"
-        >
+        <nav aria-label="Main navigation" className="site-links">
           <Link
             href="/"
             aria-current={pathname === "/" ? "page" : undefined}
@@ -51,10 +45,7 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
           <ThemeToggle />
           {session?.user ? (
             <>
-              <Link
-                href="/new"
-                className="site-signin"
-              >
+              <Link href="/new" className="site-signin">
                 Write
               </Link>
               <UserMenu user={session.user} />

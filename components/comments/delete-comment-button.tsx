@@ -20,7 +20,9 @@ interface DeleteCommentButtonProps {
   commentId: string;
 }
 
-export function DeleteCommentButton({ commentId }: DeleteCommentButtonProps): React.JSX.Element {
+export function DeleteCommentButton({
+  commentId,
+}: DeleteCommentButtonProps): React.JSX.Element {
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
@@ -32,31 +34,20 @@ export function DeleteCommentButton({ commentId }: DeleteCommentButtonProps): Re
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button
-          variant="ghost"
-          disabled={isPending}
-        >
+        <Button variant="ghost" disabled={isPending}>
           {isPending ? "Deleting..." : "Delete"}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            Delete this note?
-          </AlertDialogTitle>
+          <AlertDialogTitle>Delete this note?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. Your note will be permanently removed.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>
-            Keep note
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-          >
-            Delete
-          </AlertDialogAction>
+          <AlertDialogCancel>Keep note</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

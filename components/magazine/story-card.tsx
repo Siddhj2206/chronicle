@@ -10,22 +10,54 @@ export interface StoryCardProps {
   className?: string;
 }
 
-export function StoryCard({ post, className, lead = false }: StoryCardProps & { lead?: boolean }): React.JSX.Element {
+export function StoryCard({
+  post,
+  className,
+  lead = false,
+}: StoryCardProps & { lead?: boolean }): React.JSX.Element {
   const href = `/@${post.author.username}/${post.slug}`;
   const Heading = lead ? "h2" : "h3";
   return (
     <article className={cn("story", lead && "story-lead", className)}>
       <Link className="story-cover" href={href} aria-label={post.title}>
         {post.coverImage ? (
-          <Image src={post.coverImage} alt="" fill sizes={lead ? "(max-width: 640px) 100vw, 60vw" : "(max-width: 640px) 100vw, 50vw"} priority={lead} />
+          <Image
+            src={post.coverImage}
+            alt=""
+            fill
+            sizes={
+              lead
+                ? "(max-width: 640px) 100vw, 60vw"
+                : "(max-width: 640px) 100vw, 50vw"
+            }
+            priority={lead}
+          />
         ) : (
-          <span className="title-initial" aria-hidden="true">{Array.from(post.title.trim())[0]?.toLocaleUpperCase("en-US") || "C"}</span>
+          <span className="title-initial" aria-hidden="true">
+            {Array.from(post.title.trim())[0]?.toLocaleUpperCase("en-US") ||
+              "C"}
+          </span>
         )}
       </Link>
-      {post.publishedAt && <time className="story-meta story-date" dateTime={post.publishedAt.toISOString()}>{post.publishedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</time>}
+      {post.publishedAt && (
+        <time
+          className="story-meta story-date"
+          dateTime={post.publishedAt.toISOString()}
+        >
+          {post.publishedAt.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </time>
+      )}
       <div className="story-copy">
-        <div className="story-meta story-byline"><Link href={`/@${post.author.username}`}>{post.author.name}</Link></div>
-        <Link href={href}><Heading className="story-title">{post.title}</Heading></Link>
+        <div className="story-meta story-byline">
+          <Link href={`/@${post.author.username}`}>{post.author.name}</Link>
+        </div>
+        <Link href={href}>
+          <Heading className="story-title">{post.title}</Heading>
+        </Link>
         {post.excerpt && <p className="story-excerpt">{post.excerpt}</p>}
       </div>
     </article>

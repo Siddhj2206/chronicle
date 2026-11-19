@@ -19,9 +19,7 @@ export function SidebarList({
 }: SidebarListProps): React.JSX.Element {
   return (
     <aside className={cn("reading-list", className)}>
-      <h2>
-        {title}
-      </h2>
+      <h2>{title}</h2>
       <div className="reading-list-items">
         {posts.map((post) => (
           <div key={post.id}>
@@ -29,9 +27,7 @@ export function SidebarList({
               href={`/@${post.author.username}/${post.slug}`}
               className="hover:text-primary"
             >
-              <h3>
-                {post.title}
-              </h3>
+              <h3>{post.title}</h3>
             </Link>
             <Link
               href={`/@${post.author.username}`}

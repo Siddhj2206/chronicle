@@ -28,7 +28,9 @@ interface CommentContentProps {
   content: string;
 }
 
-export function CommentContent({ content }: CommentContentProps): React.JSX.Element {
+export function CommentContent({
+  content,
+}: CommentContentProps): React.JSX.Element {
   return (
     <div className="comment-content text-base leading-relaxed">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={commentComponents}>

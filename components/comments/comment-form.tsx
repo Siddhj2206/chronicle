@@ -58,9 +58,7 @@ export function CommentForm({
   if (!isLoggedIn) {
     return (
       <div className="comment-guest">
-        <p>
-          Sign in to join the conversation.
-        </p>
+        <p>Sign in to join the conversation.</p>
         <div>
           <Button asChild>
             <Link
@@ -77,11 +75,7 @@ export function CommentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-3">
-        <Label
-          htmlFor="comment"
-        >
-          Leave a note
-        </Label>
+        <Label htmlFor="comment">Leave a note</Label>
         <Textarea
           id="comment"
           name="comment"
@@ -98,10 +92,7 @@ export function CommentForm({
           {error}
         </p>
       )}
-      <Button
-        type="submit"
-        disabled={isPending}
-      >
+      <Button type="submit" disabled={isPending}>
         {isPending ? "Submitting..." : "Send your note"}
       </Button>
     </form>
