@@ -123,6 +123,22 @@ describe("post topics", () => {
     log.mockRestore();
   });
 
+  it("stores distinct programming topics and looks up published Unicode topics", async () => {
+    const writer = await createUser();
+    mockSession(writer);
+    const created = await createPost(data(["C", "C++", "C#", "東京"]));
+    expect(created).toHaveProperty("success", true);
+    expect((await getPostForEditWithContent(created.slug!))?.post.tags?.map((tag) => tag.slug).sort())
+      .toEqual(["c", "c-plus-plus", "c-sharp", "東京"]);
+    await publishPost(created.slug!);
+    mockSession(null);
+    for (const slug of ["c", "c-plus-plus", "c-sharp", "東京"]) {
+      expect(await getTagPosts(slug)).toMatchObject({ totalCount: 1, posts: [{ post: { slug: created.slug } }] });
+    }
+    expect(await suggestTags("東")).toMatchObject([{ name: "東京", slug: "東京" }]);
+    expect((await searchPosts({ query: "gardens", tag: "東京" })).posts).toMatchObject([{ post: { slug: created.slug } }]);
+  });
+
   it("keeps feed posts when tag enrichment fails, including every trending branch", async () => {
     expect(await tagStorage.withPostTags([])).toEqual([]);
     const writer = await createUser();

@@ -39,6 +39,10 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
     await input.press("Enter");
     await input.fill("Com");
     await page.getByRole("button", { name: "Community", exact: true }).click();
+    for (const name of ["東京", "C++", "C#"]) {
+      await input.fill(name);
+      await input.press("Enter");
+    }
     await capture(page, "editor-tags");
     await page.getByRole("button", { name: "Save Draft", exact: true }).click();
     await expect(page).toHaveURL(/\/edit\//);
@@ -51,7 +55,16 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
     await page.goto(`/@${writer.username}/${editPath.split("/").pop()}`);
     const topics = page.getByLabel("Topics", { exact: true });
     await expect(topics.getByRole("link", { name: "Gardens", exact: true })).toBeVisible();
+    await expect(topics.getByRole("link", { name: "C++", exact: true })).toHaveAttribute("href", "/tag/c-plus-plus");
+    await expect(topics.getByRole("link", { name: "C#", exact: true })).toHaveAttribute("href", "/tag/c-sharp");
     await capture(page, "article-chips");
+    const articlePath = new URL(page.url()).pathname;
+    await expect(topics.getByRole("link", { name: "東京", exact: true })).toHaveAttribute("href", `/tag/${encodeURIComponent("東京")}`);
+    await topics.getByRole("link", { name: "東京", exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`/tag/${encodeURIComponent("東京")}$`));
+    await expect(page.getByRole("heading", { name: "東京", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gardens that bring us together", exact: true })).toBeVisible();
+    await page.goto(articlePath);
     await topics.getByRole("link", { name: "Gardens", exact: true }).click();
     await expect(page).toHaveURL(/\/tag\/gardens$/);
     await expect(page.getByRole("heading", { name: "Gardens that bring us together", exact: true })).toBeVisible();
