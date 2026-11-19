@@ -140,6 +140,84 @@ remain separate. The adapter does not support `minimumCacheTTL`; it treats
 originals as immutable or not, so retain versioned upload/content keys. Test the
 built Worker with `bun run preview` (Wrangler simulates Images locally).
 
+## Workers preview environment
+
+`env.preview` is a separate persistent Worker, **chronicle-preview**, served only
+at `https://chronicle-preview.<subdomain>.workers.dev`. Replace
+`replace-with-subdomain` in both preview URL vars with the account's workers.dev
+subdomain, and replace the preview media hostname and resource IDs before a real
+deployment. The committed values are placeholders, not provisioned resources.
+`routes: []` explicitly clears the inherited production custom domain;
+`workers_dev: true` enables the stable workers.dev URL and `preview_urls: false`
+disables version preview URLs. No DNS or production-route changes are needed.
+
+[Wrangler environments](https://developers.cloudflare.com/workers/wrangler/environments/)
+do **not** inherit bindings, vars or secrets. Preview explicitly declares ASSETS,
+IMAGES, its Hyperdrive, media/cache R2 buckets, D1 tag cache, DO queue/migration,
+and `WORKER_SELF_REFERENCE` targeting `chronicle-preview`. The same DO class/tag
+is safe: its namespace belongs to the separate Worker. Do not replace preview
+IDs or bucket names with production resources. The local Hyperdrive connection
+still points to the disposable test database, not a remote preview database.
+
+When authorized to provision preview (these commands mutate remote resources):
+
+```bash
+# Use a separate Neon database/branch and its direct TLS connection string.
+bunx wrangler hyperdrive create chronicle-preview-db --connection-string="$PREVIEW_DATABASE_URL" --caching-disabled
+bunx wrangler r2 bucket create chronicle-preview
+bunx wrangler r2 bucket create chronicle-preview-cache
+bunx wrangler d1 create chronicle-preview-tags
+# Put the returned IDs in env.preview, not the top-level production bindings.
+bunx wrangler secret put BETTER_AUTH_SECRET --env preview
+bunx wrangler secret put GOOGLE_CLIENT_ID --env preview
+bunx wrangler secret put GOOGLE_CLIENT_SECRET --env preview
+```
+
+Use an independent auth secret. Add the preview origin and
+`https://chronicle-preview.<subdomain>.workers.dev/api/auth/callback/google` to
+the preview Google OAuth client. Normal state-cookie verification stays enabled
+on workers.dev. Give preview media its own public hostname and keep its cache
+bucket private. Images uses the account integration, without a create command;
+the DO migration runs on deployment. Preview consumes the same account quotas
+and can incur the same charges described below.
+
+```bash
+bun run preview:build        # build only, no upload/deployment
+bun run preview:dev          # build + local Workers runtime with preview bindings
+bun run preview:cache:local  # initialize local preview cache for an existing build
+bunx wrangler deploy --dry-run --env preview  # bundle/config check only
+# Only when explicitly authorizing a real preview deployment:
+bun run preview:deploy       # rebuild + remote preview cache population + deploy
+# Optional repair/repopulation of an existing preview build (remote writes):
+bun run preview:cache:remote
+```
+
+The [OpenNext CLI](https://opennext.js.org/cloudflare/cli) accepts `--env preview`
+on build, deploy, preview and `populateCache`. Deploy automatically populates
+the selected environment's R2 cache and initializes its D1 table before upload;
+do not replace it with a bare Wrangler deployment. Remote population temporarily
+deploys an OpenNext helper Worker too, so even OpenNext `deploy --dry-run` is
+**not** an offline safety check. Use the bare Wrangler dry-run shown above.
+
+`preview:build` reads the resolved preview Wrangler vars and explicitly exports
+them to the Next/OpenNext build, overriding any production URL values from the
+shell. `--env` alone does not inject `NEXT_PUBLIC_*` into Next's build. The helper
+also sets `NEXT_DEV_WRANGLER_ENV=preview` so build-time binding proxies select the
+same environment. Supply build secrets separately, and `DATABASE_URL` for the
+preview database when building in Node (or use `.env.test` for disposable local
+checks). Both environments share `.next`/`.open-next`: always rebuild when
+switching targets; never deploy a production build to preview or vice versa.
+
+In CI, default-environment deploys/uploads are refused by a
+[Wrangler custom build hook](https://developers.cloudflare.com/workers/wrangler/custom-builds/).
+The OpenNext config also runs the guard before remote cache population, covering
+Wrangler's automatic delegation to OpenNext. Use `preview:deploy`, which passes
+`--env preview` explicitly. The preview environment clears the default-only
+hook. Local builds/dev and manual non-CI production operations remain available.
+This prevents accidental commands, not intentional bypasses (`--no-build`,
+modified configs or disabling CI); keep production credentials out of preview CI
+and use scoped API tokens. No deployment workflow is enabled by this change.
+
 ## Production on Workers
 
 Target origin: **https://chronicle.siddhant.foo**. This is an operator runbook,
