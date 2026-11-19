@@ -1,89 +1,36 @@
-import {
-  S3Client,
-  ListObjectsV2Command,
-  DeleteObjectsCommand,
-} from "@aws-sdk/client-s3";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-function getR2Client(): S3Client {
-  const endpoint = process.env.R2_ENDPOINT;
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-
-  if (!endpoint || !accessKeyId || !secretAccessKey) {
-    throw new Error(
-      "R2 credentials are not set. Please set R2_ENDPOINT, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY.",
-    );
-  }
-
-  return new S3Client({
-    region: "auto",
-    endpoint,
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
-  });
+export async function getR2(): Promise<R2Bucket> {
+  const { env } = await getCloudflareContext({ async: true });
+  if (!env.R2) throw new Error("Missing R2 binding");
+  return env.R2;
 }
-
-// Lazy initialization
-let _r2Client: S3Client | null = null;
-
-export function getR2(): S3Client {
-  if (!_r2Client) {
-    _r2Client = getR2Client();
-  }
-  return _r2Client;
-}
-
-export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || "";
 
 export async function deleteUserObjects(
   userId: string,
   contentPaths: string[],
 ): Promise<void> {
   try {
-    const r2 = getR2();
+    const r2 = await getR2();
     const deleteKeys = async (keys: string[]) => {
       for (let offset = 0; offset < keys.length; offset += 1000) {
         try {
-          const result = await r2.send(
-            new DeleteObjectsCommand({
-              Bucket: R2_BUCKET_NAME,
-              Delete: {
-                Objects: keys
-                  .slice(offset, offset + 1000)
-                  .map((Key) => ({ Key })),
-              },
-            }),
-          );
-          if (result.Errors?.length)
-            console.error("R2 object deletion errors:", result.Errors);
+          await r2.delete(keys.slice(offset, offset + 1000));
         } catch (error) {
           console.error("Failed to delete R2 objects:", error);
         }
       }
     };
-
     await deleteKeys([...new Set(contentPaths)]);
-    let continuationToken: string | undefined;
+    let cursor: string | undefined;
     do {
-      const page = await r2.send(
-        new ListObjectsV2Command({
-          Bucket: R2_BUCKET_NAME,
-          Prefix: `uploads/${userId}/`,
-          ContinuationToken: continuationToken,
-        }),
-      );
-      await deleteKeys(
-        (page.Contents ?? []).flatMap(({ Key }) => (Key ? [Key] : [])),
-      );
-      continuationToken = page.IsTruncated
-        ? page.NextContinuationToken
-        : undefined;
-      if (page.IsTruncated && !continuationToken) {
+      const page = await r2.list({ prefix: `uploads/${userId}/`, cursor });
+      await deleteKeys(page.objects.map(({ key }) => key));
+      cursor = page.truncated ? page.cursor : undefined;
+      if (page.truncated && !cursor) {
         console.error("R2 listing was truncated without a continuation token");
       }
-    } while (continuationToken);
+    } while (cursor);
   } catch (error) {
     // Cleanup is best-effort; failed deletions have no durable retry queue.
     console.error("Failed to clean up user R2 objects:", error);
@@ -92,8 +39,6 @@ export async function deleteUserObjects(
 
 export function getR2PublicUrl(key: string): string {
   const domain = process.env.NEXT_PUBLIC_R2_DOMAIN;
-  if (domain) {
-    return `https://${domain.replace(/^https?:\/\//, "")}/${key}`;
-  }
-  return `${process.env.R2_ENDPOINT}/${R2_BUCKET_NAME}/${key}`;
+  if (!domain) throw new Error("Missing NEXT_PUBLIC_R2_DOMAIN");
+  return `https://${domain.replace(/^https?:\/\//, "").replace(/\/+$/, "")}/${key}`;
 }

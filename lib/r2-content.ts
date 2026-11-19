@@ -1,12 +1,7 @@
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
 import { unstable_cache, updateTag } from "next/cache";
 import { nanoid } from "nanoid";
 
-import { getR2, R2_BUCKET_NAME } from "@/lib/r2";
+import { getR2 } from "@/lib/r2";
 
 // Content path prefix in R2 bucket
 const CONTENT_PREFIX = "content";
@@ -29,16 +24,10 @@ export async function uploadContent(
   markdown: string,
 ): Promise<string> {
   const key = getContentKey(postId);
-  const r2 = getR2();
-
-  await r2.send(
-    new PutObjectCommand({
-      Bucket: R2_BUCKET_NAME,
-      Key: key,
-      Body: markdown,
-      ContentType: "text/markdown; charset=utf-8",
-    }),
-  );
+  const r2 = await getR2();
+  await r2.put(key, markdown, {
+    httpMetadata: { contentType: "text/markdown; charset=utf-8" },
+  });
 
   return key;
 }
@@ -49,13 +38,8 @@ export async function uploadContent(
  */
 export async function deleteContent(contentPath: string): Promise<void> {
   try {
-    const r2 = getR2();
-    await r2.send(
-      new DeleteObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: contentPath,
-      }),
-    );
+    const r2 = await getR2();
+    await r2.delete(contentPath);
   } catch (error) {
     // Best-effort cleanup can leave orphan objects after an outage or process exit.
     console.error(`Failed to delete content ${contentPath}:`, error);
@@ -68,29 +52,9 @@ export async function deleteContent(contentPath: string): Promise<void> {
  * @returns The markdown content or null if not found
  */
 async function fetchContentFromR2(contentPath: string): Promise<string | null> {
-  try {
-    const r2 = getR2();
-    const response = await r2.send(
-      new GetObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: contentPath,
-      }),
-    );
-
-    if (!response.Body) {
-      throw new Error("R2 content response has no body");
-    }
-
-    // Convert stream to string
-    const content = await response.Body.transformToString();
-    return content;
-  } catch (error) {
-    // Check if it's a "not found" error
-    if (error instanceof Error && error.name === "NoSuchKey") {
-      return null;
-    }
-    throw error;
-  }
+  const r2 = await getR2();
+  const response = await r2.get(contentPath);
+  return response ? response.text() : null;
 }
 
 /**
