@@ -24,33 +24,29 @@ export default async function FollowingPage({
     redirect("/sign-in?callbackUrl=%2Ffollowing");
 
   return (
-    <div className="mx-auto max-w-4xl pb-12">
-      <header className="mb-12 border-b border-border pb-8">
-        <h1 className="font-serif text-4xl tracking-tight md:text-5xl">
-          Following
-        </h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          The latest stories from the writers you follow.
-        </p>
+    <div className="catalogue">
+      <header className="catalogue-intro">
+        <h1>Following</h1>
+        <p>The latest stories from the writers you follow.</p>
       </header>
       {"error" in result ? (
-        <p role="alert" className="py-12 text-center font-serif text-lg">
+        <p role="alert" className="catalogue-empty text-muted-foreground">
           Unable to load your feed. Please try again.
         </p>
       ) : result.posts.length === 0 ? (
-        <div className="space-y-4 py-12 text-center">
-          <p className="font-serif text-xl text-muted-foreground">
+        <div className="catalogue-empty space-y-4">
+          <h2>
             {result.totalCount
               ? "No more stories on this page."
               : "You’re not following any writers yet."}
-          </p>
-          <p className="font-serif text-muted-foreground">
+          </h2>
+          <p className="text-muted-foreground">
             Follow writers from their profiles to bring their published stories
             here.
           </p>
           <Link
             href={result.totalCount ? "/following" : "/archive"}
-            className="inline-block underline underline-offset-4"
+            className="site-signin inline-block underline underline-offset-4"
           >
             {result.totalCount
               ? "Back to the latest stories"
@@ -58,7 +54,7 @@ export default async function FollowingPage({
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-12">
+        <div className="catalogue-entries">
           {result.posts.map(({ post, author }) => (
             <ListCard key={post.id} post={{ ...post, author }} />
           ))}

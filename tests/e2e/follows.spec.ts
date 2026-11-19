@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 
 import { deleteTestUser, signIn } from "@/tests/e2e/helpers/auth";
+import { captureThemes } from "@/tests/e2e/helpers/theme";
 import { createPost, createUser } from "@/tests/helpers/db";
 
 import type { Page } from "@playwright/test";
@@ -30,6 +31,13 @@ async function capture(page: Page, surface: string): Promise<void> {
     fullPage: true,
   });
   await page.setViewportSize({ width: 1280, height: 900 });
+  if (surface === "profile")
+    await captureThemes(
+      page,
+      directory,
+      surface,
+      page.getByRole("button", { name: "Unfollow", exact: true }),
+    );
 }
 
 test("follows a writer, reads their dispatches, and unfollows from the article", async ({

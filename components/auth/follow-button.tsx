@@ -30,7 +30,7 @@ export function FollowButton({
   if (viewerId === authorId) return null;
   if (!viewerId) {
     return (
-      <Button variant="outline" asChild>
+      <Button variant="outline" size="sm" asChild>
         <Link href={`/sign-in?callbackUrl=${encodeURIComponent(pathname)}`}>
           Sign in to follow
         </Link>
@@ -53,7 +53,8 @@ export function FollowButton({
 
   return (
     <Button
-      variant="outline"
+      variant={following ? "secondary" : "outline"}
+      size="sm"
       onClick={handleFollow}
       disabled={pending}
       aria-pressed={following}
