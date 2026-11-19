@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { eq, and, count } from "drizzle-orm";
 
 import { getSession } from "@/lib/session";
+import { getVisiblePost } from "@/lib/post-visibility";
 import { db } from "@/lib/db";
 import { like, post, user } from "@/lib/db/schema";
 
@@ -15,6 +16,10 @@ export async function toggleLike(postId: string) {
   }
 
   try {
+    if (!(await getVisiblePost(postId))) {
+      return { error: "Post not found" };
+    }
+
     // Check if already liked
     const existingLike = await db
       .select()
@@ -65,6 +70,10 @@ export async function toggleLike(postId: string) {
 
 export async function getLikeCount(postId: string): Promise<number> {
   try {
+    if (!(await getVisiblePost(postId))) {
+      return 0;
+    }
+
     const result = await db
       .select({ count: count() })
       .from(like)
@@ -85,6 +94,10 @@ export async function hasUserLiked(postId: string): Promise<boolean> {
   }
 
   try {
+    if (!(await getVisiblePost(postId))) {
+      return false;
+    }
+
     const result = await db
       .select()
       .from(like)

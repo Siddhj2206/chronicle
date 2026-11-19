@@ -7,6 +7,7 @@ import slugify from "slugify";
 import { nanoid } from "nanoid";
 
 import { getSession } from "@/lib/session";
+import { getVisiblePost, postVisibility } from "@/lib/post-visibility";
 import { db } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
@@ -342,6 +343,7 @@ export const getPost = cache(async function getPost(
   slug: string
 ): Promise<{ post: Post; author: { id: string; name: string; username: string | null; image: string | null } } | null> {
   try {
+    const session = await getSession();
     const result = await db
       .select({
         post: post,
@@ -354,7 +356,7 @@ export const getPost = cache(async function getPost(
       })
       .from(post)
       .innerJoin(user, eq(post.authorId, user.id))
-      .where(and(eq(post.slug, slug), eq(user.username, username)))
+      .where(and(eq(post.slug, slug), eq(user.username, username), postVisibility(session?.user?.id)))
       .limit(1);
 
     if (result.length === 0) {
@@ -373,14 +375,18 @@ export const getPost = cache(async function getPost(
  * Falls back to database content if R2 content not available (migration period)
  */
 export async function getPostContent(postId: string): Promise<string | null> {
-  // Try to get from R2 first
-  const r2Content = await getContent(postId);
-  if (r2Content) {
-    return r2Content;
-  }
-
-  // Fallback to database content during migration
   try {
+    if (!(await getVisiblePost(postId))) {
+      return null;
+    }
+
+    // Try to get from R2 first
+    const r2Content = await getContent(postId);
+    if (r2Content) {
+      return r2Content;
+    }
+
+    // Fallback to database content during migration
     const result = await db
       .select({ content: post.content })
       .from(post)
@@ -528,7 +534,7 @@ export async function incrementViewCount(postId: string) {
     await db
       .update(post)
       .set({ viewCount: sql`${post.viewCount} + 1` })
-      .where(eq(post.id, postId));
+      .where(and(eq(post.id, postId), postVisibility()));
   } catch (error) {
     console.error("Increment view count error:", error);
   }
