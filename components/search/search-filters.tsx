@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useId } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronsUpDown, Filter, X } from "lucide-react";
 
@@ -64,7 +64,10 @@ export function SearchFilters({
 
   // State
   const [authors, setAuthors] = useState<AuthorWithPosts[]>([]);
-  const [authorOpen, setAuthorOpen] = useState(false);
+  const [authorOpen, setAuthorOpen] = useState<"mobile" | "desktop" | null>(
+    null,
+  );
+  const authorPopoverId = useId();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -113,7 +116,7 @@ export function SearchFilters({
 
   // Handle author selection
   const handleAuthorChange = (username: string | null) => {
-    setAuthorOpen(false);
+    setAuthorOpen(null);
     router.push(buildUrl({ author: username }));
   };
 
@@ -134,25 +137,38 @@ export function SearchFilters({
   // Filter Content (shared between mobile/desktop)
   // ============================================
 
-  const filterContent = (
+  const filterContent = (variant: "mobile" | "desktop") => (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
       {/* Author Filter */}
       <div className="flex items-center gap-2">
         <span className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Author:
         </span>
-        <Popover open={authorOpen} onOpenChange={setAuthorOpen}>
+        <Popover
+          open={authorOpen === variant}
+          onOpenChange={(open) => setAuthorOpen(open ? variant : null)}
+        >
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               role="combobox"
-              aria-expanded={authorOpen}
+              aria-label={
+                selectedAuthor
+                  ? `Filter by author: ${selectedAuthor.name}`
+                  : "Filter by author..."
+              }
+              aria-expanded={authorOpen === variant}
+              aria-haspopup="dialog"
+              aria-controls={`${authorPopoverId}-${variant}`}
               className="w-[200px] justify-between rounded-none border-2 border-black font-mono text-xs dark:border-white"
             >
               {selectedAuthor ? (
                 <span className="flex items-center gap-2">
                   <Avatar className="h-5 w-5">
-                    <AvatarImage src={selectedAuthor.image || undefined} />
+                    <AvatarImage
+                      src={selectedAuthor.image || undefined}
+                      alt=""
+                    />
                     <AvatarFallback className="text-[10px]">
                       {selectedAuthor.name[0]}
                     </AvatarFallback>
@@ -165,9 +181,15 @@ export function SearchFilters({
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[250px] rounded-none p-0" align="start">
+          <PopoverContent
+            id={`${authorPopoverId}-${variant}`}
+            aria-label="Choose an author"
+            className="w-[250px] rounded-none p-0"
+            align="start"
+          >
             <Command className="rounded-none">
               <CommandInput
+                aria-label="Search authors"
                 placeholder="Search authors..."
                 className="rounded-none"
               />
@@ -204,7 +226,7 @@ export function SearchFilters({
                         )}
                       />
                       <Avatar className="mr-2 h-6 w-6">
-                        <AvatarImage src={author.image || undefined} />
+                        <AvatarImage src={author.image || undefined} alt="" />
                         <AvatarFallback className="text-[10px]">
                           {author.name[0]}
                         </AvatarFallback>
@@ -294,14 +316,16 @@ export function SearchFilters({
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-4 border-2 border-black p-4 dark:border-white">
-            {filterContent}
+            {filterContent("mobile")}
           </CollapsibleContent>
         </Collapsible>
       </div>
 
       {/* Desktop: Always visible filters */}
       <div className="hidden sm:block">
-        <div className="border-b border-border pb-4">{filterContent}</div>
+        <div className="border-b border-border pb-4">
+          {filterContent("desktop")}
+        </div>
       </div>
     </div>
   );

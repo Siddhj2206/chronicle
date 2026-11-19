@@ -46,7 +46,11 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Open account menu: ${initials || "U"} — ${user.name}`}
+        >
           <Avatar className="rounded-none border border-neutral-300 dark:border-neutral-700">
             <AvatarImage src={user.image || undefined} alt={user.name || ""} />
             <AvatarFallback className="rounded-none">

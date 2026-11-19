@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getMyPosts } from "@/actions/posts";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/layout/empty-state";
 
 export default async function DashboardPage() {
   const posts = await getMyPosts();
@@ -15,17 +16,11 @@ export default async function DashboardPage() {
       </div>
 
       {posts.length === 0 ? (
-        <div className="py-24 text-center">
-          <p className="font-serif text-2xl italic text-muted-foreground">
-            The ledger is empty.
-          </p>
-          <Link
-            href="/new"
-            className="mt-4 inline-block font-mono text-sm font-bold uppercase tracking-widest underline decoration-2 underline-offset-4"
-          >
-            Start Writing
-          </Link>
-        </div>
+        <EmptyState
+          title="The ledger is empty."
+          description="A new story begins with a few words. Make room for your next idea."
+          action={{ href: "/new", label: "Start Writing" }}
+        />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getAllPosts } from "@/actions/posts";
 import { ListCard } from "@/components/magazine/list-card";
 import { Pagination } from "@/components/archive/pagination";
+import { EmptyState } from "@/components/layout/empty-state";
 
 interface ArchivePageProps {
   searchParams: Promise<{
@@ -75,9 +76,11 @@ export default async function ArchivePage({ searchParams }: ArchivePageProps) {
 
       {/* Posts List */}
       {posts.length === 0 ? (
-        <div className="py-12 text-center font-serif text-lg italic text-muted-foreground">
-          No stories in the archives yet.
-        </div>
+        <EmptyState
+          title="No stories yet."
+          description="No stories in the archives yet."
+          action={{ href: "/", label: "Back to the journal" }}
+        />
       ) : (
         <div className="flex flex-col gap-12">
           {posts.map(({ post, author }) => (

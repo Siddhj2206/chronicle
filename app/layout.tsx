@@ -5,6 +5,7 @@ import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { KeyboardShortcuts } from "@/components/layout/keyboard-shortcuts";
 
 const inter = Inter({
   variable: "--font-ui",
@@ -46,7 +47,7 @@ export default function RootLayout({
           media="(prefers-color-scheme: dark)"
         />
       </head>
-      <body className="antialiased">
+      <body className="antialiased [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-4 [&_:focus-visible]:outline-ring motion-reduce:[&_*]:!animate-none motion-reduce:[&_*]:!transition-none motion-reduce:[&_*]:!scroll-auto">
         <ThemeProvider>
           <a
             href="#main-content"
@@ -55,6 +56,7 @@ export default function RootLayout({
             Skip to main content
           </a>
           {children}
+          <KeyboardShortcuts />
           <Toaster />
         </ThemeProvider>
       </body>

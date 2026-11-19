@@ -10,8 +10,8 @@ import python from "shiki/langs/python.mjs";
 import sql from "shiki/langs/sql.mjs";
 import tsx from "shiki/langs/tsx.mjs";
 import typescript from "shiki/langs/typescript.mjs";
-import githubDark from "shiki/themes/github-dark.mjs";
-import githubLight from "shiki/themes/github-light.mjs";
+import githubDark from "shiki/themes/github-dark-high-contrast.mjs";
+import githubLight from "shiki/themes/github-light-high-contrast.mjs";
 
 let highlighter: ReturnType<typeof createHighlighterCoreSync> | undefined;
 
@@ -38,7 +38,10 @@ export function highlightCode(code: string, language?: string): string {
   return highlighter.codeToHtml(code, {
     lang:
       lang && highlighter.getLoadedLanguages().includes(lang) ? lang : "text",
-    themes: { light: "github-light", dark: "github-dark" },
+    themes: {
+      light: "github-light-high-contrast",
+      dark: "github-dark-high-contrast",
+    },
     defaultColor: false,
   });
 }

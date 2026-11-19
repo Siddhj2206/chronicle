@@ -7,6 +7,7 @@ import { useSession } from "@/lib/auth-client";
 import { UserMenu } from "@/components/auth/user-menu";
 import { SearchInput } from "@/components/layout/search-input";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { MobileNavigation } from "@/components/layout/mobile-navigation";
 import { cn } from "@/lib/utils";
 import { safeCallbackUrl } from "@/lib/redirects";
 
@@ -24,7 +25,10 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
         <Link href="/" className="site-brand">
           Chronicle
         </Link>
-        <nav aria-label="Main navigation" className="site-links">
+        <nav
+          aria-label="Main navigation"
+          className="site-links !hidden md:!flex"
+        >
           <Link
             href="/"
             aria-current={pathname === "/" ? "page" : undefined}
@@ -41,23 +45,28 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
           </Link>
         </nav>
         <div className="site-tools">
-          <SearchInput />
+          <div className="hidden md:block">
+            <SearchInput />
+          </div>
           <ThemeToggle />
-          {session?.user ? (
-            <>
-              <Link href="/new" className="site-signin">
-                Write
+          <MobileNavigation />
+          <div className="hidden items-center gap-6 md:flex">
+            {session?.user ? (
+              <>
+                <Link href="/new" className="site-signin">
+                  Write
+                </Link>
+                <UserMenu user={session.user} />
+              </>
+            ) : (
+              <Link
+                href={`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackUrl(pathname))}`}
+                className="site-signin"
+              >
+                Sign in
               </Link>
-              <UserMenu user={session.user} />
-            </>
-          ) : (
-            <Link
-              href={`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackUrl(pathname))}`}
-              className="site-signin"
-            >
-              Sign in
-            </Link>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </header>
