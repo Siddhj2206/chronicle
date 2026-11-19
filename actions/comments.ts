@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 
 import { getSession } from "@/lib/session";
+import { getVisiblePost } from "@/lib/post-visibility";
 import { db } from "@/lib/db";
 import { comment, post, user } from "@/lib/db/schema";
 import { commentSchema } from "@/lib/validators";
@@ -24,6 +25,10 @@ export async function addComment(postId: string, formData: FormData) {
   }
 
   try {
+    if (!(await getVisiblePost(postId))) {
+      return { error: "Post not found" };
+    }
+
     await db.insert(comment).values({
       postId,
       authorId: session.user.id,
@@ -73,6 +78,10 @@ export async function deleteComment(commentId: string) {
       return { error: "Comment not found" };
     }
 
+    if (!(await getVisiblePost(commentData.postId))) {
+      return { error: "Post not found" };
+    }
+
     // Check if user is comment author or post author
     const postData = await db
       .select({ authorId: post.authorId, slug: post.slug })
@@ -115,6 +124,10 @@ export async function deleteComment(commentId: string) {
 
 export async function getComments(postId: string) {
   try {
+    if (!(await getVisiblePost(postId))) {
+      return [];
+    }
+
     const result = await db
       .select({
         comment: comment,
