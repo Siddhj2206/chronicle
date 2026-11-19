@@ -32,10 +32,10 @@ export function ArticleActions({
 
   useEffect(() => {
     const actions = actionsRef.current;
-    const article = actions?.closest("article.reader");
-    if (!actions || !(article instanceof HTMLElement)) return;
+    const page = actions?.closest("[data-public-page]");
+    if (!actions || !(page instanceof HTMLElement)) return;
     const observer = new ResizeObserver(() => {
-      article.style.setProperty(
+      page.style.setProperty(
         "--article-actions-height",
         `${actions.getBoundingClientRect().height + 24}px`,
       );
@@ -43,7 +43,7 @@ export function ArticleActions({
     observer.observe(actions);
     return () => {
       observer.disconnect();
-      article.style.removeProperty("--article-actions-height");
+      page.style.removeProperty("--article-actions-height");
     };
   }, []);
 

@@ -15,16 +15,14 @@ test.beforeAll(async () => {
   assertTestDatabase();
   const db = await getDb();
   const now = new Date();
-  await db
-    .insert(session)
-    .values({
-      id: randomUUID(),
-      token,
-      userId: "seed-writer",
-      createdAt: now,
-      updatedAt: now,
-      expiresAt: new Date(now.getTime() + 3600000),
-    });
+  await db.insert(session).values({
+    id: randomUUID(),
+    token,
+    userId: "seed-writer",
+    createdAt: now,
+    updatedAt: now,
+    expiresAt: new Date(now.getTime() + 3600000),
+  });
   for (let index = 0; index < 4; index++) {
     const created = await createPost("seed-writer", {
       title: `Another observation ${index}`,
@@ -106,6 +104,37 @@ test("mobile actions remain visible and respond focuses unobscured comments", as
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+});
+
+test("mobile footer navigation clears the action bar at maximum scroll", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(articlePath);
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  const shell = page.locator("[data-public-page]");
+  await expect
+    .poll(() =>
+      shell.evaluate((element) =>
+        parseFloat(getComputedStyle(element).paddingBottom),
+      ),
+    )
+    .toBeGreaterThan(0);
+  await page.evaluate(() =>
+    window.scrollTo(0, document.documentElement.scrollHeight),
+  );
+  const lastLink = page
+    .getByRole("navigation", { name: "Footer navigation" })
+    .getByRole("link")
+    .last();
+  const actions = page.getByRole("group", { name: "Story actions" });
+  await expect(lastLink).toBeInViewport();
+  const linkBox = await lastLink.boundingBox();
+  const barBox = await actions.boundingBox();
+  expect(linkBox!.y + linkBox!.height).toBeLessThanOrEqual(barBox!.y);
+  await lastLink.click({ trial: true });
 });
 
 test("share copies the story URL with feedback when native sharing is unavailable", async ({

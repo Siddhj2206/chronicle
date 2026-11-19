@@ -94,7 +94,7 @@ export default async function PostPage({
   const commentsId = `article:comments:${post.id}`;
 
   return (
-    <article className="reader pb-[var(--article-actions-height,8rem)] md:pb-0">
+    <article className="reader">
       <ReadingProgress />
       {/* Article Header */}
       <header className="grid gap-x-12 gap-y-6 py-10 md:grid-cols-[1fr_3fr] md:py-16">
