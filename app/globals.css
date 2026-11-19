@@ -191,6 +191,16 @@
   }
 }
 
+.post-content .shiki,
+.post-content .shiki span {
+  color: var(--shiki-light);
+}
+
+.dark .post-content .shiki,
+.dark .post-content .shiki span {
+  color: var(--shiki-dark);
+}
+
 /* ============================================
    Lexical Editor Theme
    - Libre Baskerville font for body text
