@@ -361,6 +361,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           <TextareaAutosize
             name="subtitle"
             aria-label="Post subtitle (optional)"
+            aria-describedby="subtitle-limit"
             placeholder="Subtitle (optional)…"
             maxLength={200}
             className="w-full resize-none bg-transparent font-serif text-2xl leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -368,6 +369,10 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
             onChange={(e) => setSubtitle(e.target.value)}
             minRows={1}
           />
+          <div id="subtitle-limit" className="flex flex-wrap justify-between gap-2 text-sm text-muted-foreground" aria-live="polite">
+            <span>{subtitle.length === 200 ? "Character limit reached. Additional characters are not added." : "Up to 200 characters."}</span>
+            <span>{subtitle.length}/200</span>
+          </div>
 
           {/* Excerpt */}
           <TextareaAutosize
