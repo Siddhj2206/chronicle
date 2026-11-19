@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 
 import { useDropzone } from "react-dropzone";
@@ -26,12 +26,7 @@ export function ImageUpload({
   aspectRatio = "video" 
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(value || null);
-
-  // Sync preview with value prop changes
-  useEffect(() => {
-    setPreview(value || null);
-  }, [value]);
+  const preview = value || null;
 
   const aspectClass = aspectRatio === "square" ? "aspect-square" : "aspect-video";
 
@@ -53,7 +48,6 @@ export function ImageUpload({
 
         const url = await readUploadResponse(response);
 
-        setPreview(url);
         onChange(url);
         toast.success("Image uploaded");
       } catch (error) {
@@ -107,7 +101,6 @@ export function ImageUpload({
             className="font-mono text-xs font-bold uppercase tracking-widest"
             onClick={(e) => {
               e.stopPropagation();
-              setPreview(null);
               onChange("");
             }}
           >

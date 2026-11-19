@@ -13,37 +13,37 @@ const WINDOW_MS = 60 * 1000;
 const uploadWindows = new Map<string, number[]>();
 
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session?.user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const now = Date.now();
-  for (const [userId, times] of uploadWindows) {
-    if (times[times.length - 1] <= now - WINDOW_MS) uploadWindows.delete(userId);
-  }
-  const times = (uploadWindows.get(session.user.id) ?? []).filter(time => time > now - WINDOW_MS);
-  if (times.length >= UPLOAD_LIMIT) {
-    return Response.json({ error: `Upload limit reached. Limit: ${UPLOAD_LIMIT} per minute.` }, {
-      status: 429,
-      headers: { "Retry-After": String(Math.ceil((times[0] + WINDOW_MS - now) / 1000)) },
-    });
-  }
-  times.push(now);
-  uploadWindows.set(session.user.id, times);
-
-  const contentLength = request.headers.get("content-length");
-  if (contentLength === null) {
-    return Response.json({ error: "Content-Length required" }, { status: 411 });
-  }
-  if (!(Number(contentLength) <= MAX_REQUEST_SIZE)) {
-    return Response.json({ error: IMAGE_SIZE_ERROR }, { status: 413 });
-  }
-
   try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const now = Date.now();
+    for (const [userId, times] of uploadWindows) {
+      if (times[times.length - 1] <= now - WINDOW_MS) uploadWindows.delete(userId);
+    }
+    const times = (uploadWindows.get(session.user.id) ?? []).filter(time => time > now - WINDOW_MS);
+    if (times.length >= UPLOAD_LIMIT) {
+      return Response.json({ error: `Upload limit reached. Limit: ${UPLOAD_LIMIT} per minute.` }, {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil((times[0] + WINDOW_MS - now) / 1000)) },
+      });
+    }
+    times.push(now);
+    uploadWindows.set(session.user.id, times);
+
+    const contentLength = request.headers.get("content-length");
+    if (contentLength === null) {
+      return Response.json({ error: "Content-Length required" }, { status: 411 });
+    }
+    if (!(Number(contentLength) <= MAX_REQUEST_SIZE)) {
+      return Response.json({ error: IMAGE_SIZE_ERROR }, { status: 413 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
 
