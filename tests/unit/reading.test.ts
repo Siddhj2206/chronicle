@@ -8,6 +8,19 @@ import { PostContent } from "@/components/posts/post-content";
 import { analyzeReading } from "@/lib/reading";
 
 describe("article reading metadata", () => {
+  it("reserves the response section id for story-card links", () => {
+    const content = "## Responses\n\n### Responses\n\n## Responses-1";
+    const { headings } = analyzeReading(content);
+    expect(headings.map(({ id }) => id)).toEqual([
+      "responses-1",
+      "responses-2",
+      "responses-1-1",
+    ]);
+    const html = renderToStaticMarkup(createElement(PostContent, { content }));
+    for (const { id } of headings) expect(html).toContain(`id="${id}"`);
+    expect(html).not.toContain('id="responses"');
+  });
+
   it("reserves the article navbar theme toggle id", () => {
     const content = "## Theme toggle\n\n## Theme toggle\n\n## Theme toggle-1";
     const { headings } = analyzeReading(content);
