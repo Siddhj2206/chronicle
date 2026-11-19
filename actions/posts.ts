@@ -20,7 +20,7 @@ import {
 import type { Post } from "@/lib/db/schema";
 
 // Generate a unique slug - tries clean slug first, then adds suffix only if needed
-async function generateUniqueSlug(title: string, authorId: string): Promise<string> {
+async function generateUniqueSlug(title: string): Promise<string> {
   const baseSlug = slugify(title, { lower: true, strict: true });
   
   if (!baseSlug) {
@@ -28,11 +28,11 @@ async function generateUniqueSlug(title: string, authorId: string): Promise<stri
     return nanoid(10);
   }
 
-  // Check for existing slugs by this author that start with baseSlug
+  // Check for existing slugs that start with baseSlug
   const existing = await db
     .select({ slug: post.slug })
     .from(post)
-    .where(and(eq(post.authorId, authorId), like(post.slug, `${baseSlug}%`)));
+    .where(like(post.slug, `${baseSlug}%`));
 
   if (existing.length === 0) {
     return baseSlug;
@@ -55,6 +55,17 @@ async function generateUniqueSlug(title: string, authorId: string): Promise<stri
 
   // Fallback to random suffix if somehow we have 100+ posts with same title
   return `${baseSlug}-${nanoid(6)}`;
+}
+
+function isSlugConflict(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  if (
+    "code" in error && error.code === "23505" &&
+    "constraint_name" in error && error.constraint_name === "post_slug_idx"
+  ) {
+    return true;
+  }
+  return "cause" in error && isSlugConflict(error.cause);
 }
 
 /**
@@ -108,38 +119,44 @@ export async function createPost(formData: FormData) {
 
   const { title, content, excerpt, coverImage } = parsed.data;
 
-  // Generate unique slug (clean, only adds suffix on conflict)
-  const slug = await generateUniqueSlug(title, session.user.id);
-
   // Generate a temporary ID for the post (will be replaced by DB)
   const tempId = crypto.randomUUID();
 
   try {
+    let slug = await generateUniqueSlug(title);
+
     // Upload content to R2 first
     const contentPath = await uploadContent(tempId, content);
 
     // Generate search vector for full-text search
     const searchVector = generateSearchVector(title, excerpt || null, content);
 
-    const [newPost] = await db
-      .insert(post)
-      .values({
-        id: tempId, // Use the same ID we used for R2
-        authorId: session.user.id,
-        title,
-        slug,
-        content, // Keep in DB for now (migration period)
-        contentPath,
-        excerpt: excerpt || null,
-        coverImage: coverImage || null,
-        published: false,
-        searchVector,
-      })
-      .returning();
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const [newPost] = await db
+          .insert(post)
+          .values({
+            id: tempId, // Use the same ID we used for R2
+            authorId: session.user.id,
+            title,
+            slug,
+            content, // Keep in DB for now (migration period)
+            contentPath,
+            excerpt: excerpt || null,
+            coverImage: coverImage || null,
+            published: false,
+            searchVector,
+          })
+          .returning();
 
-    revalidatePath("/manuscripts");
+        revalidatePath("/manuscripts");
 
-    return { success: true, slug: newPost.slug };
+        return { success: true, slug: newPost.slug };
+      } catch (error) {
+        if (!isSlugConflict(error) || attempt === 3) throw error;
+        slug = `${slugify(title, { lower: true, strict: true }) || "post"}-${nanoid(6)}`;
+      }
+    }
   } catch (error) {
     console.error("Create post error:", error);
     // Try to clean up R2 content if DB insert failed
