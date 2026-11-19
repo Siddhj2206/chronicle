@@ -41,7 +41,7 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
         }
       });
     },
-    [content, postId]
+    [content, postId],
   );
 
   if (!isLoggedIn) {
@@ -66,18 +66,20 @@ export function CommentForm({ postId, isLoggedIn = true }: CommentFormProps) {
         >
           ━━━ Write to the Editor ━━━
         </Label>
-          <Textarea
-            id="comment"
-            name="comment"
-            placeholder="Share your thoughts on this article…"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={4}
-            className="rounded-none border-2 border-black font-serif dark:border-white"
-          />
+        <Textarea
+          id="comment"
+          name="comment"
+          placeholder="Share your thoughts on this article…"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={4}
+          className="rounded-none border-2 border-black font-serif dark:border-white"
+        />
       </div>
       {error && (
-        <p className="font-mono text-sm font-medium text-destructive">{error}</p>
+        <p className="font-mono text-sm font-medium text-destructive">
+          {error}
+        </p>
       )}
       <Button
         type="submit"

@@ -88,17 +88,17 @@ Live: **[chronicle-lyart.vercel.app](https://chronicle-lyart.vercel.app)**
 
 ## Stack
 
-| Layer | Technology |
-| --- | --- |
-| Framework | Next.js 16 (App Router), React 19, TypeScript (strict) |
-| Styling | Tailwind CSS 4, shadcn/ui |
-| Editor | Lexical (`@lexical/react`, `@lexical/markdown`) |
-| Rendering | `react-markdown` + `remark-gfm` + `react-syntax-highlighter` |
-| Database | PostgreSQL (Neon), Drizzle ORM, `postgres` driver |
-| Auth | Better Auth with Google OAuth |
-| Storage | Cloudflare R2 (S3-compatible) via `@aws-sdk/client-s3` |
-| Validation | Zod + `react-hook-form` + `@hookform/resolvers` |
-| Package manager | Bun |
+| Layer           | Technology                                                   |
+| --------------- | ------------------------------------------------------------ |
+| Framework       | Next.js 16 (App Router), React 19, TypeScript (strict)       |
+| Styling         | Tailwind CSS 4, shadcn/ui                                    |
+| Editor          | Lexical (`@lexical/react`, `@lexical/markdown`)              |
+| Rendering       | `react-markdown` + `remark-gfm` + `react-syntax-highlighter` |
+| Database        | PostgreSQL (Neon), Drizzle ORM, `postgres` driver            |
+| Auth            | Better Auth with Google OAuth                                |
+| Storage         | Cloudflare R2 (S3-compatible) via `@aws-sdk/client-s3`       |
+| Validation      | Zod + `react-hook-form` + `@hookform/resolvers`              |
+| Package manager | Bun                                                          |
 
 ## Implementation notes
 
@@ -171,17 +171,17 @@ bun install
 
 Copy `env.example` to `.env.local` and fill it in:
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Postgres connection string |
-| `NEXT_PUBLIC_APP_URL` | Public app origin (required for the auth client in production) |
-| `BETTER_AUTH_SECRET` | Better Auth signing secret |
-| `BETTER_AUTH_URL` | Auth base URL |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
-| `R2_ENDPOINT` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
-| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 credentials |
-| `R2_BUCKET_NAME` | Manuscript-content and image bucket |
-| `NEXT_PUBLIC_R2_DOMAIN` | Public domain for serving uploaded media |
+| Variable                                    | Purpose                                                        |
+| ------------------------------------------- | -------------------------------------------------------------- |
+| `DATABASE_URL`                              | Postgres connection string                                     |
+| `NEXT_PUBLIC_APP_URL`                       | Public app origin (required for the auth client in production) |
+| `BETTER_AUTH_SECRET`                        | Better Auth signing secret                                     |
+| `BETTER_AUTH_URL`                           | Auth base URL                                                  |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials                                       |
+| `R2_ENDPOINT`                               | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`                |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 credentials                                                 |
+| `R2_BUCKET_NAME`                            | Manuscript-content and image bucket                            |
+| `NEXT_PUBLIC_R2_DOMAIN`                     | Public domain for serving uploaded media                       |
 
 Then run migrations and start the dev server:
 

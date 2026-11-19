@@ -6,13 +6,18 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 // Real images from Unsplash (direct URLs that exist)
 const UNSPLASH_IMAGES = {
   tech: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80",
-  nature: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80",
+  nature:
+    "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80",
   city: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1200&q=80",
-  coffee: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&q=80",
-  books: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1200&q=80",
-  workspace: "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=1200&q=80",
+  coffee:
+    "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&q=80",
+  books:
+    "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1200&q=80",
+  workspace:
+    "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=1200&q=80",
   food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80",
-  travel: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&q=80",
+  travel:
+    "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&q=80",
 };
 
 async function downloadImage(url: string): Promise<Buffer> {
@@ -25,7 +30,7 @@ async function downloadImage(url: string): Promise<Buffer> {
 async function uploadToR2(
   buffer: Buffer,
   userId: string,
-  filename: string
+  filename: string,
 ): Promise<string> {
   const key = `uploads/${userId}/${crypto.randomUUID()}-${filename}`;
 
@@ -35,12 +40,12 @@ async function uploadToR2(
       Key: key,
       Body: buffer,
       ContentType: "image/jpeg",
-    })
+    }),
   );
 
   const R2_DOMAIN = process.env.NEXT_PUBLIC_R2_DOMAIN;
   if (R2_DOMAIN) {
-    return `https://${R2_DOMAIN.replace(/^https?:\/\//, '')}/${key}`;
+    return `https://${R2_DOMAIN.replace(/^https?:\/\//, "")}/${key}`;
   }
   return `${process.env.R2_ENDPOINT}/${R2_BUCKET_NAME}/${key}`;
 }
@@ -65,7 +70,9 @@ async function seed() {
   }
 
   const author = users[0];
-  console.log(`📝 Creating posts for user: ${author.name} (@${author.username})\n`);
+  console.log(
+    `📝 Creating posts for user: ${author.name} (@${author.username})\n`,
+  );
 
   // Upload images
   console.log("📸 Uploading images to R2...");
@@ -779,7 +786,7 @@ In a heartbeat. But maybe differently—slower, deeper, less checking boxes.
       const now = new Date();
       // Stagger publish dates for variety
       const publishedAt = new Date(
-        now.getTime() - Math.random() * 14 * 24 * 60 * 60 * 1000
+        now.getTime() - Math.random() * 14 * 24 * 60 * 60 * 1000,
       );
 
       await db.insert(post).values({

@@ -13,11 +13,9 @@ import type { Components } from "react-markdown";
 const SyntaxHighlighter = dynamic(
   () => import("react-syntax-highlighter").then((mod) => mod.Prism),
   {
-    loading: () => (
-      <div className="my-4 h-24 animate-pulse bg-muted p-4" />
-    ),
+    loading: () => <div className="my-4 h-24 animate-pulse bg-muted p-4" />,
     ssr: false,
-  }
+  },
 );
 
 // Hoisted style objects to prevent recreation on every render
@@ -73,12 +71,8 @@ const markdownComponents: Components = {
       {children}
     </a>
   ),
-  ul: ({ children }) => (
-    <ul className="mb-4 list-disc pl-6">{children}</ul>
-  ),
-  ol: ({ children }) => (
-    <ol className="mb-4 list-decimal pl-6">{children}</ol>
-  ),
+  ul: ({ children }) => <ul className="mb-4 list-disc pl-6">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-4 list-decimal pl-6">{children}</ol>,
   li: ({ children }) => <li className="mb-1">{children}</li>,
   blockquote: ({ children }) => (
     <blockquote className="my-4 border-l-4 border-border pl-4 italic text-muted-foreground">
@@ -141,9 +135,7 @@ const markdownComponents: Components = {
       </table>
     </div>
   ),
-  thead: ({ children }) => (
-    <thead className="bg-muted">{children}</thead>
-  ),
+  thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
   th: ({ children }) => (
     <th className="border border-border px-4 py-2 text-left font-bold">
       {children}
@@ -173,7 +165,10 @@ interface PostContentProps {
 export function PostContent({ content }: PostContentProps) {
   return (
     <article className="post-content" style={articleStyle}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={markdownComponents}
+      >
         {content}
       </ReactMarkdown>
     </article>

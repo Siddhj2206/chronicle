@@ -2,19 +2,20 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import {
-  ListObjectsV2Command,
-  DeleteObjectsCommand,
-} from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema";
-import { usernameSchema, profileSchema, imageUrlSchema } from "@/lib/validators";
+import {
+  usernameSchema,
+  profileSchema,
+  imageUrlSchema,
+} from "@/lib/validators";
 import { getR2, R2_BUCKET_NAME } from "@/lib/r2";
 
 export async function checkUsernameAvailable(
-  username: string
+  username: string,
 ): Promise<{ available: boolean; error?: string }> {
   const parsed = usernameSchema.safeParse(username);
 
@@ -30,7 +31,7 @@ export async function checkUsernameAvailable(
 }
 
 export async function setUsername(
-  username: string
+  username: string,
 ): Promise<{ success: boolean; error?: string }> {
   const session = await getSession();
 
@@ -70,7 +71,7 @@ export async function setUsername(
 }
 
 export async function updateProfile(
-  formData: FormData
+  formData: FormData,
 ): Promise<{ success: boolean; error?: string }> {
   const session = await getSession();
 
@@ -154,7 +155,7 @@ export async function updateProfile(
 }
 
 export async function updateAvatar(
-  imageUrl: string
+  imageUrl: string,
 ): Promise<{ success: boolean; error?: string }> {
   const session = await getSession();
 
@@ -186,7 +187,7 @@ export async function updateAvatar(
 }
 
 export async function deleteAccount(
-  confirmationUsername: string
+  confirmationUsername: string,
 ): Promise<{ success: boolean; error?: string }> {
   const session = await getSession();
 

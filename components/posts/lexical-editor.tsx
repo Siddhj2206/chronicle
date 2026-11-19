@@ -1,7 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useCallback, useState, useRef, useSyncExternalStore, useMemo } from "react";
+import {
+  useEffect,
+  useCallback,
+  useState,
+  useRef,
+  useSyncExternalStore,
+  useMemo,
+} from "react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import type { InitialConfigType } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -94,7 +101,13 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { ALLOWED_IMAGE_TYPES, IMAGE_SIZE_ERROR, IMAGE_TYPE_ERROR, MAX_FILE_SIZE, readUploadResponse } from "@/lib/image-upload";
+import {
+  ALLOWED_IMAGE_TYPES,
+  IMAGE_SIZE_ERROR,
+  IMAGE_TYPE_ERROR,
+  MAX_FILE_SIZE,
+  readUploadResponse,
+} from "@/lib/image-upload";
 
 // ============================================
 // Image Node
@@ -176,7 +189,9 @@ export function $createImageNode(src: string, altText: string): ImageNode {
   return $applyNodeReplacement(new ImageNode(src, altText || "image"));
 }
 
-export function $isImageNode(node: LexicalNode | null | undefined): node is ImageNode {
+export function $isImageNode(
+  node: LexicalNode | null | undefined,
+): node is ImageNode {
   return node instanceof ImageNode;
 }
 
@@ -227,7 +242,12 @@ const HR_TRANSFORMER: ElementTransformer = {
 };
 
 // Image transformer should come first for proper parsing
-const ALL_TRANSFORMERS = [IMAGE_TRANSFORMER, HR_TRANSFORMER, ...TRANSFORMERS, CHECK_LIST];
+const ALL_TRANSFORMERS = [
+  IMAGE_TRANSFORMER,
+  HR_TRANSFORMER,
+  ...TRANSFORMERS,
+  CHECK_LIST,
+];
 
 // ============================================
 // Block type definitions
@@ -437,7 +457,9 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         newState.blockType = tag as BlockType;
       } else if ($isListNode(element)) {
         const parentList = $getNearestNodeOfType(anchorNode, ListNodeClass);
-        const listType = parentList ? parentList.getListType() : element.getListType();
+        const listType = parentList
+          ? parentList.getListType()
+          : element.getListType();
         if (listType === "check") {
           newState.blockType = "check";
         } else if (listType === "number") {
@@ -453,7 +475,7 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         newState.blockType = "paragraph";
       }
 
-      setState(prev => ({ ...prev, ...newState }));
+      setState((prev) => ({ ...prev, ...newState }));
     }
   }, []);
 
@@ -470,15 +492,15 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           updateToolbar();
           return false;
         },
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand(
         KEY_MODIFIER_COMMAND,
         () => {
           return false;
         },
-        COMMAND_PRIORITY_CRITICAL
-      )
+        COMMAND_PRIORITY_CRITICAL,
+      ),
     );
   }, [editor, updateToolbar]);
 
@@ -490,15 +512,15 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
         () => {
           return false;
         },
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_LOW,
       ),
       editor.registerCommand(
         REDO_COMMAND,
         () => {
           return false;
         },
-        COMMAND_PRIORITY_LOW
-      )
+        COMMAND_PRIORITY_LOW,
+      ),
     );
   }, [editor]);
 
@@ -508,50 +530,56 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
       editor.getEditorState().read(() => {
         // We need to access the history plugin state
         // For now, we'll use a simple approach
-        setState(prev => ({ ...prev, canUndo: true, canRedo: true }));
+        setState((prev) => ({ ...prev, canUndo: true, canRedo: true }));
       });
     });
   }, [editor]);
 
   // Memoized format text handler - single function for all text formats
-  const formatText = useCallback((format: "bold" | "italic" | "strikethrough" | "code") => {
-    editor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
-  }, [editor]);
+  const formatText = useCallback(
+    (format: "bold" | "italic" | "strikethrough" | "code") => {
+      editor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
+    },
+    [editor],
+  );
 
-  const formatBlock = useCallback((type: BlockType) => {
-    editor.update(() => {
-      const selection = $getSelection();
-      if (!$isRangeSelection(selection)) return;
+  const formatBlock = useCallback(
+    (type: BlockType) => {
+      editor.update(() => {
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection)) return;
 
-      if (type === "paragraph") {
-        $setBlocksType(selection, () => $createParagraphNode());
-      } else if (type === "h1" || type === "h2" || type === "h3") {
-        $setBlocksType(selection, () => $createHeadingNode(type));
-      } else if (type === "quote") {
-        $setBlocksType(selection, () => $createQuoteNode());
-      } else if (type === "code") {
-        $setBlocksType(selection, () => $createCodeNode());
-      } else if (type === "bullet") {
-        if (state.blockType === "bullet") {
-          editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-        } else {
-          editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+        if (type === "paragraph") {
+          $setBlocksType(selection, () => $createParagraphNode());
+        } else if (type === "h1" || type === "h2" || type === "h3") {
+          $setBlocksType(selection, () => $createHeadingNode(type));
+        } else if (type === "quote") {
+          $setBlocksType(selection, () => $createQuoteNode());
+        } else if (type === "code") {
+          $setBlocksType(selection, () => $createCodeNode());
+        } else if (type === "bullet") {
+          if (state.blockType === "bullet") {
+            editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+          } else {
+            editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+          }
+        } else if (type === "number") {
+          if (state.blockType === "number") {
+            editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+          } else {
+            editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+          }
+        } else if (type === "check") {
+          if (state.blockType === "check") {
+            editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+          } else {
+            editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
+          }
         }
-      } else if (type === "number") {
-        if (state.blockType === "number") {
-          editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-        } else {
-          editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
-        }
-      } else if (type === "check") {
-        if (state.blockType === "check") {
-          editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-        } else {
-          editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
-        }
-      }
-    });
-  }, [editor, state.blockType]);
+      });
+    },
+    [editor, state.blockType],
+  );
 
   const insertLink = useCallback(() => {
     if (state.isLink) {
@@ -594,13 +622,19 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
     });
   }, [editor]);
 
-  const undo = useCallback(() => editor.dispatchCommand(UNDO_COMMAND, undefined), [editor]);
-  const redo = useCallback(() => editor.dispatchCommand(REDO_COMMAND, undefined), [editor]);
+  const undo = useCallback(
+    () => editor.dispatchCommand(UNDO_COMMAND, undefined),
+    [editor],
+  );
+  const redo = useCallback(
+    () => editor.dispatchCommand(REDO_COMMAND, undefined),
+    [editor],
+  );
 
   const toolbarButtonClass = (active: boolean = false) =>
     cn(
       "h-8 w-8 p-0 rounded-none",
-      active ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"
+      active ? "bg-accent text-accent-foreground" : "hover:bg-accent/50",
     );
 
   return (
@@ -753,7 +787,10 @@ function ToolbarPlugin({ onInsertImage }: ToolbarProps) {
           <PopoverContent className="w-80 rounded-none p-3" align="start">
             <div className="space-y-3">
               <div className="space-y-1">
-                <label htmlFor="link-url-input" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <label
+                  htmlFor="link-url-input"
+                  className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground"
+                >
                   URL
                 </label>
                 <Input
@@ -906,23 +943,28 @@ interface ImageUploadPluginProps {
 function ImageUploadPlugin({ fileInputRef }: ImageUploadPluginProps) {
   const [editor] = useLexicalComposerContext();
 
-  const uploadImage = useCallback(async (file: File): Promise<string | null> => {
-    const formData = new FormData();
-    formData.append("file", file);
+  const uploadImage = useCallback(
+    async (file: File): Promise<string | null> => {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      try {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
 
-      return await readUploadResponse(response);
-    } catch (error) {
-      console.error("Image upload failed:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to upload image");
-      return null;
-    }
-  }, []);
+        return await readUploadResponse(response);
+      } catch (error) {
+        console.error("Image upload failed:", error);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to upload image",
+        );
+        return null;
+      }
+    },
+    [],
+  );
 
   const insertImage = useCallback(
     (url: string, altText: string = "Image") => {
@@ -938,7 +980,7 @@ function ImageUploadPlugin({ fileInputRef }: ImageUploadPluginProps) {
         }
       });
     },
-    [editor]
+    [editor],
   );
 
   const handleImageFile = useCallback(
@@ -962,7 +1004,7 @@ function ImageUploadPlugin({ fileInputRef }: ImageUploadPluginProps) {
         insertImage(url, file.name);
       }
     },
-    [uploadImage, insertImage]
+    [uploadImage, insertImage],
   );
 
   // Handle file input change
@@ -1058,16 +1100,16 @@ function InitializePlugin({ initialContent }: { initialContent?: string }) {
     editor.update(() => {
       // Convert markdown to Lexical nodes
       $convertFromMarkdownString(initialContent, ALL_TRANSFORMERS);
-      
+
       // Post-process: find any remaining image markdown in text nodes and convert them
       const root = $getRoot();
       const imageRegex = /^!\[([^\]]*)\]\(([^)]+)\)$/;
-      
+
       const processNode = (node: LexicalNode) => {
         if ($isTextNode(node)) {
           const text = node.getTextContent();
           const match = text.match(imageRegex);
-          
+
           if (match) {
             const [, altText, src] = match;
             const imageNode = $createImageNode(src, altText || "image");
@@ -1079,7 +1121,7 @@ function InitializePlugin({ initialContent }: { initialContent?: string }) {
           children.forEach(processNode);
         }
       };
-      
+
       root.getChildren().forEach(processNode);
     });
   }, [editor, initialContent]);
@@ -1168,16 +1210,23 @@ export function LexicalEditor({
   placeholder = "Begin your story...",
 }: LexicalEditorProps) {
   // Use useSyncExternalStore for flicker-free hydration detection
-  const isClient = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
+  const isClient = useSyncExternalStore(
+    emptySubscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Memoize config to prevent recreation on every render
-  const initialConfig = useMemo<InitialConfigType>(() => ({
-    namespace: "ChronicleEditor",
-    theme,
-    onError: handleEditorError,
-    nodes: EDITOR_NODES,
-  }), []);
+  const initialConfig = useMemo<InitialConfigType>(
+    () => ({
+      namespace: "ChronicleEditor",
+      theme,
+      onError: handleEditorError,
+      nodes: EDITOR_NODES,
+    }),
+    [],
+  );
 
   const handleChange = useCallback(
     (editorState: EditorState) => {
@@ -1186,7 +1235,7 @@ export function LexicalEditor({
         onChange(markdown);
       });
     },
-    [onChange]
+    [onChange],
   );
 
   const triggerImageUpload = useCallback(() => {

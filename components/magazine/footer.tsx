@@ -27,10 +27,7 @@ export function Footer() {
               Navigation
             </h3>
             <nav className="flex flex-col gap-2">
-              <Link
-                href="/"
-                className="font-serif text-sm hover:underline"
-              >
+              <Link href="/" className="font-serif text-sm hover:underline">
                 Home
               </Link>
               <Link
@@ -45,10 +42,7 @@ export function Footer() {
               >
                 My Posts
               </Link>
-              <Link
-                href="/new"
-                className="font-serif text-sm hover:underline"
-              >
+              <Link href="/new" className="font-serif text-sm hover:underline">
                 Write Article
               </Link>
             </nav>

@@ -7,7 +7,7 @@ function getR2Client(): S3Client {
 
   if (!endpoint || !accessKeyId || !secretAccessKey) {
     throw new Error(
-      "R2 credentials are not set. Please set R2_ENDPOINT, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY."
+      "R2 credentials are not set. Please set R2_ENDPOINT, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY.",
     );
   }
 

@@ -18,7 +18,9 @@ interface PostPageProps {
   }>;
 }
 
-export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PostPageProps): Promise<Metadata> {
   const { username, slug } = await params;
   const decodedUsername = decodeURIComponent(username).replace("@", "");
   const result = await getPost(decodedUsername, slug);
@@ -73,7 +75,10 @@ export default async function PostPage({ params }: PostPageProps) {
       {/* Article Header */}
       <header className="mb-12 border-b-4 border-black pb-8 text-center dark:border-white">
         <div className="mb-6 flex justify-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          <Link href={`/@${author.username}`} className="hover:text-foreground hover:underline">
+          <Link
+            href={`/@${author.username}`}
+            className="hover:text-foreground hover:underline"
+          >
             {author.name}
           </Link>
           <span>•</span>

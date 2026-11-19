@@ -36,7 +36,9 @@ export function proxy(request: NextRequest) {
 
   // Redirect logged-in users away from auth routes (preserve callbackUrl)
   if (isAuthRoute && isLoggedIn) {
-    const callbackUrl = safeCallbackUrl(request.nextUrl.searchParams.get("callbackUrl"));
+    const callbackUrl = safeCallbackUrl(
+      request.nextUrl.searchParams.get("callbackUrl"),
+    );
     return NextResponse.redirect(new URL(callbackUrl, request.url));
   }
 
