@@ -14,10 +14,6 @@ BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=dummy-google-client
 GOOGLE_CLIENT_SECRET=dummy-google-secret
-R2_ACCESS_KEY_ID=dummy
-R2_SECRET_ACCESS_KEY=dummy
-R2_BUCKET_NAME=test
-R2_ENDPOINT=http://127.0.0.1:9
 NEXT_PUBLIC_R2_DOMAIN=http://127.0.0.1:9
 ```
 
@@ -39,7 +35,7 @@ The not-found smoke asserts the 404 UI rather than HTTP status, because App Rout
 can stream the not-found boundary after sending a 200 response.
 No real OAuth or R2 credentials are needed: action tests mock session, cache, and
 R2 content calls; browser tests use signed-out sessions and database content
-fallback with a deliberately unreachable local R2 endpoint.
+fallback with Wrangler's local R2 simulation.
 
 Add unit tests under `tests/unit`, integration suites under `tests/integration`,
 and browser tests under `tests/e2e`. Reuse `tests/helpers/db.ts` for database
@@ -67,7 +63,7 @@ bun run cf-typegen  # generate Cloudflare binding types
 
 `bun run dev` still uses the Next.js development server. Next.js was upgraded
 to 16.4.6 to meet OpenNext's supported peer range; `proxy.ts` support in OpenNext
-is experimental. R2 bindings and incremental caching are not configured yet.
+is experimental. R2 uses a native bucket binding; incremental caching is not configured yet.
 Do not treat the deployment commands as production-ready until those follow-up
 migrations land.
 
@@ -128,7 +124,7 @@ Live: **[chronicle-lyart.vercel.app](https://chronicle-lyart.vercel.app)**
 | Rendering       | `react-markdown` + `remark-gfm` + `react-syntax-highlighter` |
 | Database        | PostgreSQL (Neon), Drizzle ORM, `postgres` driver            |
 | Auth            | Better Auth with Google OAuth                                |
-| Storage         | Cloudflare R2 (S3-compatible) via `@aws-sdk/client-s3`       |
+| Storage         | Cloudflare R2 via native Workers bucket binding              |
 | Validation      | Zod + `react-hook-form` + `@hookform/resolvers`              |
 | Package manager | Bun                                                          |
 
@@ -192,10 +188,28 @@ API surface for writes.
 ### Images
 
 `app/api/upload/route.ts` accepts JPEG, PNG, GIF, and WebP up to 5 MB, enforced
-in `lib/r2.ts` alongside the lazily-constructed S3 client. Public reads go
+in `lib/image-upload.ts`; storage uses the native `R2` bucket binding. Public reads go
 through `NEXT_PUBLIC_R2_DOMAIN` rather than proxying bytes through the app.
 
 ## Getting started
+
+### R2 storage
+
+Create the bucket with `bunx wrangler r2 bucket create chronicle` and set
+`r2_buckets[].bucket_name` in `wrangler.jsonc` to its name. The `R2` binding
+stores images and Markdown without S3 credentials or presigned URLs. Set
+`NEXT_PUBLIC_R2_DOMAIN` to the bucket's public/custom domain for media URLs;
+Markdown is read privately through the binding. Run `bun run cf-typegen`
+after changing bindings.
+
+`next dev`, `next start`, and Wrangler previews use local R2 simulation
+persisted under `.wrangler/state` (no remote bucket access). `next dev` initializes
+bindings via `initOpenNextCloudflareForDev`; the async context accessor also
+supports Node production previews and static generation. Vitest storage tests
+use an in-memory bucket mock. The seed-image and content-migration scripts use
+Wrangler's local binding proxy, require `--local` for writes, and must target a
+local database: their objects are not uploaded to the real bucket. The migration
+script still supports `--dry-run` without a bucket.
 
 ```bash
 bun install
@@ -210,9 +224,6 @@ Copy `env.example` to `.env.local` and fill it in:
 | `BETTER_AUTH_SECRET`                        | Better Auth signing secret                                     |
 | `BETTER_AUTH_URL`                           | Auth base URL                                                  |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials                                       |
-| `R2_ENDPOINT`                               | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`                |
-| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 credentials                                                 |
-| `R2_BUCKET_NAME`                            | Manuscript-content and image bucket                            |
 | `NEXT_PUBLIC_R2_DOMAIN`                     | Public domain for serving uploaded media                       |
 
 Then run migrations and start the dev server:
@@ -227,7 +238,7 @@ Open [http://localhost:3000](http://localhost:3000).
 Useful scripts:
 
 ```bash
-bunx tsx scripts/seed-posts.ts                       # seed sample manuscripts
+bunx tsx scripts/seed-posts.ts --local                       # seed sample manuscripts
 bunx tsx scripts/migrate-content-to-r2.ts --dry-run  # preview the R2 move
 ```
 
