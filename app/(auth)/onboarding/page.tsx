@@ -11,11 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ImageUpload } from "@/components/layout/image-upload";
 import { checkUsernameAvailable, setUsername, updateAvatar } from "@/actions/users";
 import { useSession } from "@/lib/auth-client";
+import { safeCallbackUrl } from "@/lib/redirects";
 
 function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
   const { data: session, refetch } = useSession();
   const [isPending, startTransition] = useTransition();
   const [username, setUsernameValue] = useState("");

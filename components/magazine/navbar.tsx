@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/auth/user-menu";
 import { SearchInput } from "@/components/layout/search-input";
 import { cn } from "@/lib/utils";
+import { safeCallbackUrl } from "@/lib/redirects";
 
 interface NavbarProps {
   className?: string;
@@ -75,7 +76,7 @@ export function Navbar({ className }: NavbarProps) {
                 asChild
                 className="h-7 text-xs font-bold uppercase tracking-widest"
               >
-                                <Link href={`/sign-in?callbackUrl=${encodeURIComponent(pathname)}`}>Sign in</Link>
+                                <Link href={`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackUrl(pathname))}`}>Sign in</Link>
               </Button>
             )}
           </div>
