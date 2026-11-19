@@ -36,7 +36,10 @@ export async function POST(request: Request) {
   uploadWindows.set(session.user.id, times);
 
   const contentLength = request.headers.get("content-length");
-  if (contentLength !== null && Number(contentLength) > MAX_REQUEST_SIZE) {
+  if (contentLength === null) {
+    return Response.json({ error: "Content-Length required" }, { status: 411 });
+  }
+  if (!(Number(contentLength) <= MAX_REQUEST_SIZE)) {
     return Response.json({ error: IMAGE_SIZE_ERROR }, { status: 413 });
   }
 
