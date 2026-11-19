@@ -57,9 +57,9 @@ export function ListCard({ post, className }: ListCardProps) {
             {post.title}
           </h3>
           <PostSummary post={post} />
-          <p className="line-clamp-2 font-serif text-base leading-relaxed text-muted-foreground">
+          {!post.subtitle && <p className="line-clamp-2 font-serif text-base leading-relaxed text-muted-foreground">
             {post.excerpt}
-          </p>
+          </p>}
         </Link>
       </CardContent>
     </Card>

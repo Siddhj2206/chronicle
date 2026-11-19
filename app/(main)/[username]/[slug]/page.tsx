@@ -92,7 +92,7 @@ export default async function PostPage({ params }: PostPageProps) {
         </h1>
         <PostSummary post={{ ...post, content: postContent }} />
 
-        {post.excerpt && (
+        {!post.subtitle && post.excerpt && (
           <p className="mx-auto max-w-2xl font-serif text-xl italic leading-relaxed text-muted-foreground md:text-2xl">
             {post.excerpt}
           </p>

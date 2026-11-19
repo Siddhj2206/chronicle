@@ -57,9 +57,9 @@ export function GridCard({ post, className }: GridCardProps) {
             {post.title}
           </h3>
           <PostSummary post={post} />
-          <p className="mt-2 line-clamp-3 font-serif text-sm leading-relaxed text-muted-foreground">
+          {!post.subtitle && <p className="mt-2 line-clamp-3 font-serif text-sm leading-relaxed text-muted-foreground">
             {post.excerpt}
-          </p>
+          </p>}
         </Link>
       </CardContent>
     </Card>

@@ -239,6 +239,7 @@ export async function updatePost(slug: string, formData: FormData) {
     await revalidateContent(postId);
 
     revalidatePath("/manuscripts");
+    revalidatePath("/");
     revalidatePath(`/@${(session.user as { username?: string }).username}/${slug}`);
 
     return { success: true, slug: updatedPost.slug };
