@@ -76,17 +76,16 @@ export default async function PostPage({
   const postContent = content || post.content;
 
   return (
-    <article className="mx-auto max-w-3xl pb-20">
+    <article className="reader">
       {/* Article Header */}
-      <header className="mb-12 border-b-4 border-black pb-8 text-center dark:border-white">
-        <div className="mb-6 flex justify-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+      <header className="reader-header">
+        <div className="reader-meta">
           <Link
             href={`/@${author.username}`}
             className="hover:text-foreground hover:underline"
           >
             {author.name}
           </Link>
-          <span>•</span>
           <time dateTime={post.publishedAt?.toISOString()}>
             {post.publishedAt?.toLocaleDateString("en-US", {
               month: "long",
@@ -96,42 +95,44 @@ export default async function PostPage({
           </time>
         </div>
 
-        <h1 className="mb-6 font-serif text-5xl font-black leading-tight tracking-tight md:text-6xl lg:text-7xl">
-          {post.title}
-        </h1>
+        <h1 className="reader-title">{post.title}</h1>
 
-        {post.excerpt && (
-          <p className="mx-auto max-w-2xl font-serif text-xl italic leading-relaxed text-muted-foreground md:text-2xl">
-            {post.excerpt}
-          </p>
-        )}
+        {post.excerpt && <p className="reader-deck">{post.excerpt}</p>}
       </header>
 
       {/* Cover Image (if exists) */}
       {post.coverImage && (
-        <figure className="mb-12">
-          <div className="relative aspect-[3/2] w-full overflow-hidden border border-border">
+        <figure className="reader-cover">
+          <div className="story-cover">
             <Image
               src={post.coverImage}
               alt={post.title}
               fill
+              sizes="(max-width: 1200px) 100vw, 1180px"
               className="object-cover"
               priority
             />
           </div>
-          <figcaption className="mt-2 text-center font-sans text-xs uppercase tracking-widest text-muted-foreground">
-            Image Credit: {author.name}
-          </figcaption>
+          <figcaption>Image Credit: {author.name}</figcaption>
         </figure>
       )}
 
+      {!post.coverImage && (
+        <div className="reader-cover-initial" aria-hidden="true">
+          <span className="title-initial">
+            {Array.from(post.title.trim())[0]?.toLocaleUpperCase("en-US") ||
+              "C"}
+          </span>
+        </div>
+      )}
+
       {/* Article Content */}
-      <div className="prose prose-lg prose-neutral dark:prose-invert mx-auto font-serif prose-headings:font-bold prose-headings:tracking-tight prose-p:leading-loose">
+      <div className="reader-column">
         <PostContent content={postContent} />
       </div>
 
       {/* Post Actions */}
-      <div className="mt-12 flex items-center justify-center border-y border-border py-6">
+      <div className="reader-actions reader-column">
         <LikeButton
           postId={post.id}
           initialLiked={userLiked}
@@ -140,36 +141,31 @@ export default async function PostPage({
       </div>
 
       {/* Article Footer / Author Bio */}
-      <footer className="mt-12 border-b border-border pb-12">
-        <div className="flex flex-col items-center gap-4 text-center">
-          {author.image && (
-            <div className="relative h-16 w-16 overflow-hidden border border-neutral-300 dark:border-neutral-700">
-              <Image
-                src={author.image}
-                alt={author.name}
-                fill
-                className="object-cover"
-              />
-            </div>
-          )}
-          <div>
-            <div className="mb-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Written By
-            </div>
-            <h3 className="font-serif text-2xl font-bold">
-              <Link href={`/@${author.username}`} className="hover:underline">
-                {author.name}
-              </Link>
-            </h3>
+      <footer className="reader-author reader-column">
+        {author.image && (
+          <div className="reader-author-image">
+            <Image
+              src={author.image}
+              alt={author.name}
+              fill
+              sizes="64px"
+              className="object-cover"
+            />
           </div>
+        )}
+        <div>
+          <div className="reader-author-label">Written By</div>
+          <h2>
+            <Link href={`/@${author.username}`} className="hover:underline">
+              {author.name}
+            </Link>
+          </h2>
         </div>
       </footer>
 
       {/* Comments Section */}
-      <section className="mt-12">
-        <h2 className="mb-8 border-y-2 border-black py-4 text-center font-mono text-sm font-bold uppercase tracking-widest dark:border-white">
-          Letters to the Editor
-        </h2>
+      <section className="reader-comments reader-column">
+        <h2>Reader notes</h2>
         <div className="mb-10">
           <CommentForm
             postId={post.id}

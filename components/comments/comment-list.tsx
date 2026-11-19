@@ -4,28 +4,27 @@ import { getSession } from "@/lib/session";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CommentContent } from "@/components/comments/comment-content";
 import { getComments } from "@/actions/comments";
-import { DeleteCommentButton } from "./delete-comment-button";
+import { DeleteCommentButton } from "@/components/comments/delete-comment-button";
 
 interface CommentListProps {
   postId: string;
   postAuthorId: string;
 }
 
-export async function CommentList({ postId, postAuthorId }: CommentListProps) {
+export async function CommentList({
+  postId,
+  postAuthorId,
+}: CommentListProps): Promise<React.JSX.Element> {
   const session = await getSession();
   const comments = await getComments(postId);
 
   if (comments.length === 0) {
-    return (
-      <p className="py-12 text-center font-serif italic text-muted-foreground">
-        No letters have been received for this article.
-      </p>
-    );
+    return <p className="comment-empty">The conversation starts here.</p>;
   }
 
   return (
     <div className="space-y-0">
-      {comments.map(({ comment, author }, index) => {
+      {comments.map(({ comment, author }) => {
         const initials = author.name
           ?.split(" ")
           .map((n: string) => n[0])
@@ -46,53 +45,36 @@ export async function CommentList({ postId, postAuthorId }: CommentListProps) {
         );
 
         return (
-          <article
-            key={comment.id}
-            className={
-              index > 0
-                ? "border-t border-neutral-300 pt-8 dark:border-neutral-700"
-                : ""
-            }
-          >
-            <header className="mb-4 flex items-start justify-between gap-4">
+          <article key={comment.id} className="comment-entry">
+            <header>
               <div className="flex items-start gap-4">
-                <Avatar className="h-12 w-12 rounded-none border border-neutral-300 dark:border-neutral-700">
+                <Avatar>
                   <AvatarImage
                     src={author.image || undefined}
                     alt={author.name || "User avatar"}
                   />
-                  <AvatarFallback className="rounded-none font-mono text-xs">
-                    {initials || "U"}
-                  </AvatarFallback>
+                  <AvatarFallback>{initials || "U"}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <div className="flex items-baseline gap-2">
+                  <div className="comment-byline">
                     <Link
                       href={`/@${author.username}`}
-                      className="font-serif font-bold hover:underline"
+                      className="hover:underline"
                     >
                       {author.name}
                     </Link>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      @{author.username}
-                    </span>
+                    <span>@{author.username}</span>
                   </div>
-                  <time
-                    dateTime={comment.createdAt.toISOString()}
-                    className="font-mono text-xs uppercase tracking-wide text-muted-foreground"
-                  >
-                    Published: {formattedDate}
+                  <time dateTime={comment.createdAt.toISOString()}>
+                    {formattedDate}
                   </time>
                 </div>
               </div>
               {canDelete && <DeleteCommentButton commentId={comment.id} />}
             </header>
-            <div className="prose prose-sm prose-neutral dark:prose-invert ml-16 font-serif italic">
-              <span className="text-muted-foreground">&ldquo;</span>
+            <div>
               <CommentContent content={comment.content} />
-              <span className="text-muted-foreground">&rdquo;</span>
             </div>
-            {index < comments.length - 1 && <div className="pb-8" />}
           </article>
         );
       })}
