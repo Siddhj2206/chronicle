@@ -10,7 +10,23 @@
     "binding": "ASSETS",
   },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "chronicle" }],
-  "r2_buckets": [{ "binding": "R2", "bucket_name": "chronicle" }],
+  "r2_buckets": [
+    { "binding": "R2", "bucket_name": "chronicle" },
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "chronicle-cache" },
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" },
+    ],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }],
+  "d1_databases": [
+    {
+      "binding": "NEXT_TAG_CACHE_D1",
+      "database_name": "chronicle-tags",
+      "database_id": "00000000000000000000000000000000",
+    },
+  ],
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
