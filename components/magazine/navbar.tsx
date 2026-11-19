@@ -41,7 +41,12 @@ export function Navbar({ className }: NavbarProps) {
 
   return (
     <div className={cn("border-b border-border py-2 bg-background", className)}>
-      <div className={cn("container mx-auto flex max-w-7xl items-center justify-between px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground", session?.user && "flex-wrap gap-y-2")}>
+      <div
+        className={cn(
+          "container mx-auto flex max-w-7xl items-center justify-between px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground",
+          session?.user && "flex-wrap gap-y-2",
+        )}
+      >
         <div className="flex items-center gap-4">
           {isHomePage ? (
             <>
@@ -58,12 +63,22 @@ export function Navbar({ className }: NavbarProps) {
           )}
         </div>
 
-        <div className={cn("flex items-center gap-4", session?.user && "w-full justify-end sm:w-auto")}>
+        <div
+          className={cn(
+            "flex items-center gap-4",
+            session?.user && "w-full justify-end sm:w-auto",
+          )}
+        >
           <SearchInput />
           <div className="flex items-center gap-2">
             {session?.user ? (
               <>
-                <Link href="/following" className="font-bold hover:text-foreground hover:underline">Following</Link>
+                <Link
+                  href="/following"
+                  className="font-bold hover:text-foreground hover:underline"
+                >
+                  Following
+                </Link>
                 <Button
                   variant="ghost"
                   size="sm"

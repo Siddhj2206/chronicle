@@ -64,13 +64,14 @@ export default async function PostPage({
   const { post, author } = result;
 
   // Fetch content from R2 and like data in parallel
-  const [content, likeCount, userLiked, followInfo, session] = await Promise.all([
-    getPostContent(post.id),
-    getLikeCount(post.id),
-    hasUserLiked(post.id),
-    getFollowInfo(author.id),
-    getSession(),
-  ]);
+  const [content, likeCount, userLiked, followInfo, session] =
+    await Promise.all([
+      getPostContent(post.id),
+      getLikeCount(post.id),
+      hasUserLiked(post.id),
+      getFollowInfo(author.id),
+      getSession(),
+    ]);
 
   // Track view (fire and forget - don't await)
   incrementViewCount(post.id);
@@ -165,7 +166,11 @@ export default async function PostPage({
               </Link>
             </h3>
           </div>
-          <FollowButton authorId={author.id} viewerId={followInfo.viewerId} initialFollowing={followInfo.isFollowing} />
+          <FollowButton
+            authorId={author.id}
+            viewerId={followInfo.viewerId}
+            initialFollowing={followInfo.isFollowing}
+          />
         </div>
       </footer>
 

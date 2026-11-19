@@ -17,7 +17,11 @@ interface FollowButtonProps {
   initialFollowing: boolean;
 }
 
-export function FollowButton({ authorId, viewerId, initialFollowing }: FollowButtonProps): ReactElement | null {
+export function FollowButton({
+  authorId,
+  viewerId,
+  initialFollowing,
+}: FollowButtonProps): ReactElement | null {
   const pathname = usePathname();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -25,7 +29,13 @@ export function FollowButton({ authorId, viewerId, initialFollowing }: FollowBut
 
   if (viewerId === authorId) return null;
   if (!viewerId) {
-    return <Button variant="outline" asChild><Link href={`/sign-in?callbackUrl=${encodeURIComponent(pathname)}`}>Sign in to follow</Link></Button>;
+    return (
+      <Button variant="outline" asChild>
+        <Link href={`/sign-in?callbackUrl=${encodeURIComponent(pathname)}`}>
+          Sign in to follow
+        </Link>
+      </Button>
+    );
   }
 
   function handleFollow() {
@@ -42,7 +52,12 @@ export function FollowButton({ authorId, viewerId, initialFollowing }: FollowBut
   }
 
   return (
-    <Button variant="outline" onClick={handleFollow} disabled={pending} aria-pressed={following}>
+    <Button
+      variant="outline"
+      onClick={handleFollow}
+      disabled={pending}
+      aria-pressed={following}
+    >
       {following ? "Unfollow" : "Follow"}
     </Button>
   );

@@ -77,10 +77,17 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         )}
         <div className="mt-6 flex flex-col items-center gap-4">
           <p className="flex gap-6 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-            <span>{followInfo.followers} {followInfo.followers === 1 ? "follower" : "followers"}</span>
+            <span>
+              {followInfo.followers}{" "}
+              {followInfo.followers === 1 ? "follower" : "followers"}
+            </span>
             <span>{followInfo.following} following</span>
           </p>
-          <FollowButton authorId={userData.id} viewerId={followInfo.viewerId} initialFollowing={followInfo.isFollowing} />
+          <FollowButton
+            authorId={userData.id}
+            viewerId={followInfo.viewerId}
+            initialFollowing={followInfo.isFollowing}
+          />
         </div>
       </div>
 
