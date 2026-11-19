@@ -17,6 +17,7 @@ export function readingTimeMinutes(markdown: string): number {
     .replace(/<[^>]*>/g, " ")
     .replace(/[#*_~>|`\[\]{}\\]/g, " ")
     .replace(/^\s*(?:[-+] |\d+[.)] )/gm, " ");
-  const words = text.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu)?.length ?? 0;
-  return Math.max(1, Math.ceil(words / 238 + images * 12 / 60));
+  const words =
+    text.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu)?.length ?? 0;
+  return Math.max(1, Math.ceil(words / 238 + (images * 12) / 60));
 }

@@ -70,9 +70,11 @@ export function HeroCard({ post, className }: HeroCardProps) {
             {post.title}
           </h2>
           <PostSummary post={post} />
-          {!post.subtitle && <p className="font-serif text-lg leading-relaxed text-muted-foreground md:text-xl">
-            {post.excerpt}
-          </p>}
+          {!post.subtitle && (
+            <p className="font-serif text-lg leading-relaxed text-muted-foreground md:text-xl">
+              {post.excerpt}
+            </p>
+          )}
         </Link>
       </div>
     </article>

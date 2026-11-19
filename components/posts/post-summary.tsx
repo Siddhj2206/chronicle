@@ -10,14 +10,21 @@ interface PostSummaryProps {
   variant?: "card" | "article" | "compact";
 }
 
-export function PostSummary({ post, variant = "card" }: PostSummaryProps): ReactElement {
+export function PostSummary({
+  post,
+  variant = "card",
+}: PostSummaryProps): ReactElement {
   return (
     <div className="my-2 space-y-2 text-muted-foreground">
       {variant !== "compact" && post.subtitle && (
-        <p className={cn(
-          "font-serif leading-relaxed",
-          variant === "article" ? "mx-auto max-w-2xl text-xl italic md:text-2xl" : "text-lg"
-        )}>
+        <p
+          className={cn(
+            "font-serif leading-relaxed",
+            variant === "article"
+              ? "mx-auto max-w-2xl text-xl italic md:text-2xl"
+              : "text-lg",
+          )}
+        >
           {post.subtitle}
         </p>
       )}

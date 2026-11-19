@@ -59,7 +59,13 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
 
   // Track if there are unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
-  const initialDataRef = useRef({ title, subtitle, excerpt, content, coverImage });
+  const initialDataRef = useRef({
+    title,
+    subtitle,
+    excerpt,
+    content,
+    coverImage,
+  });
 
   // Use ref to store form data for savePost to avoid recreation on every state change
   const formDataRef = useRef({ title, subtitle, excerpt, content, coverImage });
@@ -100,7 +106,8 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   // Optimized savePost using refs to minimize dependency array
   const savePost = useCallback(
     async (isAutoSave = false): Promise<SaveResult> => {
-      const { title, subtitle, content, excerpt, coverImage } = formDataRef.current;
+      const { title, subtitle, content, excerpt, coverImage } =
+        formDataRef.current;
 
       if (!title.trim()) {
         if (!isAutoSave) toast.error("Title is required");
@@ -132,7 +139,13 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           router.replace(`/edit/${result.slug}`);
           toast.success("Manuscript created");
           // Update initial data ref
-          initialDataRef.current = { title, subtitle, excerpt, content, coverImage };
+          initialDataRef.current = {
+            title,
+            subtitle,
+            excerpt,
+            content,
+            coverImage,
+          };
           setHasChanges(false);
           return { ok: true, slug: result.slug! };
         } else {
@@ -146,7 +159,13 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           }
           setLastSaved(new Date());
           // Update initial data ref
-          initialDataRef.current = { title, subtitle, excerpt, content, coverImage };
+          initialDataRef.current = {
+            title,
+            subtitle,
+            excerpt,
+            content,
+            coverImage,
+          };
           setHasChanges(false);
           return { ok: true, slug: result.slug! };
         }
@@ -369,8 +388,16 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
             onChange={(e) => setSubtitle(e.target.value)}
             minRows={1}
           />
-          <div id="subtitle-limit" className="flex flex-wrap justify-between gap-2 text-sm text-muted-foreground" aria-live="polite">
-            <span>{subtitle.length === 200 ? "Character limit reached. Additional characters are not added." : "Up to 200 characters."}</span>
+          <div
+            id="subtitle-limit"
+            className="flex flex-wrap justify-between gap-2 text-sm text-muted-foreground"
+            aria-live="polite"
+          >
+            <span>
+              {subtitle.length === 200
+                ? "Character limit reached. Additional characters are not added."
+                : "Up to 200 characters."}
+            </span>
             <span>{subtitle.length}/200</span>
           </div>
 
