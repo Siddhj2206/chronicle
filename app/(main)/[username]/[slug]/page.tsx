@@ -8,6 +8,8 @@ import { PostContent } from "@/components/posts/post-content";
 import { LikeButton } from "@/components/posts/post-actions";
 import { CommentList } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
+import { FollowButton } from "@/components/auth/follow-button";
+import { getFollowInfo } from "@/actions/follows";
 
 import type { Metadata } from "next";
 
@@ -56,10 +58,11 @@ export default async function PostPage({ params }: PostPageProps) {
   const { post, author } = result;
 
   // Fetch content from R2 and like data in parallel
-  const [content, likeCount, userLiked] = await Promise.all([
+  const [content, likeCount, userLiked, followInfo] = await Promise.all([
     getPostContent(post.id),
     getLikeCount(post.id),
     hasUserLiked(post.id),
+    getFollowInfo(author.id),
   ]);
 
   // Track view (fire and forget - don't await)
@@ -152,6 +155,7 @@ export default async function PostPage({ params }: PostPageProps) {
               </Link>
             </h3>
           </div>
+          <FollowButton authorId={author.id} viewerId={followInfo.viewerId} initialFollowing={followInfo.isFollowing} />
         </div>
       </footer>
 

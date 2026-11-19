@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { getPostsByUser } from "@/actions/posts";
 import { ListCard } from "@/components/magazine/list-card";
+import { FollowButton } from "@/components/auth/follow-button";
+import { getFollowInfo } from "@/actions/follows";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
@@ -40,6 +42,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     notFound();
   }
 
+  const followInfo = await getFollowInfo(userData.id);
+
   return (
     <div className="mx-auto max-w-4xl pb-12">
       {/* Profile Header - Classic Masthead Style */}
@@ -71,6 +75,13 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             </p>
           </div>
         )}
+        <div className="mt-6 flex flex-col items-center gap-4">
+          <p className="flex gap-6 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            <span>{followInfo.followers} {followInfo.followers === 1 ? "follower" : "followers"}</span>
+            <span>{followInfo.following} following</span>
+          </p>
+          <FollowButton authorId={userData.id} viewerId={followInfo.viewerId} initialFollowing={followInfo.isFollowing} />
+        </div>
       </div>
 
       {/* Posts Section */}
