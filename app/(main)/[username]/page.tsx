@@ -77,7 +77,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           </div>
         )}
         <div className="mt-6 flex flex-col items-center gap-4">
-          <p className="flex gap-6 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+          <p className="story-meta flex gap-6">
             <span>
               {followInfo.followers}{" "}
               {followInfo.followers === 1 ? "follower" : "followers"}
