@@ -44,6 +44,7 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
   context,
   page,
 }) => {
+  test.setTimeout(60_000);
   const writer = await signIn(context, { name: "Amelia Reed" });
   const db = await getDb();
   const [community] = await db
@@ -63,6 +64,8 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
       .fill(
         "A thoughtful guide to gardens and the communities that grow around them.",
       );
+    await page.getByRole("button", { name: "Publish", exact: true }).click();
+    const panel = page.getByRole("dialog");
     const input = page.getByPlaceholder("Add a tag", { exact: true });
     const invalidName = page.getByText(
       "Use a tag of 1–50 characters with letters or numbers.",
@@ -86,19 +89,36 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
       await input.press("Enter");
     }
     await capture(page, "editor-tags");
-    await page.getByRole("button", { name: "Save Draft", exact: true }).click();
+    await panel.getByRole("button", { name: "Close", exact: true }).click();
+    const saved = page.getByRole("status").filter({ hasText: /^Saved$/ });
+    await expect(saved).toBeVisible({ timeout: 15000 });
     await expect(page).toHaveURL(/\/edit\//);
     const editPath = new URL(page.url()).pathname;
     await page.reload();
+    await page.getByRole("button", { name: "Publish", exact: true }).click();
     await expect(
       page.getByRole("button", { name: "Remove Gardens", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Remove Community", exact: true }),
     ).toBeVisible();
+    await page
+      .getByRole("button", { name: "Remove Gardens", exact: true })
+      .click();
+    await panel.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(saved).toBeVisible({ timeout: 15000 });
+    await page.reload();
     await page.getByRole("button", { name: "Publish", exact: true }).click();
     await expect(
-      page.getByRole("button", { name: "Unpublish", exact: true }),
+      page.getByRole("button", { name: "Remove Gardens", exact: true }),
+    ).toHaveCount(0);
+    await input.fill("Gardens");
+    await input.press("Enter");
+    await panel
+      .getByRole("button", { name: "Confirm publish", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Publishing settings", exact: true }),
     ).toBeEnabled();
     await page.goto(`/@${writer.username}/${editPath.split("/").pop()}`);
     const topics = page.getByLabel("Topics", { exact: true });
@@ -152,16 +172,24 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
     await capture(page, "search-filter");
     await page.goto(editPath);
     await page
+      .getByRole("button", { name: "Publishing settings", exact: true })
+      .click();
+    await page
       .getByRole("button", { name: "Remove Gardens", exact: true })
       .click();
-    await page.getByRole("button", { name: "Save Draft", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "Save Draft", exact: true }),
-    ).toBeDisabled();
+    await panel
+      .getByRole("button", { name: "Save changes", exact: true })
+      .click();
+    await expect(panel).not.toBeVisible();
+    await expect(saved).toBeVisible();
     await page.reload();
+    await page
+      .getByRole("button", { name: "Publishing settings", exact: true })
+      .click();
     await expect(
       page.getByRole("button", { name: "Remove Gardens", exact: true }),
     ).toHaveCount(0);
+    await panel.getByRole("button", { name: "Close", exact: true }).click();
     await page.goto("/search?q=gardens&tag=gardens");
     await expect(
       page.getByText("No stories found matching your query.", { exact: true }),
