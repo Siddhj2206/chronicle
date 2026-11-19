@@ -26,6 +26,19 @@ export function SearchResults({
   initialResults,
   searchParams,
 }: SearchResultsProps) {
+  return (
+    <SearchResultsList
+      key={JSON.stringify([searchParams.query, searchParams.author, searchParams.datePreset, searchParams.limit])}
+      initialResults={initialResults}
+      searchParams={searchParams}
+    />
+  );
+}
+
+function SearchResultsList({
+  initialResults,
+  searchParams,
+}: SearchResultsProps) {
   const [results, setResults] = useState(initialResults.posts);
   const [hasMore, setHasMore] = useState(initialResults.hasMore);
   const [cursor, setCursor] = useState(initialResults.nextCursor);
