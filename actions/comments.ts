@@ -10,7 +10,6 @@ import { comment, post, user } from "@/lib/db/schema";
 import { commentSchema } from "@/lib/validators";
 
 export async function addComment(postId: string, formData: FormData) {
-  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -26,6 +25,7 @@ export async function addComment(postId: string, formData: FormData) {
   }
 
   try {
+    const db = await getDb();
     if (!(await getVisiblePost(postId))) {
       return { error: "Post not found" };
     }
@@ -60,7 +60,6 @@ export async function addComment(postId: string, formData: FormData) {
 }
 
 export async function deleteComment(commentId: string) {
-  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -68,6 +67,7 @@ export async function deleteComment(commentId: string) {
   }
 
   try {
+    const db = await getDb();
     // Get the comment to check ownership
     const commentData = await db
       .select()
@@ -125,8 +125,8 @@ export async function deleteComment(commentId: string) {
 }
 
 export async function getComments(postId: string) {
-  const db = await getDb();
   try {
+    const db = await getDb();
     if (!(await getVisiblePost(postId))) {
       return [];
     }

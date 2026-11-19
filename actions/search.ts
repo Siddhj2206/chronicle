@@ -93,7 +93,6 @@ const searchCursorSchema = z.object({
  * @returns Paginated search results
  */
 export async function searchPosts(params: SearchParams): Promise<SearchResult> {
-  const db = await getDb();
   const { query, author, datePreset, cursor, limit = 10 } = params;
 
   // Empty query returns empty results
@@ -128,6 +127,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
   END`;
 
   try {
+    const db = await getDb();
     if (after?.fallback) throw new Error("Continue fallback pagination");
     // Build WHERE conditions dynamically
     // Hybrid approach: full-text search with ILIKE fallback for stop words
@@ -201,6 +201,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
     
     // Fallback: Simple ILIKE search without full-text
     try {
+      const db = await getDb();
       const likePattern = `%${searchTerm}%`;
       const fallbackConditions = [
         eq(post.published, true),
@@ -267,8 +268,8 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
  * @returns Array of authors with their post counts, sorted by post count
  */
 export async function getAuthorsWithPosts(): Promise<AuthorWithPosts[]> {
-  const db = await getDb();
   try {
+    const db = await getDb();
     const result = await db
       .select({
         username: user.username,
