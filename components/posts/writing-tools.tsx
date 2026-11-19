@@ -17,6 +17,7 @@ import { $createLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { INSERT_HORIZONTAL_RULE_COMMAND } from "@lexical/react/LexicalHorizontalRuleNode";
 
 import { editorUrl } from "@/lib/draft";
+import { $isEmptyWritingParagraph } from "@/lib/writing-selection";
 
 import type { RangeSelection } from "lexical";
 
@@ -94,10 +95,7 @@ export function WritingTools({
         } else {
           const node = range.anchor.getNode();
           const block = node.getTopLevelElement();
-          if (
-            block?.getType() === "paragraph" &&
-            block.getTextContent() === ""
-          ) {
+          if ($isEmptyWritingParagraph(block)) {
             const bounds = editor
               .getElementByKey(block.getKey())
               ?.getBoundingClientRect();
@@ -177,8 +175,8 @@ export function WritingTools({
         const paragraph = $createParagraphNode().append(
           $createLinkNode(value).append($createTextNode(value)),
         );
-        if (block?.getType() === "paragraph" && !block.getTextContent())
-          block.replace(paragraph);
+        if (block && $isEmptyWritingParagraph(block)) block.replace(paragraph);
+        else if (block) block.insertAfter(paragraph);
         else range.insertNodes([paragraph]);
         const next = $createParagraphNode();
         paragraph.insertAfter(next);
