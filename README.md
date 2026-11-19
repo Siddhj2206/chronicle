@@ -50,6 +50,31 @@ explicitly; suites run serially against the same database. The shared setup mock
 CI runs lint, TypeScript, schema push, Vitest, production build, seed, and Chromium
 smoke tests. Playwright reports and traces are uploaded on failure.
 
+## Cloudflare Workers
+
+Workers scaffolding uses the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare).
+Copy `.dev.vars.example` to `.dev.vars` and fill in local environment values;
+also export build-time variables (including `NEXT_PUBLIC_*`), or use a Next.js
+`.env.local` file. Never commit secrets. For disposable testing, the `.env.test`
+values above can be used with `bun --env-file=.env.test run preview`.
+
+```bash
+bun run preview     # build and serve locally in the Workers runtime
+bun run deploy      # build and deploy (requires Cloudflare authentication)
+bun run upload      # build and upload a version without deploying
+bun run cf-typegen  # generate Cloudflare binding types
+```
+
+`bun run dev` still uses the Next.js development server. Next.js was upgraded
+to 16.4.6 to meet OpenNext's supported peer range; `proxy.ts` support in OpenNext
+is experimental. This is scaffolding only: Hyperdrive database connectivity,
+R2 bindings, and incremental caching are not configured yet. Do not treat the
+deployment commands as production-ready until those follow-up migrations land.
+Local smoke testing against PostgreSQL reached the home page, but sequential
+database-backed requests can fail with Workers' "Cannot perform I/O on behalf
+of a different request" error from the shared postgres.js client. This is left
+for the Hyperdrive migration rather than changing database code here.
+
 # Chronicle
 
 A writing and publishing workspace for long-form manuscripts. Chronicle separates
@@ -88,17 +113,17 @@ Live: **[chronicle-lyart.vercel.app](https://chronicle-lyart.vercel.app)**
 
 ## Stack
 
-| Layer | Technology |
-| --- | --- |
-| Framework | Next.js 16 (App Router), React 19, TypeScript (strict) |
-| Styling | Tailwind CSS 4, shadcn/ui |
-| Editor | Lexical (`@lexical/react`, `@lexical/markdown`) |
-| Rendering | `react-markdown` + `remark-gfm` + `react-syntax-highlighter` |
-| Database | PostgreSQL (Neon), Drizzle ORM, `postgres` driver |
-| Auth | Better Auth with Google OAuth |
-| Storage | Cloudflare R2 (S3-compatible) via `@aws-sdk/client-s3` |
-| Validation | Zod + `react-hook-form` + `@hookform/resolvers` |
-| Package manager | Bun |
+| Layer           | Technology                                                   |
+| --------------- | ------------------------------------------------------------ |
+| Framework       | Next.js 16 (App Router), React 19, TypeScript (strict)       |
+| Styling         | Tailwind CSS 4, shadcn/ui                                    |
+| Editor          | Lexical (`@lexical/react`, `@lexical/markdown`)              |
+| Rendering       | `react-markdown` + `remark-gfm` + `react-syntax-highlighter` |
+| Database        | PostgreSQL (Neon), Drizzle ORM, `postgres` driver            |
+| Auth            | Better Auth with Google OAuth                                |
+| Storage         | Cloudflare R2 (S3-compatible) via `@aws-sdk/client-s3`       |
+| Validation      | Zod + `react-hook-form` + `@hookform/resolvers`              |
+| Package manager | Bun                                                          |
 
 ## Implementation notes
 
@@ -171,17 +196,17 @@ bun install
 
 Copy `env.example` to `.env.local` and fill it in:
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Postgres connection string |
-| `NEXT_PUBLIC_APP_URL` | Public app origin (required for the auth client in production) |
-| `BETTER_AUTH_SECRET` | Better Auth signing secret |
-| `BETTER_AUTH_URL` | Auth base URL |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
-| `R2_ENDPOINT` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
-| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 credentials |
-| `R2_BUCKET_NAME` | Manuscript-content and image bucket |
-| `NEXT_PUBLIC_R2_DOMAIN` | Public domain for serving uploaded media |
+| Variable                                    | Purpose                                                        |
+| ------------------------------------------- | -------------------------------------------------------------- |
+| `DATABASE_URL`                              | Postgres connection string                                     |
+| `NEXT_PUBLIC_APP_URL`                       | Public app origin (required for the auth client in production) |
+| `BETTER_AUTH_SECRET`                        | Better Auth signing secret                                     |
+| `BETTER_AUTH_URL`                           | Auth base URL                                                  |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials                                       |
+| `R2_ENDPOINT`                               | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`                |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 credentials                                                 |
+| `R2_BUCKET_NAME`                            | Manuscript-content and image bucket                            |
+| `NEXT_PUBLIC_R2_DOMAIN`                     | Public domain for serving uploaded media                       |
 
 Then run migrations and start the dev server:
 
@@ -198,6 +223,31 @@ Useful scripts:
 bunx tsx scripts/seed-posts.ts                       # seed sample manuscripts
 bunx tsx scripts/migrate-content-to-r2.ts --dry-run  # preview the R2 move
 ```
+
+## Linting and formatting
+
+```bash
+bun run lint          # oxlint
+bun run lint:fix      # safe automatic lint fixes
+bun run format        # oxfmt, write changes
+bun run format:check  # CI formatting check
+```
+
+Oxlint preserves the supported Next core-web-vitals and TypeScript ESLint rules,
+including React hooks and experimental React Compiler checks. Hook rules use the
+`react` plugin, not a separate `react-hooks` plugin. The mount-time masthead date
+has a targeted `react/purity` suppression to preserve its existing behavior.
+
+The migration cannot retain Next's `no-location-assign-relative-destination`,
+React's `no-deprecated`, or the React Compiler `config` and `gating` rules natively.
+JSX usage rules are covered by unused-variable analysis and the modern JSX
+transform. No ESLint runtime or compatibility plugins are retained.
+
+Oxfmt uses double quotes, semicolons, two-space indentation, and an 80-column
+print width. Import, package-key, and Tailwind class sorting are disabled to
+preserve existing ordering; Oxfmt supports Tailwind sorting if desired later.
+Generated shadcn components (`components/ui`), Drizzle migrations, and build/test
+artifacts are excluded from formatting. Both tools also respect `.gitignore`.
 
 ## Project structure
 

@@ -29,7 +29,7 @@ export function Pagination({ currentPage, totalPages, sort, basePath = "/archive
           totalPages - 3,
           totalPages - 2,
           totalPages - 1,
-          totalPages
+          totalPages,
         );
       } else {
         pages.push(
@@ -39,7 +39,7 @@ export function Pagination({ currentPage, totalPages, sort, basePath = "/archive
           currentPage,
           currentPage + 1,
           "...",
-          totalPages
+          totalPages,
         );
       }
     }
@@ -69,10 +69,7 @@ export function Pagination({ currentPage, totalPages, sort, basePath = "/archive
       <div className="flex items-center gap-1 px-4">
         {pageNumbers.map((page, i) =>
           page === "..." ? (
-            <span
-              key={`ellipsis-${i}`}
-              className="px-2 text-muted-foreground"
-            >
+            <span key={`ellipsis-${i}`} className="px-2 text-muted-foreground">
               …
             </span>
           ) : (
@@ -83,12 +80,12 @@ export function Pagination({ currentPage, totalPages, sort, basePath = "/archive
                 "min-w-[2rem] px-2 py-1 text-center font-mono text-xs uppercase tracking-widest",
                 page === currentPage
                   ? "bg-black text-white dark:bg-white dark:text-black"
-                  : "hover:underline"
+                  : "hover:underline",
               )}
             >
               {page}
             </Link>
-          )
+          ),
         )}
       </div>
 

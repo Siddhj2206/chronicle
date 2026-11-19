@@ -1,15 +1,15 @@
 /**
  * Migration Script: Move blog content from PostgreSQL to R2
- * 
+ *
  * This script:
  * 1. Fetches all posts with content from the database
  * 2. Uploads each post's content to R2 as a markdown file
  * 3. Updates the database with the R2 path and search vector
- * 
+ *
  * Usage:
  *   bunx tsx scripts/migrate-content-to-r2.ts --dry-run  # Preview changes
  *   bunx tsx scripts/migrate-content-to-r2.ts            # Execute migration
- * 
+ *
  * Note: Ensure .env.local is present with required environment variables
  */
 
@@ -75,7 +75,7 @@ const post = pgTable(
     uniqueIndex("post_slug_idx").on(table.slug),
     index("post_author_idx").on(table.authorId),
     index("post_published_idx").on(table.published, table.publishedAt),
-  ]
+  ],
 );
 
 // Configuration
@@ -90,7 +90,7 @@ function getR2Client(): S3Client {
 
   if (!endpoint || !accessKeyId || !secretAccessKey) {
     throw new Error(
-      "R2 credentials not set. Required: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY"
+      "R2 credentials not set. Required: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY",
     );
   }
 
@@ -122,7 +122,11 @@ function stripMarkdown(markdown: string): string {
 }
 
 // Generate search vector text
-function generateSearchVector(title: string, excerpt: string | null, content: string): string {
+function generateSearchVector(
+  title: string,
+  excerpt: string | null,
+  content: string,
+): string {
   const cleanContent = stripMarkdown(content);
   return [title, title, excerpt || "", cleanContent].join(" ");
 }
@@ -154,7 +158,9 @@ async function main() {
   }
 
   console.log(`📦 R2 Bucket: ${bucketName}`);
-  console.log(`🗄️  Database: ${databaseUrl.split("@")[1]?.split("/")[0] || "connected"}`);
+  console.log(
+    `🗄️  Database: ${databaseUrl.split("@")[1]?.split("/")[0] || "connected"}`,
+  );
   console.log();
 
   // Connect to database
@@ -167,7 +173,7 @@ async function main() {
   try {
     // Fetch posts that need migration (no contentPath set)
     console.log("📊 Fetching posts to migrate...");
-    
+
     const postsToMigrate = await db
       .select({
         id: post.id,
@@ -197,20 +203,26 @@ async function main() {
       const batchNum = Math.floor(i / BATCH_SIZE) + 1;
       const totalBatches = Math.ceil(postsToMigrate.length / BATCH_SIZE);
 
-      console.log(`📦 Processing batch ${batchNum}/${totalBatches} (${batch.length} posts)...`);
+      console.log(
+        `📦 Processing batch ${batchNum}/${totalBatches} (${batch.length} posts)...`,
+      );
 
       for (const postData of batch) {
         const contentKey = `content/${postData.id}.md`;
         const searchVector = generateSearchVector(
           postData.title,
           postData.excerpt,
-          postData.content
+          postData.content,
         );
 
         try {
           if (DRY_RUN) {
-            console.log(`   [DRY] Would upload: ${contentKey} (${postData.content.length} bytes)`);
-            console.log(`         Title: "${postData.title.substring(0, 50)}..."`);
+            console.log(
+              `   [DRY] Would upload: ${contentKey} (${postData.content.length} bytes)`,
+            );
+            console.log(
+              `         Title: "${postData.title.substring(0, 50)}..."`,
+            );
           } else {
             // Upload to R2
             await r2.send(
@@ -219,7 +231,7 @@ async function main() {
                 Key: contentKey,
                 Body: postData.content,
                 ContentType: "text/markdown; charset=utf-8",
-              })
+              }),
             );
 
             // Update database
@@ -254,7 +266,9 @@ async function main() {
     console.log();
 
     if (DRY_RUN) {
-      console.log("🔍 This was a dry run. Run without --dry-run to apply changes.");
+      console.log(
+        "🔍 This was a dry run. Run without --dry-run to apply changes.",
+      );
     } else if (errorCount === 0) {
       console.log("✅ Migration completed successfully!");
     } else {
@@ -264,7 +278,7 @@ async function main() {
     // Verification
     if (!DRY_RUN) {
       console.log("\n📊 Verifying migration...");
-      
+
       const remainingCount = await db
         .select({ id: post.id })
         .from(post)
@@ -273,10 +287,11 @@ async function main() {
       if (remainingCount.length === 0) {
         console.log("   ✓ All posts have contentPath set");
       } else {
-        console.log(`   ⚠️  ${remainingCount.length} posts still without contentPath`);
+        console.log(
+          `   ⚠️  ${remainingCount.length} posts still without contentPath`,
+        );
       }
     }
-
   } finally {
     await client.end();
   }

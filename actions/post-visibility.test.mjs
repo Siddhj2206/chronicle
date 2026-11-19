@@ -48,69 +48,87 @@ afterAll(async () => {
   await sql.end();
 });
 
-integration("anonymous and non-owner cannot read drafts, bodies, comments or likes", async () => {
-  for (const caller of [null, other]) {
-    session = caller ? { user: { id: caller } } : null;
-    readContent.mockClear();
-    expect(await posts.getPost(owner, draft)).toBeNull();
-    expect(await posts.getPostContent(draft)).toBeNull();
-    expect(readContent).not.toHaveBeenCalled();
-    expect(await comments.getComments(draft)).toEqual([]);
-    expect(await likes.getLikeCount(draft)).toBe(0);
-    expect(await likes.hasUserLiked(draft)).toBe(false);
+integration(
+  "anonymous and non-owner cannot read drafts, bodies, comments or likes",
+  async () => {
+    for (const caller of [null, other]) {
+      session = caller ? { user: { id: caller } } : null;
+      readContent.mockClear();
+      expect(await posts.getPost(owner, draft)).toBeNull();
+      expect(await posts.getPostContent(draft)).toBeNull();
+      expect(readContent).not.toHaveBeenCalled();
+      expect(await comments.getComments(draft)).toEqual([]);
+      expect(await likes.getLikeCount(draft)).toBe(0);
+      expect(await likes.hasUserLiked(draft)).toBe(false);
+      const form = new FormData();
+      form.set("content", "Not allowed");
+      expect(await comments.addComment(draft, form)).toHaveProperty("error");
+      expect(await likes.toggleLike(draft)).toHaveProperty("error");
+    }
+  },
+);
+
+integration(
+  "owner can read and edit drafts and interact; published reads are public",
+  async () => {
+    session = { user: { id: owner } };
+    expect((await posts.getPost(owner, draft)).post.id).toBe(draft);
+    expect(await posts.getPostContent(draft)).toBe("R2 body");
+    expect((await posts.getPostForEditWithContent(draft)).content).toBe(
+      "R2 body",
+    );
+    body = null;
+    expect(await posts.getPostContent(draft)).toBe("DB body");
+    body = "R2 body";
     const form = new FormData();
-    form.set("content", "Not allowed");
-    expect(await comments.addComment(draft, form)).toHaveProperty("error");
-    expect(await likes.toggleLike(draft)).toHaveProperty("error");
-  }
-});
+    form.set("content", "Owner comment");
+    expect(await comments.addComment(draft, form)).toEqual({ success: true });
+    expect(await likes.toggleLike(draft)).toEqual({
+      success: true,
+      liked: true,
+    });
+    expect(await likes.hasUserLiked(draft)).toBe(true);
+    expect(await likes.getLikeCount(draft)).toBe(1);
+    expect(await comments.getComments(draft)).toHaveLength(1);
+    for (const caller of [null, other]) {
+      session = caller ? { user: { id: caller } } : null;
+      expect((await posts.getPost(owner, published)).post.id).toBe(published);
+      expect(await posts.getPostContent(published)).toBe("R2 body");
+      expect(await comments.getComments(draft)).toEqual([]);
+      expect(await likes.getLikeCount(draft)).toBe(0);
+    }
+  },
+);
 
-integration("owner can read and edit drafts and interact; published reads are public", async () => {
-  session = { user: { id: owner } };
-  expect((await posts.getPost(owner, draft)).post.id).toBe(draft);
-  expect(await posts.getPostContent(draft)).toBe("R2 body");
-  expect((await posts.getPostForEditWithContent(draft)).content).toBe("R2 body");
-  body = null;
-  expect(await posts.getPostContent(draft)).toBe("DB body");
-  body = "R2 body";
-  const form = new FormData();
-  form.set("content", "Owner comment");
-  expect(await comments.addComment(draft, form)).toEqual({ success: true });
-  expect(await likes.toggleLike(draft)).toEqual({ success: true, liked: true });
-  expect(await likes.hasUserLiked(draft)).toBe(true);
-  expect(await likes.getLikeCount(draft)).toBe(1);
-  expect(await comments.getComments(draft)).toHaveLength(1);
-  for (const caller of [null, other]) {
-    session = caller ? { user: { id: caller } } : null;
-    expect((await posts.getPost(owner, published)).post.id).toBe(published);
-    expect(await posts.getPostContent(published)).toBe("R2 body");
-    expect(await comments.getComments(draft)).toEqual([]);
-    expect(await likes.getLikeCount(draft)).toBe(0);
-  }
-});
+integration(
+  "missing posts fail closed and only published posts accrue views",
+  async () => {
+    session = { user: { id: owner } };
+    expect(await posts.getPost(owner, "missing")).toBeNull();
+    expect(await posts.getPostContent("missing")).toBeNull();
+    expect(await comments.getComments("missing")).toEqual([]);
+    expect(await likes.getLikeCount("missing")).toBe(0);
+    expect(await likes.toggleLike("missing")).toHaveProperty("error");
+    await posts.incrementViewCount(draft);
+    await posts.incrementViewCount(published);
+    const rows =
+      await sql`SELECT id, view_count FROM post WHERE id IN (${draft}, ${published})`;
+    expect(rows.find((row) => row.id === draft).view_count).toBe(0);
+    expect(rows.find((row) => row.id === published).view_count).toBe(1);
+  },
+);
 
-integration("missing posts fail closed and only published posts accrue views", async () => {
-  session = { user: { id: owner } };
-  expect(await posts.getPost(owner, "missing")).toBeNull();
-  expect(await posts.getPostContent("missing")).toBeNull();
-  expect(await comments.getComments("missing")).toEqual([]);
-  expect(await likes.getLikeCount("missing")).toBe(0);
-  expect(await likes.toggleLike("missing")).toHaveProperty("error");
-  await posts.incrementViewCount(draft);
-  await posts.incrementViewCount(published);
-  const rows = await sql`SELECT id, view_count FROM post WHERE id IN (${draft}, ${published})`;
-  expect(rows.find((row) => row.id === draft).view_count).toBe(0);
-  expect(rows.find((row) => row.id === published).view_count).toBe(1);
-});
-
-integration("body read failures return null rather than exposing content", async () => {
-  session = { user: { id: owner } };
-  const log = spyOn(console, "error").mockImplementation(() => {});
-  readContent.mockRejectedValueOnce(new Error("Storage unavailable"));
-  try {
-    expect(await posts.getPostContent(draft)).toBeNull();
-    expect(log).toHaveBeenCalled();
-  } finally {
-    log.mockRestore();
-  }
-});
+integration(
+  "body read failures return null rather than exposing content",
+  async () => {
+    session = { user: { id: owner } };
+    const log = spyOn(console, "error").mockImplementation(() => {});
+    readContent.mockRejectedValueOnce(new Error("Storage unavailable"));
+    try {
+      expect(await posts.getPostContent(draft)).toBeNull();
+      expect(log).toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+    }
+  },
+);

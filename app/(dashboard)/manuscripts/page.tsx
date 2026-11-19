@@ -19,8 +19,8 @@ export default async function DashboardPage() {
           <p className="font-serif text-2xl italic text-muted-foreground">
             The ledger is empty.
           </p>
-          <Link 
-            href="/new" 
+          <Link
+            href="/new"
             className="mt-4 inline-block font-mono text-sm font-bold uppercase tracking-widest underline decoration-2 underline-offset-4"
           >
             Start Writing
@@ -39,14 +39,19 @@ export default async function DashboardPage() {
             </thead>
             <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
               {posts.map((post) => (
-                <tr key={post.id} className="group transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900">
+                <tr
+                  key={post.id}
+                  className="group transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900"
+                >
                   <td className="whitespace-nowrap py-6 pr-8 align-top font-mono text-xs font-bold uppercase tracking-widest">
-                    <span className={cn(
-                      "inline-block rounded-none border px-2 py-0.5",
-                      post.published 
-                        ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black" 
-                        : "border-neutral-400 text-neutral-500"
-                    )}>
+                    <span
+                      className={cn(
+                        "inline-block rounded-none border px-2 py-0.5",
+                        post.published
+                          ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                          : "border-neutral-400 text-neutral-500",
+                      )}
+                    >
                       {post.published ? "PUB" : "DFT"}
                     </span>
                   </td>
@@ -58,7 +63,10 @@ export default async function DashboardPage() {
                     })}
                   </td>
                   <td className="py-6 pr-8 align-top">
-                    <Link href={`/edit/${post.slug}`} className="group-hover:underline">
+                    <Link
+                      href={`/edit/${post.slug}`}
+                      className="group-hover:underline"
+                    >
                       <h3 className="font-serif text-xl font-bold leading-tight">
                         {post.title}
                       </h3>
@@ -68,7 +76,10 @@ export default async function DashboardPage() {
                     </p>
                   </td>
                   <td className="whitespace-nowrap py-6 text-right align-top font-mono text-xs font-bold uppercase tracking-widest">
-                     <Link href={`/edit/${post.slug}`} className="hover:underline">
+                    <Link
+                      href={`/edit/${post.slug}`}
+                      className="hover:underline"
+                    >
                       [Edit]
                     </Link>
                   </td>
