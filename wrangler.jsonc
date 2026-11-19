@@ -10,5 +10,12 @@
   },
   "services": [
     { "binding": "WORKER_SELF_REFERENCE", "service": "chronicle" }
+  ],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "00000000000000000000000000000000",
+      "localConnectionString": "postgres://chronicle:chronicle@localhost:5432/chronicle_test"
+    }
   ]
 }

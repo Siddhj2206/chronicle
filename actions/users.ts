@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 
 import { getSession } from "@/lib/session";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { usernameSchema, profileSchema, imageUrlSchema } from "@/lib/validators";
 import { getR2, R2_BUCKET_NAME } from "@/lib/r2";
@@ -16,6 +16,7 @@ import { getR2, R2_BUCKET_NAME } from "@/lib/r2";
 export async function checkUsernameAvailable(
   username: string
 ): Promise<{ available: boolean; error?: string }> {
+  const db = await getDb();
   const parsed = usernameSchema.safeParse(username);
 
   if (!parsed.success) {
@@ -32,6 +33,7 @@ export async function checkUsernameAvailable(
 export async function setUsername(
   username: string
 ): Promise<{ success: boolean; error?: string }> {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -72,6 +74,7 @@ export async function setUsername(
 export async function updateProfile(
   formData: FormData
 ): Promise<{ success: boolean; error?: string }> {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -156,6 +159,7 @@ export async function updateProfile(
 export async function updateAvatar(
   imageUrl: string
 ): Promise<{ success: boolean; error?: string }> {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -188,6 +192,7 @@ export async function updateAvatar(
 export async function deleteAccount(
   confirmationUsername: string
 ): Promise<{ success: boolean; error?: string }> {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {

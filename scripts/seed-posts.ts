@@ -1,4 +1,4 @@
-import { db } from "../lib/db";
+import { getDb } from "@/lib/db";
 import { post, user } from "../lib/db/schema";
 import { getR2, R2_BUCKET_NAME } from "../lib/r2";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
@@ -55,6 +55,7 @@ function generateSlug(title: string): string {
 }
 
 async function seed() {
+  const db = await getDb();
   console.log("🌱 Starting seed...\n");
 
   // Get the first user from the database

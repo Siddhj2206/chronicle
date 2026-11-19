@@ -3,7 +3,7 @@
 import { eq, and, desc, sql, gte } from "drizzle-orm";
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 
 import type { Post } from "@/lib/db/schema";
@@ -93,6 +93,7 @@ const searchCursorSchema = z.object({
  * @returns Paginated search results
  */
 export async function searchPosts(params: SearchParams): Promise<SearchResult> {
+  const db = await getDb();
   const { query, author, datePreset, cursor, limit = 10 } = params;
 
   // Empty query returns empty results
@@ -266,6 +267,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
  * @returns Array of authors with their post counts, sorted by post count
  */
 export async function getAuthorsWithPosts(): Promise<AuthorWithPosts[]> {
+  const db = await getDb();
   try {
     const result = await db
       .select({

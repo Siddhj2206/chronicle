@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { eq } from "drizzle-orm";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { getPostsByUser } from "@/actions/posts";
 import { ListCard } from "@/components/magazine/list-card";
@@ -12,6 +12,7 @@ interface ProfilePageProps {
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
+  const db = await getDb();
   const { username } = await params;
 
   if (!username) {

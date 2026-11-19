@@ -1,8 +1,9 @@
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { comment } from "@/lib/db/schema";
 import { createPost, createUser, resetDatabase } from "@/tests/helpers/db";
 
 async function seed(): Promise<void> {
+  const db = await getDb();
   await resetDatabase();
   const writer = await createUser({ id: "seed-writer", username: "test_writer", name: "Test Writer", email: "writer@example.test" });
   const reader = await createUser({ id: "seed-reader", username: "test_reader", name: "Test Reader", email: "reader@example.test" });

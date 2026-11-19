@@ -8,7 +8,7 @@ import { nanoid } from "nanoid";
 
 import { getSession } from "@/lib/session";
 import { getVisiblePost, postVisibility } from "@/lib/post-visibility";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
 import {
@@ -22,6 +22,7 @@ import type { Post } from "@/lib/db/schema";
 
 // Generate a unique slug - tries clean slug first, then adds suffix only if needed
 async function generateUniqueSlug(title: string): Promise<string> {
+  const db = await getDb();
   const baseSlug = slugify(title, { lower: true, strict: true });
   
   if (!baseSlug) {
@@ -101,6 +102,7 @@ function generateSearchVector(title: string, excerpt: string | null, content: st
 }
 
 export async function createPost(formData: FormData) {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -171,6 +173,7 @@ export async function createPost(formData: FormData) {
 }
 
 export async function updatePost(slug: string, formData: FormData) {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -242,6 +245,7 @@ export async function updatePost(slug: string, formData: FormData) {
 }
 
 export async function deletePost(slug: string) {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -272,6 +276,7 @@ export async function deletePost(slug: string) {
 }
 
 export async function publishPost(slug: string) {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -304,6 +309,7 @@ export async function publishPost(slug: string) {
 }
 
 export async function unpublishPost(slug: string) {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -342,6 +348,7 @@ export const getPost = cache(async function getPost(
   username: string,
   slug: string
 ): Promise<{ post: Post; author: { id: string; name: string; username: string | null; image: string | null } } | null> {
+  const db = await getDb();
   try {
     const session = await getSession();
     const result = await db
@@ -375,6 +382,7 @@ export const getPost = cache(async function getPost(
  * Falls back to database content if R2 content not available (migration period)
  */
 export async function getPostContent(postId: string): Promise<string | null> {
+  const db = await getDb();
   try {
     if (!(await getVisiblePost(postId))) {
       return null;
@@ -401,6 +409,7 @@ export async function getPostContent(postId: string): Promise<string | null> {
 }
 
 export async function getPostForEdit(slug: string): Promise<Post | null> {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -426,6 +435,7 @@ export async function getPostForEdit(slug: string): Promise<Post | null> {
  * Returns both post metadata and content
  */
 export async function getPostForEditWithContent(slug: string): Promise<{ post: Post; content: string } | null> {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -458,6 +468,7 @@ export async function getPostForEditWithContent(slug: string): Promise<{ post: P
 }
 
 export async function getPostsByUser(username: string) {
+  const db = await getDb();
   try {
     const result = await db
       .select({
@@ -482,6 +493,7 @@ export async function getPostsByUser(username: string) {
 }
 
 export async function getMyPosts() {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -503,6 +515,7 @@ export async function getMyPosts() {
 }
 
 export async function getNewestPosts(limit = 10, offset = 0) {
+  const db = await getDb();
   try {
     const result = await db
       .select({
@@ -530,6 +543,7 @@ export async function getNewestPosts(limit = 10, offset = 0) {
 
 // Increment view count (fire and forget)
 export async function incrementViewCount(postId: string) {
+  const db = await getDb();
   try {
     await db
       .update(post)
@@ -542,6 +556,7 @@ export async function incrementViewCount(postId: string) {
 
 // Get trending posts (last 14 days by view count, backfill with all-time if needed)
 export async function getTrendingPosts(limit = 5) {
+  const db = await getDb();
   try {
     const fourteenDaysAgo = new Date();
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
@@ -631,6 +646,7 @@ export async function getAllPosts(options: {
   page?: number;
   sort?: "newest" | "trending" | "oldest";
 } = {}) {
+  const db = await getDb();
   const { limit = 10, page = 1, sort = "newest" } = options;
   const offset = (page - 1) * limit;
 

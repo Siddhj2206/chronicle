@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { sql } from "drizzle-orm";
 
 import { addComment, deleteComment, getComments } from "@/actions/comments";
 import { getLikeCount, hasUserLiked, toggleLike } from "@/actions/likes";
 import { createPost, deletePost, publishPost, updatePost } from "@/actions/posts";
 import { searchPosts } from "@/actions/search";
 import { updateProfile } from "@/actions/users";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { uploadContent } from "@/lib/r2-content";
 import { createPost as seedPost, createUser, formData, resetDatabase } from "@/tests/helpers/db";
 import { mockSession } from "@/tests/helpers/session";
@@ -27,6 +28,7 @@ describe("posts", () => {
   });
 
   it("prevents editing, publishing or deleting another author's post", async () => {
+    const db = await getDb();
     const owner = await createUser();
     const article = await seedPost(owner.id);
     mockSession(await createUser());
@@ -37,6 +39,7 @@ describe("posts", () => {
   });
 
   it("creates a draft, updates, publishes and deletes it", async () => {
+    const db = await getDb();
     const owner = await createUser();
     mockSession(owner);
     const result = await createPost(validPost());
@@ -51,6 +54,7 @@ describe("posts", () => {
   });
 
   it("rejects empty input and reports storage errors without inserting a post", async () => {
+    const db = await getDb();
     mockSession(await createUser());
     expect(await createPost(formData({ title: "", content: "" }))).toHaveProperty("error");
     vi.mocked(uploadContent).mockRejectedValueOnce(new Error("Storage unavailable"));
@@ -102,6 +106,15 @@ describe("comments and likes", () => {
 });
 
 describe("search and profiles", () => {
+  it("preserves pg execute rows and timestamp values", async () => {
+    const db = await getDb();
+    const owner = await createUser();
+    const article = await seedPost(owner.id);
+    expect(article.publishedAt).toEqual(new Date("2025-01-02T00:00:00.000Z"));
+    const result = await db.execute<{ id: string }>(sql`select ${article.id}::text as id`);
+    expect(result.rows).toEqual([{ id: article.id }]);
+  });
+
   it("finds published content with a basic query and handles empty and unmatched queries", async () => {
     const owner = await createUser();
     const article = await seedPost(owner.id, { title: "Astronomy journal" });
@@ -114,6 +127,7 @@ describe("search and profiles", () => {
   });
 
   it("validates profile updates and persists valid changes", async () => {
+    const db = await getDb();
     expect(await updateProfile(formData({ name: "Reader" }))).toEqual({ success: false, error: "Unauthorized" });
     mockSession(await createUser());
     const invalidProfiles: Record<string, string>[] = [{ name: "" }, { name: "Reader", username: "admin" }, { name: "Reader", bio: "x".repeat(501) }];

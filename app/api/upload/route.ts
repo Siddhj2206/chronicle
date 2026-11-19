@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { detectImageType, IMAGE_EXTENSIONS, IMAGE_SIZE_ERROR, IMAGE_TYPE_ERROR, MAX_FILE_SIZE } from "@/lib/image-upload";
 import { getR2, getR2PublicUrl, R2_BUCKET_NAME } from "@/lib/r2";
 
@@ -13,7 +13,7 @@ const WINDOW_MS = 60 * 1000;
 const uploadWindows = new Map<string, number[]>();
 
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({
+  const session = await (await getAuth()).api.getSession({
     headers: await headers(),
   });
 

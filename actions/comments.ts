@@ -5,11 +5,12 @@ import { eq } from "drizzle-orm";
 
 import { getSession } from "@/lib/session";
 import { getVisiblePost } from "@/lib/post-visibility";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { comment, post, user } from "@/lib/db/schema";
 import { commentSchema } from "@/lib/validators";
 
 export async function addComment(postId: string, formData: FormData) {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -59,6 +60,7 @@ export async function addComment(postId: string, formData: FormData) {
 }
 
 export async function deleteComment(commentId: string) {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user?.id) {
@@ -123,6 +125,7 @@ export async function deleteComment(commentId: string) {
 }
 
 export async function getComments(postId: string) {
+  const db = await getDb();
   try {
     if (!(await getVisiblePost(postId))) {
       return [];
