@@ -165,7 +165,7 @@ describe("post topics", () => {
         try {
           const rows = await query();
           expect(rows).toHaveLength(expectedCount);
-          expect(rows.every(({ post }) => post.tags?.length === 0)).toBe(true);
+          for (const { post } of rows) expect(post).toMatchObject({ tags: [] });
           expect(log).toHaveBeenLastCalledWith("Post tags lookup error:", failure);
         } finally {
           lookup.mockRestore();
