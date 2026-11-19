@@ -1,3 +1,55 @@
+# Testing
+
+Install dependencies with `bun install`. Tests require a **disposable PostgreSQL
+database whose name ends in `_test`**. Integration tests and the seed script
+truncate users (cascading to posts, sessions, comments, and likes) and verification
+records. Never point them at a shared or production database.
+
+Create `.env.test` (ignored by git), or export the same environment variables:
+
+```dotenv
+DATABASE_URL=postgres://chronicle:chronicle@localhost:5432/chronicle_test
+BETTER_AUTH_SECRET=testing-only-secret-at-least-32-characters
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=dummy-google-client
+GOOGLE_CLIENT_SECRET=dummy-google-secret
+R2_ACCESS_KEY_ID=dummy
+R2_SECRET_ACCESS_KEY=dummy
+R2_BUCKET_NAME=test
+R2_ENDPOINT=http://127.0.0.1:9
+NEXT_PUBLIC_R2_DOMAIN=http://127.0.0.1:9
+```
+
+```bash
+bun --env-file=.env.test x drizzle-kit push
+bun run test                    # Vitest unit + real-Postgres integration tests
+bun run db:seed                  # deterministic, destructive reset and seed
+bun --env-file=.env.test run build
+bunx playwright install chromium
+bun run test:e2e                 # starts production server on port 3000
+```
+
+Vitest and Playwright load `.env.test` without overriding exported variables.
+The seed creates `test_writer` and `test_reader`, two published articles, a draft,
+and a comment. The article fixture is `/@test_writer/chronicle-testing`.
+Seed before building so the statically cached home page includes the fixtures.
+After running integration tests again, reseed before starting the browser tests.
+The not-found smoke asserts the 404 UI rather than HTTP status, because App Router
+can stream the not-found boundary after sending a 200 response.
+No real OAuth or R2 credentials are needed: action tests mock session, cache, and
+R2 content calls; browser tests use signed-out sessions and database content
+fallback with a deliberately unreachable local R2 endpoint.
+
+Add unit tests under `tests/unit`, integration suites under `tests/integration`,
+and browser tests under `tests/e2e`. Reuse `tests/helpers/db.ts` for database
+reset, users, posts, and FormData and `tests/helpers/session.ts` for sign-in
+mocking. Call `resetDatabase()` before each integration test and `mockSession()`
+explicitly; suites run serially against the same database. The shared setup mocks
+`@/lib/session`, `next/cache`, and `@/lib/r2-content` without mocking Drizzle.
+CI runs lint, TypeScript, schema push, Vitest, production build, seed, and Chromium
+smoke tests. Playwright reports and traces are uploaded on failure.
+
 # Chronicle
 
 A writing and publishing workspace for long-form manuscripts. Chronicle separates

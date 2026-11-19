@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: chronicle
+          POSTGRES_PASSWORD: chronicle
+          POSTGRES_DB: chronicle_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U chronicle -d chronicle_test"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgres://chronicle:chronicle@localhost:5432/chronicle_test
+      BETTER_AUTH_SECRET: testing-only-secret-at-least-32-characters
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      GOOGLE_CLIENT_ID: dummy-google-client
+      GOOGLE_CLIENT_SECRET: dummy-google-secret
+      R2_ACCESS_KEY_ID: dummy
+      R2_SECRET_ACCESS_KEY: dummy
+      R2_BUCKET_NAME: test
+      R2_ENDPOINT: http://127.0.0.1:9
+      NEXT_PUBLIC_R2_DOMAIN: http://127.0.0.1:9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.5
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bunx tsc --noEmit
+      - run: bunx drizzle-kit push --force
+      - run: bun run test
+      - run: bun run db:seed
+      - run: bun run build
+      - run: bun run db:seed
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
