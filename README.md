@@ -242,6 +242,14 @@ bunx tsx scripts/seed-posts.ts --local                       # seed sample manus
 bunx tsx scripts/migrate-content-to-r2.ts --dry-run  # preview the R2 move
 ```
 
+## Type checking
+
+Run `bun run typecheck` locally and in CI. It uses the stable native
+TypeScript 7.0.2 compiler, installed as the `typescript-native` npm alias.
+The script invokes its CLI explicitly to avoid sharing the `tsc` binary name
+with TypeScript 5.9.3, which remains installed for Next.js's default compiler
+API integration. `bunx tsc --noEmit` still uses TypeScript 5.9.3.
+
 ## Linting and formatting
 
 ```bash
