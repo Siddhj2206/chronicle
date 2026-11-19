@@ -1,25 +1,10 @@
 import type { NextConfig } from "next";
 
+import { imageRemotePatterns } from "./lib/image-sources";
+
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-      },
-      {
-        protocol: "https",
-        hostname: "**.r2.cloudflarestorage.com",
-      },
-      {
-        protocol: "https",
-        hostname: "**.r2.dev",
-      },
-    ],
+    remotePatterns: imageRemotePatterns,
   },
 };
 

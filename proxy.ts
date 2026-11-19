@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { safeCallbackUrl } from "@/lib/redirects";
+
 const authRoutes = ["/sign-in"];
 const onboardingRoute = "/onboarding";
 
@@ -34,7 +36,7 @@ export function proxy(request: NextRequest) {
 
   // Redirect logged-in users away from auth routes (preserve callbackUrl)
   if (isAuthRoute && isLoggedIn) {
-    const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/";
+    const callbackUrl = safeCallbackUrl(request.nextUrl.searchParams.get("callbackUrl"));
     return NextResponse.redirect(new URL(callbackUrl, request.url));
   }
 

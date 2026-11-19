@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 
 import { getSession } from "@/lib/session";
+import { safeCallbackUrl } from "@/lib/redirects";
 import { Navbar } from "@/components/magazine/navbar";
 import { Footer } from "@/components/magazine/footer";
 
@@ -15,13 +16,13 @@ export default async function DashboardLayout({
   const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
 
   if (!session?.user) {
-    const callbackUrl = encodeURIComponent(pathname);
+    const callbackUrl = encodeURIComponent(safeCallbackUrl(pathname));
     redirect(`/sign-in${callbackUrl ? `?callbackUrl=${callbackUrl}` : ""}`);
   }
 
   const username = (session.user as { username?: string }).username;
   if (!username) {
-    const callbackUrl = encodeURIComponent(pathname);
+    const callbackUrl = encodeURIComponent(safeCallbackUrl(pathname));
     redirect(`/onboarding${callbackUrl ? `?callbackUrl=${callbackUrl}` : ""}`);
   }
 
