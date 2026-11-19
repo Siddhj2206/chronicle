@@ -5,6 +5,7 @@
   "minify": true,
   "compatibility_date": "2026-11-19",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "build": { "command": "node scripts/check-workers-deploy.mjs" },
   "routes": [{ "pattern": "chronicle.siddhant.foo", "custom_domain": true }],
   "vars": {
     "NEXT_PUBLIC_APP_URL": "https://chronicle.siddhant.foo",
@@ -41,4 +42,53 @@
       "localConnectionString": "postgres://chronicle:chronicle@localhost:5432/chronicle_test",
     },
   ],
+  "env": {
+    "preview": {
+      "name": "chronicle-preview",
+      "workers_dev": true,
+      "preview_urls": false,
+      "routes": [],
+      "build": { "command": "" },
+      "vars": {
+        "NEXT_PUBLIC_APP_URL": "https://chronicle-preview.replace-with-subdomain.workers.dev",
+        "BETTER_AUTH_URL": "https://chronicle-preview.replace-with-subdomain.workers.dev",
+        "NEXT_PUBLIC_R2_DOMAIN": "replace-with-preview-media.example.invalid",
+      },
+      "assets": {
+        "directory": ".open-next/assets",
+        "binding": "ASSETS",
+      },
+      "images": { "binding": "IMAGES" },
+      "services": [
+        { "binding": "WORKER_SELF_REFERENCE", "service": "chronicle-preview" },
+      ],
+      "r2_buckets": [
+        { "binding": "R2", "bucket_name": "chronicle-preview" },
+        {
+          "binding": "NEXT_INC_CACHE_R2_BUCKET",
+          "bucket_name": "chronicle-preview-cache",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" },
+        ],
+      },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }],
+      "d1_databases": [
+        {
+          "binding": "NEXT_TAG_CACHE_D1",
+          "database_name": "chronicle-preview-tags",
+          "database_id": "11111111111111111111111111111111",
+        },
+      ],
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "11111111111111111111111111111111",
+          "localConnectionString": "postgres://chronicle:chronicle@localhost:5432/chronicle_test",
+        },
+      ],
+    },
+  },
 }
