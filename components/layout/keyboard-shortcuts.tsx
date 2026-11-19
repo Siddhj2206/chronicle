@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { ModalSurface } from "@/components/layout/modal-surface";
 import { useSession } from "@/lib/auth-client";
@@ -21,6 +21,7 @@ export function ShortcutsButton(): React.JSX.Element {
 
 export function KeyboardShortcuts(): React.JSX.Element {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const [panel, setPanel] = useState<"help" | "search" | null>(null);
   const [enabled, setEnabled] = useState(true);
@@ -63,6 +64,11 @@ export function KeyboardShortcuts(): React.JSX.Element {
       );
       prefixAt = action === "prefix" ? performance.now() : 0;
       if (!action) return;
+      if (
+        (pathname === "/new" || pathname.startsWith("/edit/")) &&
+        (action === "prefix" || action === "home" || action === "new")
+      )
+        return;
       event.preventDefault();
       if (action === "help") openHelp();
       if (action === "home") router.push("/");
@@ -89,7 +95,7 @@ export function KeyboardShortcuts(): React.JSX.Element {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("chronicle:shortcuts", openHelp);
     };
-  }, [enabled, panel, router, session?.user]);
+  }, [enabled, panel, pathname, router, session?.user]);
 
   return (
     <ModalSurface

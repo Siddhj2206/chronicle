@@ -203,6 +203,32 @@ test("c opens a new story for a signed-in writer", async ({ page }) => {
   await expect(page).toHaveURL("/new");
 });
 
+for (const route of [
+  "/new",
+  "/edit/unfinished-notes",
+  "/edit/chronicle-testing",
+]) {
+  test(`navigation shortcuts preserve edits outside text fields on ${route}`, async ({
+    page,
+  }) => {
+    await page.goto(route, { waitUntil: "networkidle" });
+    const subtitle = page.getByRole("textbox", {
+      name: "Post subtitle",
+      exact: true,
+    });
+    await subtitle.fill("An unsaved shortcut regression");
+    await page.getByRole("main").focus();
+    for (const key of ["g", "h", "n", "c"]) await page.keyboard.press(key);
+    await page.keyboard.press("?");
+    await expect(
+      page.getByRole("dialog", { name: "Keyboard shortcuts" }),
+    ).toBeVisible();
+    await expect(page).toHaveURL(route);
+    await page.keyboard.press("Escape");
+    await expect(subtitle).toHaveValue("An unsaved shortcut regression");
+  });
+}
+
 test("signed-out new-story shortcuts do not navigate", async ({
   context,
   page,
