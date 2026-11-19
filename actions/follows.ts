@@ -8,6 +8,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { follow, post, user } from "@/lib/db/schema";
 import { getSession } from "@/lib/session";
+import { revalidatePosts } from "@/lib/revalidate-posts";
 
 import type { Post, User } from "@/lib/db/schema";
 
@@ -52,8 +53,8 @@ export async function toggleFollow(authorId: string): Promise<FollowResult> {
       return true;
     });
     revalidatePath("/following");
-    revalidatePath("/[username]", "page");
-    revalidatePath("/[username]/[slug]", "page");
+    await revalidatePosts(parsed.data);
+    await revalidatePosts(viewer.user.id, { posts: [] });
     return { success: true, following };
   } catch (error) {
     console.error("Toggle follow error:", error);

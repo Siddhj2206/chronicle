@@ -31,7 +31,7 @@ test("follows a writer, reads their dispatches, and unfollows from the article",
   });
   try {
     await page.goto("/following");
-    await expect(page.getByText("Your personal edition is waiting to be written.", { exact: true })).toBeVisible();
+    await expect(page.getByText("You’re not following any writers yet.", { exact: true })).toBeVisible();
     await page.goto(`/@${writer.username}`);
     await expect(page.getByText("0 followers", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Follow", exact: true }).click();

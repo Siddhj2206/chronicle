@@ -10,8 +10,10 @@ import { CommentList } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
 import { FollowButton } from "@/components/auth/follow-button";
 import { getFollowInfo } from "@/actions/follows";
+import { getSession } from "@/lib/session";
 
 import type { Metadata } from "next";
+import type { ReactElement } from "react";
 
 interface PostPageProps {
   params: Promise<{
@@ -46,7 +48,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   };
 }
 
-export default async function PostPage({ params }: PostPageProps) {
+export default async function PostPage({ params }: PostPageProps): Promise<ReactElement> {
   const { username, slug } = await params;
   const decodedUsername = decodeURIComponent(username).replace("@", "");
   const result = await getPost(decodedUsername, slug);
@@ -58,11 +60,12 @@ export default async function PostPage({ params }: PostPageProps) {
   const { post, author } = result;
 
   // Fetch content from R2 and like data in parallel
-  const [content, likeCount, userLiked, followInfo] = await Promise.all([
+  const [content, likeCount, userLiked, followInfo, session] = await Promise.all([
     getPostContent(post.id),
     getLikeCount(post.id),
     hasUserLiked(post.id),
     getFollowInfo(author.id),
+    getSession(),
   ]);
 
   // Track view (fire and forget - don't await)
@@ -165,7 +168,11 @@ export default async function PostPage({ params }: PostPageProps) {
           Letters to the Editor
         </h2>
         <div className="mb-10">
-          <CommentForm postId={post.id} />
+          <CommentForm
+            postId={post.id}
+            isLoggedIn={!!session?.user?.id}
+            articlePath={`/@${encodeURIComponent(decodedUsername)}/${encodeURIComponent(slug)}`}
+          />
         </div>
         <CommentList postId={post.id} postAuthorId={author.id} />
       </section>
