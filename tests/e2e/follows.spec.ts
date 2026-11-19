@@ -31,7 +31,7 @@ async function capture(page: Page, surface: string): Promise<void> {
     fullPage: true,
   });
   await page.setViewportSize({ width: 1280, height: 900 });
-  if (surface === "profile")
+  if (surface === "article-byline")
     await captureThemes(
       page,
       directory,
