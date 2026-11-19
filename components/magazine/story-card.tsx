@@ -19,7 +19,11 @@ export function StoryCard({
   const Heading = lead ? "h2" : "h3";
   return (
     <article className={cn("story", lead && "story-lead", className)}>
-      <Link className="story-cover" href={href} aria-label={post.title}>
+      <Link
+        className="story-cover"
+        href={href}
+        aria-label={post.title || "Read story"}
+      >
         {post.coverImage ? (
           <Image
             src={post.coverImage}

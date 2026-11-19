@@ -84,6 +84,13 @@ describe("Museum monograph components", () => {
           post: { ...post, title: "", coverImage: null },
         }),
       ),
+    ).toContain('aria-label="Read story"');
+    expect(
+      renderToStaticMarkup(
+        createElement(ListCard, {
+          post: { ...post, title: "", coverImage: null },
+        }),
+      ),
     ).toContain('aria-hidden="true">C</span>');
   });
 
