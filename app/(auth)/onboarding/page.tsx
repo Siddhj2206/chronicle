@@ -54,7 +54,11 @@ function OnboardingContent() {
       if (result.success) {
         // Update avatar if one was uploaded
         if (imageUrl) {
-          await updateAvatar(imageUrl);
+          const avatarResult = await updateAvatar(imageUrl);
+          if (avatarResult.error) {
+            setError(avatarResult.error);
+            return;
+          }
         }
         toast.success("Credentials Issued");
         await refetch();
