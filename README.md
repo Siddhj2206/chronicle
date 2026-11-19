@@ -111,6 +111,141 @@ Wrangler's Node binding proxy can warn that internal Durable Objects are not
 available during builds or `next dev`; the built Worker exports `DOQueueHandler`
 and runs it in Wrangler preview instead of through that Node proxy.
 
+## Production on Workers
+
+Target origin: **https://chronicle.siddhant.foo**. This is an operator runbook,
+not an automatic deployment. The commands below create/change remote resources;
+run them only when authorizing the cutover. W5/PR #24 (Images binding and custom
+R2-domain allowlist) must be merged before deploying this stack.
+
+### Ordered setup and cutover
+
+1. Use the intended Cloudflare account and an **active `siddhant.foo` zone**.
+   `wrangler.jsonc` declares a [Custom Domain](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/),
+   not a wildcard path route. Cloudflare creates DNS and TLS on deployment. Back
+   up/remove any existing CNAME for `chronicle.siddhant.foo` at cutover; Custom
+   Domains cannot replace an existing CNAME automatically. No DNS changes are
+   needed for local builds or preview.
+2. Create/reuse a Neon Free project and production schema. Retrieve a **direct,
+   non-pooled** TLS connection string from a secret manager as
+   `NEON_DATABASE_URL`; Hyperdrive performs its own pooling ([Neon guide](https://neon.com/docs/guides/cloudflare-hyperdrive)).
+   Do not run the destructive test seed against production. Create Hyperdrive:
+
+   ```bash
+   bunx wrangler hyperdrive create chronicle-db --connection-string="$NEON_DATABASE_URL" --caching-disabled
+   ```
+
+   Put the returned ID in `HYPERDRIVE.id`. Query caching is disabled here for
+   auth/session read-after-write freshness; Next's separate content cache remains
+   enabled. Keep `localConnectionString` pointed at disposable local Postgres.
+
+3. Create/reuse two **Standard** R2 buckets and the D1 tag database:
+
+   ```bash
+   bunx wrangler r2 bucket create chronicle
+   bunx wrangler r2 bucket create chronicle-cache
+   bunx wrangler d1 create chronicle-tags
+   ```
+
+   Keep `R2` and `NEXT_INC_CACHE_R2_BUCKET` separate. Replace
+   `NEXT_TAG_CACHE_D1.database_id` with the returned ID. In the R2 dashboard,
+   attach the chosen public media hostname to `chronicle` and set
+   `NEXT_PUBLIC_R2_DOMAIN` in Wrangler's `vars` to that hostname. Its committed
+   `.example.invalid` value is deliberately nonfunctional; replace it before
+   building. Do **not** expose `chronicle-cache` publicly. No S3 keys are needed.
+
+4. Enable/check **Images** in the account dashboard and retain W5's
+   `"images": { "binding": "IMAGES" }`. There is no Images bucket/create command
+   for this binding: originals remain in R2. Zone `/cdn-cgi/image` transformations
+   are not needed. The existing `v1` SQLite DO migration creates `DOQueueHandler`
+   on deployment; there is no separate queue creation command. OpenNext's
+   deploy/upload/preview commands populate R2 build cache and initialize D1.
+5. Set the three required runtime secrets (these commands mutate the Worker):
+
+   ```bash
+   bunx wrangler secret put BETTER_AUTH_SECRET
+   bunx wrangler secret put GOOGLE_CLIENT_ID
+   bunx wrangler secret put GOOGLE_CLIENT_SECRET
+   bun run cf-typegen
+   ```
+
+   Use a cryptographically random auth secret of at least 32 characters, shared
+   by builds and runtime. No `DATABASE_URL` Worker secret is needed: Workers use
+   Hyperdrive's stored origin credentials. `DATABASE_URL` is still required for
+   Node migrations/build-time SSG; keep it in the build secret store, not Git.
+   No AWS/R2 credentials or cache-purge token are required. CI deployment
+   credentials (`CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`) belong in CI, not
+   Worker secrets.
+
+6. In the Google OAuth web client, add authorized JavaScript origin
+   `https://chronicle.siddhant.foo` and this exact authorized redirect URI:
+
+   ```text
+   https://chronicle.siddhant.foo/api/auth/callback/google
+   ```
+
+   Keep the existing Vercel redirect URI until cutover is verified. Each
+   deployment must set matching `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL` for
+   **its own origin**. The server trusts only that configured origin; it does not
+   trust arbitrary request/forwarded hosts or all Vercel deployments. The
+   state-cookie workaround applies only when the configured auth hostname ends
+   in `.vercel.app`; the custom domain and localhost use the normal state-cookie
+   check. Vercel's `VERCEL_URL` is a fallback only when neither URL is configured.
+
+7. Supply build variables explicitly, then build **without deploying**:
+
+   ```bash
+   export NEXT_PUBLIC_APP_URL=https://chronicle.siddhant.foo
+   export BETTER_AUTH_URL=https://chronicle.siddhant.foo
+   export NEXT_PUBLIC_R2_DOMAIN='<CHOSEN_PUBLIC_MEDIA_HOSTNAME>'
+   export DATABASE_URL="$NEON_DATABASE_URL"
+   # Inject BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET securely.
+   bunx opennextjs-cloudflare build
+   bunx wrangler deploy --dry-run
+   ```
+
+   `vars` configures runtime, **not Next's build environment**. `NEXT_PUBLIC_*`
+   values are baked into browser code and image allowlists: changing only
+   Wrangler vars requires a rebuild. For Cloudflare Workers Builds, set these in
+   **Build variables and secrets** as well as the runtime vars/secrets above
+   ([OpenNext environment guide](https://opennext.js.org/cloudflare/howtos/env-vars)).
+   The production build reads the production DB for statically rendered lists;
+   never build a production home page against the disposable test DB. Use
+   `.dev.vars.example`/`.env.test` with localhost URLs for local preview instead.
+
+8. Only after separate deployment approval, use the existing OpenNext deploy
+   script with the same production build environment. Verify real Google
+   sign-in/callback/sign-out, uploads, public images, cache invalidation and CPU
+   usage before retiring Vercel. A local smoke cannot verify Google credentials,
+   DNS/TLS issuance, account entitlements or the production CPU budget.
+
+### Cost: start with Free, upgrade only when measured limits require it
+
+Official limits checked for this migration; pricing can change. Every service
+below is available without Workers Paid. The cheapest candidate is **Workers
+Free + Neon Free + Images Free**, keeping both R2 buckets inside the shared free
+allowance. It is not a guarantee of zero charges or sufficient production CPU:
+SSR/auth must fit Workers Free's **10 ms CPU per invocation**, and this has not
+been measured on Cloudflare. Time awaiting DB/network I/O is not CPU time. If
+real requests exceed the CPU limit or Workers/Hyperdrive/D1/DO Free quotas, use
+Workers Paid ($5/month minimum) rather than accepting failed requests. Images
+and Neon limits require their own plan decisions. No plan was upgraded.
+
+| Service                                                                                             | Official free allowance                                                                                                                                       | Is Workers Paid required? / charge risk                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Workers](https://developers.cloudflare.com/workers/platform/pricing/)                              | 100,000 requests/day; 10 ms CPU/invocation. Static asset requests are free/unlimited.                                                                         | No, subject to [runtime limits](https://developers.cloudflare.com/workers/platform/limits/). Paid starts at $5/month, includes 10M requests and 30M CPU-ms/month; excess $0.30/M requests and $0.02/M CPU-ms.                                                   |
+| [Hyperdrive](https://developers.cloudflare.com/hyperdrive/platform/pricing/)                        | 100,000 DB statements/day, including cached queries and mutations.                                                                                            | No. Free excess fails; Paid includes unlimited Hyperdrive queries without a separate Hyperdrive fee. Neon still bills independently.                                                                                                                            |
+| [R2 Standard: content + incremental cache](https://developers.cloudflare.com/r2/pricing/)           | **Shared across both buckets/account**, not per bucket: 10 GB-month storage, 1M Class A and 10M Class B operations/month; free Internet egress.               | No Workers Paid requirement. Beyond allowance: $0.015/GB-month, $4.50/M Class A, $0.36/M Class B. R2 billing activation/payment details may be required; monitor usage and obsolete build-cache prefixes. Avoid Infrequent Access (no Standard free allowance). |
+| [D1 tag cache](https://developers.cloudflare.com/d1/platform/pricing/)                              | 5M rows read/day, 100k rows written/day, 5 GB total storage; 10 databases, [500 MB per Free database](https://developers.cloudflare.com/d1/platform/limits/). | No. Free excess fails. Paid includes 25B reads, 50M writes/month and 5 GB; overage $0.001/M reads, $1/M writes, $0.75/GB-month.                                                                                                                                 |
+| [Durable Objects SQLite queue](https://developers.cloudflare.com/durable-objects/platform/pricing/) | 100k requests/day, 13,000 GB-s duration/day; 5M rows read/day, 100k rows written/day, 5 GB total storage.                                                     | No: the migration uses SQLite, which is available on Free. Paid has separate metered DO request/duration/SQL/storage overages; alarms count as requests and active duration matters.                                                                            |
+| [Images transformations](https://developers.cloudflare.com/images/pricing/)                         | 5,000 unique transformations/month (source + size; format/quality changes do not add uniques).                                                                | No Workers Paid requirement. Images Free rejects new transforms after the limit (9422). Images Paid adds $0.50/1,000 after 5,000; this is separate from Workers Paid. No Images storage/delivery plan is needed for R2 originals.                               |
+| [Neon Postgres](https://neon.com/pricing)                                                           | 100 CU-hours/project/month, 1 GB storage/project (20 GB/account), 5 GB public transfer/project/month; 100 projects, scale-to-zero after 5 min.                | Independent of Cloudflare. Stay on Neon Free; continuous DB activity/pool keepalives can prevent suspension and consume compute. Paid Launch meters compute ($0.106/CU-hour), storage and transfer; Workers Paid does not upgrade Neon.                         |
+
+Free hard-limit failures are not graceful fallbacks. Track usage for the whole
+account (including other projects), set billing alerts, and investigate before
+upgrading. Domain registration is separate; use the existing zone. Do not assume
+that a $5 Workers subscription caps R2, Images, Neon or total account spend.
+
 # Chronicle
 
 A writing and publishing workspace for long-form manuscripts. Chronicle separates
