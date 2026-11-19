@@ -2,7 +2,7 @@ import { createHmac, randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { session, user } from "@/lib/db/schema";
 import { assertTestDatabase, createUser } from "@/tests/helpers/db";
 
@@ -23,6 +23,7 @@ export async function signIn(
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   try {
+    const db = await getDb();
     await db.insert(session).values({
       id: randomUUID(),
       userId: writer.id,
@@ -54,5 +55,6 @@ export async function signIn(
 
 export async function deleteTestUser(id: string): Promise<void> {
   assertTestDatabase();
+  const db = await getDb();
   await db.delete(user).where(eq(user.id, id));
 }

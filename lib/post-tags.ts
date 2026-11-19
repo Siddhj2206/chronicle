@@ -1,11 +1,13 @@
 import { asc, eq, inArray } from "drizzle-orm";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { postTag, tag } from "@/lib/db/schema";
 
 import type { Post, Tag } from "@/lib/db/schema";
 
-type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+type Transaction = Parameters<
+  Parameters<Awaited<ReturnType<typeof getDb>>["transaction"]>[0]
+>[0];
 
 export async function replacePostTags(
   tx: Transaction,
@@ -33,6 +35,7 @@ export async function withPostTags<T extends { post: Post }>(
   if (!rows.length) return rows;
   const grouped = new Map<string, Tag[]>();
   try {
+    const db = await getDb();
     const tags = await db
       .select({ postId: postTag.postId, tag })
       .from(postTag)

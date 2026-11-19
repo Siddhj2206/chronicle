@@ -15,11 +15,13 @@ import {
 } from "@/actions/posts";
 import { getTagPosts, getTagsWithPosts, suggestTags } from "@/actions/tags";
 import { searchPosts } from "@/actions/search";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post, postTag, tag } from "@/lib/db/schema";
 import { createUser, resetDatabase } from "@/tests/helpers/db";
 import { mockSession } from "@/tests/helpers/session";
 import * as tagStorage from "@/lib/post-tags";
+
+let db: Awaited<ReturnType<typeof getDb>>;
 
 function data(tags: string[] = []) {
   const form = new FormData();
@@ -31,6 +33,7 @@ function data(tags: string[] = []) {
 
 beforeEach(async () => {
   await resetDatabase();
+  db = await getDb();
   await db.delete(tag);
   mockSession(null);
 });

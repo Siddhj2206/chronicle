@@ -4,7 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { inArray } from "drizzle-orm";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { postTag, tag } from "@/lib/db/schema";
 import { deleteTestUser, signIn } from "@/tests/e2e/helpers/auth";
 import { createPost } from "@/tests/helpers/db";
@@ -37,6 +37,7 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
   page,
 }) => {
   const writer = await signIn(context, { name: "Amelia Reed" });
+  const db = await getDb();
   const [community] = await db
     .insert(tag)
     .values({ name: "Community", slug: "community" })

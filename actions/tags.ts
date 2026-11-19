@@ -3,7 +3,7 @@
 import { and, asc, count, desc, eq, ilike } from "drizzle-orm";
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post, postTag, tag, user } from "@/lib/db/schema";
 import { withPostTags } from "@/lib/post-tags";
 import { postVisibility } from "@/lib/post-visibility";
@@ -15,6 +15,7 @@ export async function getTagsWithPosts(): Promise<
   Pick<Tag, "name" | "slug">[]
 > {
   try {
+    const db = await getDb();
     return await db
       .selectDistinct({ name: tag.name, slug: tag.slug })
       .from(tag)
@@ -33,6 +34,7 @@ export async function suggestTags(query: string = ""): Promise<Tag[]> {
   if (!parsed.success) return [];
   try {
     const session = await getSession();
+    const db = await getDb();
     return await db
       .selectDistinct({
         id: tag.id,
@@ -67,6 +69,7 @@ export async function getTagPosts(slug: string, page = 1, limit = 10) {
     .safeParse({ slug, page, limit });
   if (!parsed.success) return { error: "Invalid tag query" } as const;
   try {
+    const db = await getDb();
     const [topic] = await db
       .selectDistinct({
         id: tag.id,
