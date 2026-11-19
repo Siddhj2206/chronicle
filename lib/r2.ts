@@ -1,4 +1,8 @@
-import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
+} from "@aws-sdk/client-s3";
 
 function getR2Client(): S3Client {
   const endpoint = process.env.R2_ENDPOINT;
@@ -33,17 +37,27 @@ export function getR2(): S3Client {
 
 export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || "";
 
-export async function deleteUserObjects(userId: string, contentPaths: string[]): Promise<void> {
+export async function deleteUserObjects(
+  userId: string,
+  contentPaths: string[],
+): Promise<void> {
   try {
     const r2 = getR2();
     const deleteKeys = async (keys: string[]) => {
       for (let offset = 0; offset < keys.length; offset += 1000) {
         try {
-          const result = await r2.send(new DeleteObjectsCommand({
-            Bucket: R2_BUCKET_NAME,
-            Delete: { Objects: keys.slice(offset, offset + 1000).map((Key) => ({ Key })) },
-          }));
-          if (result.Errors?.length) console.error("R2 object deletion errors:", result.Errors);
+          const result = await r2.send(
+            new DeleteObjectsCommand({
+              Bucket: R2_BUCKET_NAME,
+              Delete: {
+                Objects: keys
+                  .slice(offset, offset + 1000)
+                  .map((Key) => ({ Key })),
+              },
+            }),
+          );
+          if (result.Errors?.length)
+            console.error("R2 object deletion errors:", result.Errors);
         } catch (error) {
           console.error("Failed to delete R2 objects:", error);
         }
@@ -53,13 +67,19 @@ export async function deleteUserObjects(userId: string, contentPaths: string[]):
     await deleteKeys([...new Set(contentPaths)]);
     let continuationToken: string | undefined;
     do {
-      const page = await r2.send(new ListObjectsV2Command({
-        Bucket: R2_BUCKET_NAME,
-        Prefix: `uploads/${userId}/`,
-        ContinuationToken: continuationToken,
-      }));
-      await deleteKeys((page.Contents ?? []).flatMap(({ Key }) => Key ? [Key] : []));
-      continuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
+      const page = await r2.send(
+        new ListObjectsV2Command({
+          Bucket: R2_BUCKET_NAME,
+          Prefix: `uploads/${userId}/`,
+          ContinuationToken: continuationToken,
+        }),
+      );
+      await deleteKeys(
+        (page.Contents ?? []).flatMap(({ Key }) => (Key ? [Key] : [])),
+      );
+      continuationToken = page.IsTruncated
+        ? page.NextContinuationToken
+        : undefined;
       if (page.IsTruncated && !continuationToken) {
         console.error("R2 listing was truncated without a continuation token");
       }

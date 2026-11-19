@@ -16,7 +16,11 @@ interface CommentFormProps {
   articlePath: string;
 }
 
-export function CommentForm({ postId, isLoggedIn, articlePath }: CommentFormProps): ReactElement {
+export function CommentForm({
+  postId,
+  isLoggedIn,
+  articlePath,
+}: CommentFormProps): ReactElement {
   const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +44,7 @@ export function CommentForm({ postId, isLoggedIn, articlePath }: CommentFormProp
           setError(
             result.error === "Unauthorized"
               ? "Your session has expired. Please sign in again to submit your letter."
-              : result.error
+              : result.error,
           );
         } else {
           setContent("");
@@ -59,7 +63,9 @@ export function CommentForm({ postId, isLoggedIn, articlePath }: CommentFormProp
         </p>
         <div className="mt-4">
           <Button asChild>
-            <Link href={`/sign-in?callbackUrl=${encodeURIComponent(articlePath)}`}>
+            <Link
+              href={`/sign-in?callbackUrl=${encodeURIComponent(articlePath)}`}
+            >
               Sign in
             </Link>
           </Button>

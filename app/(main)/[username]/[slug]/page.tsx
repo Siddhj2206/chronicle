@@ -48,7 +48,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function PostPage({ params }: PostPageProps): Promise<ReactElement> {
+export default async function PostPage({
+  params,
+}: PostPageProps): Promise<ReactElement> {
   const { username, slug } = await params;
   const decodedUsername = decodeURIComponent(username).replace("@", "");
   const result = await getPost(decodedUsername, slug);

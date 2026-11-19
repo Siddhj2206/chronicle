@@ -3,7 +3,13 @@ import { headers } from "next/headers";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { auth } from "@/lib/auth";
-import { detectImageType, IMAGE_EXTENSIONS, IMAGE_SIZE_ERROR, IMAGE_TYPE_ERROR, MAX_FILE_SIZE } from "@/lib/image-upload";
+import {
+  detectImageType,
+  IMAGE_EXTENSIONS,
+  IMAGE_SIZE_ERROR,
+  IMAGE_TYPE_ERROR,
+  MAX_FILE_SIZE,
+} from "@/lib/image-upload";
 import { getR2, getR2PublicUrl, R2_BUCKET_NAME } from "@/lib/r2";
 
 const MAX_REQUEST_SIZE = MAX_FILE_SIZE + 64 * 1024;
@@ -24,21 +30,34 @@ export async function POST(request: Request) {
 
     const now = Date.now();
     for (const [userId, times] of uploadWindows) {
-      if (times[times.length - 1] <= now - WINDOW_MS) uploadWindows.delete(userId);
+      if (times[times.length - 1] <= now - WINDOW_MS)
+        uploadWindows.delete(userId);
     }
-    const times = (uploadWindows.get(session.user.id) ?? []).filter(time => time > now - WINDOW_MS);
+    const times = (uploadWindows.get(session.user.id) ?? []).filter(
+      (time) => time > now - WINDOW_MS,
+    );
     if (times.length >= UPLOAD_LIMIT) {
-      return Response.json({ error: `Upload limit reached. Limit: ${UPLOAD_LIMIT} per minute.` }, {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil((times[0] + WINDOW_MS - now) / 1000)) },
-      });
+      return Response.json(
+        { error: `Upload limit reached. Limit: ${UPLOAD_LIMIT} per minute.` },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((times[0] + WINDOW_MS - now) / 1000),
+            ),
+          },
+        },
+      );
     }
     times.push(now);
     uploadWindows.set(session.user.id, times);
 
     const contentLength = request.headers.get("content-length");
     if (contentLength === null) {
-      return Response.json({ error: "Content-Length required" }, { status: 411 });
+      return Response.json(
+        { error: "Content-Length required" },
+        { status: 411 },
+      );
     }
     if (!(Number(contentLength) <= MAX_REQUEST_SIZE)) {
       return Response.json({ error: IMAGE_SIZE_ERROR }, { status: 413 });
@@ -56,10 +75,7 @@ export async function POST(request: Request) {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return Response.json(
-        { error: IMAGE_SIZE_ERROR },
-        { status: 413 }
-      );
+      return Response.json({ error: IMAGE_SIZE_ERROR }, { status: 413 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -83,9 +99,6 @@ export async function POST(request: Request) {
     return Response.json({ url: getR2PublicUrl(key), key });
   } catch (error) {
     console.error("Upload error:", error);
-    return Response.json(
-      { error: "Failed to upload file" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to upload file" }, { status: 500 });
   }
 }
