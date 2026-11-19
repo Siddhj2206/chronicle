@@ -50,6 +50,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
 
   // Form state
   const [title, setTitle] = useState(post?.title || "");
+  const [subtitle, setSubtitle] = useState(post?.subtitle || "");
   const [excerpt, setExcerpt] = useState(post?.excerpt || "");
   const [content, setContent] = useState(post?.content || "");
   const [coverImage, setCoverImage] = useState(post?.coverImage || "");
@@ -58,13 +59,13 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
 
   // Track if there are unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
-  const initialDataRef = useRef({ title, excerpt, content, coverImage });
+  const initialDataRef = useRef({ title, subtitle, excerpt, content, coverImage });
   
   // Use ref to store form data for savePost to avoid recreation on every state change
-  const formDataRef = useRef({ title, excerpt, content, coverImage });
+  const formDataRef = useRef({ title, subtitle, excerpt, content, coverImage });
   useEffect(() => {
-    formDataRef.current = { title, excerpt, content, coverImage };
-  }, [title, excerpt, content, coverImage]);
+    formDataRef.current = { title, subtitle, excerpt, content, coverImage };
+  }, [title, subtitle, excerpt, content, coverImage]);
 
   // Track last change time for optimized auto-save
   const lastChangeTimeRef = useRef<number>(Date.now());
@@ -73,6 +74,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   useEffect(() => {
     const hasChanged =
       title !== initialDataRef.current.title ||
+      subtitle !== initialDataRef.current.subtitle ||
       excerpt !== initialDataRef.current.excerpt ||
       content !== initialDataRef.current.content ||
       coverImage !== initialDataRef.current.coverImage;
@@ -80,7 +82,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
     if (hasChanged) {
       lastChangeTimeRef.current = Date.now();
     }
-  }, [title, excerpt, content, coverImage]);
+  }, [title, subtitle, excerpt, content, coverImage]);
 
   // Warn before navigation with unsaved changes
   useEffect(() => {
@@ -98,7 +100,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   // Optimized savePost using refs to minimize dependency array
   const savePost = useCallback(
     async (isAutoSave = false): Promise<SaveResult> => {
-      const { title, content, excerpt, coverImage } = formDataRef.current;
+      const { title, subtitle, content, excerpt, coverImage } = formDataRef.current;
       
       if (!title.trim()) {
         if (!isAutoSave) toast.error("Title is required");
@@ -114,6 +116,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
       try {
         const formData = new FormData();
         formData.append("title", title);
+        formData.append("subtitle", subtitle);
         formData.append("content", content);
         formData.append("excerpt", excerpt);
         formData.append("coverImage", coverImage);
@@ -129,7 +132,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           router.replace(`/edit/${result.slug}`);
           toast.success("Manuscript created");
           // Update initial data ref
-          initialDataRef.current = { title, excerpt, content, coverImage };
+          initialDataRef.current = { title, subtitle, excerpt, content, coverImage };
           setHasChanges(false);
           return { ok: true, slug: result.slug! };
         } else {
@@ -143,7 +146,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           }
           setLastSaved(new Date());
           // Update initial data ref
-          initialDataRef.current = { title, excerpt, content, coverImage };
+          initialDataRef.current = { title, subtitle, excerpt, content, coverImage };
           setHasChanges(false);
           return { ok: true, slug: result.slug! };
         }
@@ -355,11 +358,22 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
             minRows={1}
           />
 
+          <TextareaAutosize
+            name="subtitle"
+            aria-label="Post subtitle (optional)"
+            placeholder="Subtitle (optional)…"
+            maxLength={200}
+            className="w-full resize-none bg-transparent font-serif text-2xl leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            value={subtitle}
+            onChange={(e) => setSubtitle(e.target.value)}
+            minRows={1}
+          />
+
           {/* Excerpt */}
           <TextareaAutosize
             name="excerpt"
             aria-label="Post excerpt"
-            placeholder="Write a brief excerpt or subtitle…"
+            placeholder="Write a brief excerpt…"
             className="w-full resize-none bg-transparent font-serif text-xl italic leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}

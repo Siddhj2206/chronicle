@@ -8,6 +8,7 @@ import { PostContent } from "@/components/posts/post-content";
 import { LikeButton } from "@/components/posts/post-actions";
 import { CommentList } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
+import { PostSummary } from "@/components/posts/post-summary";
 
 import type { Metadata } from "next";
 
@@ -89,6 +90,7 @@ export default async function PostPage({ params }: PostPageProps) {
         <h1 className="mb-6 font-serif text-5xl font-black leading-tight tracking-tight md:text-6xl lg:text-7xl">
           {post.title}
         </h1>
+        <PostSummary post={{ ...post, content: postContent }} />
 
         {post.excerpt && (
           <p className="mx-auto max-w-2xl font-serif text-xl italic leading-relaxed text-muted-foreground md:text-2xl">

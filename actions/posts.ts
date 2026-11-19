@@ -11,6 +11,7 @@ import { getVisiblePost, postVisibility } from "@/lib/post-visibility";
 import { db } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
+import { readingTimeMinutes } from "@/lib/reading-time";
 import {
   uploadContent,
   deleteContent,
@@ -109,6 +110,7 @@ export async function createPost(formData: FormData) {
 
   const parsed = postSchema.safeParse({
     title: formData.get("title"),
+    subtitle: formData.get("subtitle") || undefined,
     content: formData.get("content"),
     excerpt: formData.get("excerpt") || undefined,
     coverImage: formData.get("coverImage") || undefined,
@@ -118,7 +120,7 @@ export async function createPost(formData: FormData) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const { title, content, excerpt, coverImage } = parsed.data;
+  const { title, subtitle, content, excerpt, coverImage } = parsed.data;
 
   // Generate a temporary ID for the post (will be replaced by DB)
   const tempId = crypto.randomUUID();
@@ -140,6 +142,8 @@ export async function createPost(formData: FormData) {
             id: tempId, // Use the same ID we used for R2
             authorId: session.user.id,
             title,
+            subtitle: subtitle || null,
+            readingTimeMinutes: readingTimeMinutes(content),
             slug,
             content, // Keep in DB for now (migration period)
             contentPath,
@@ -179,6 +183,7 @@ export async function updatePost(slug: string, formData: FormData) {
 
   const parsed = postSchema.safeParse({
     title: formData.get("title"),
+    subtitle: formData.get("subtitle") || undefined,
     content: formData.get("content"),
     excerpt: formData.get("excerpt") || undefined,
     coverImage: formData.get("coverImage") || undefined,
@@ -188,7 +193,7 @@ export async function updatePost(slug: string, formData: FormData) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const { title, content, excerpt, coverImage } = parsed.data;
+  const { title, subtitle, content, excerpt, coverImage } = parsed.data;
 
   try {
     // First get the post to get its ID
@@ -214,6 +219,8 @@ export async function updatePost(slug: string, formData: FormData) {
       .update(post)
       .set({
         title,
+        subtitle: subtitle || null,
+        readingTimeMinutes: readingTimeMinutes(content),
         content, // Keep in DB for now (migration period)
         contentPath,
         excerpt: excerpt || null,

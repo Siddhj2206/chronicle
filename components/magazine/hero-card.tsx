@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+
+import { PostSummary } from "@/components/posts/post-summary";
 import { cn } from "@/lib/utils";
 import type { Post, User } from "@/lib/db/schema";
 
@@ -51,6 +53,7 @@ export function HeroCard({ post, className }: HeroCardProps) {
           <h2 className="mb-4 font-serif text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
             {post.title}
           </h2>
+          <PostSummary post={post} />
           <p className="font-serif text-lg leading-relaxed text-muted-foreground md:text-xl">
             {post.excerpt}
           </p>

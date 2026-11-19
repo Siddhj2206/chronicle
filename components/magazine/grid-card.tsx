@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+
+import { PostSummary } from "@/components/posts/post-summary";
 import { cn } from "@/lib/utils";
 import type { Post, User } from "@/lib/db/schema";
 import {
@@ -54,6 +56,7 @@ export function GridCard({ post, className }: GridCardProps) {
           <h3 className="font-serif text-2xl font-bold leading-tight">
             {post.title}
           </h3>
+          <PostSummary post={post} />
           <p className="mt-2 line-clamp-3 font-serif text-sm leading-relaxed text-muted-foreground">
             {post.excerpt}
           </p>

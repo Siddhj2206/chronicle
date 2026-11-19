@@ -36,6 +36,7 @@ export const usernameSchema = z
   );
 
 export const postSchema = z.object({
+  subtitle: z.string().trim().max(200, "Subtitle must be at most 200 characters").optional(),
   title: z
     .string()
     .min(1, "Title is required")

@@ -1,4 +1,6 @@
 import Link from "next/link";
+
+import { PostSummary } from "@/components/posts/post-summary";
 import { getMyPosts } from "@/actions/posts";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +65,7 @@ export default async function DashboardPage() {
                         {post.title}
                       </h3>
                     </Link>
+                    <PostSummary post={post} />
                     <p className="mt-2 line-clamp-1 font-serif text-sm italic text-muted-foreground">
                       {post.excerpt || "No excerpt…"}
                     </p>

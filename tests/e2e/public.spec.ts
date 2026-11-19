@@ -15,6 +15,8 @@ for (const path of ["/", "/archive", "/@test_writer", "/search?q=Chronicle"]) {
 test("renders article body and comments", async ({ page }) => {
   await page.goto("/@test_writer/chronicle-testing");
   await expect(page.getByRole("heading", { name: "Chronicle Testing Journal", exact: true })).toBeVisible();
+  await expect(page.locator("article header").getByText("Stories from a reproducible newsroom", { exact: true })).toBeVisible();
+  await expect(page.locator("article header").getByText("1 min read", { exact: true })).toBeVisible();
   await expect(page.getByText("This seeded article makes smoke tests reliable.", { exact: true })).toBeVisible();
   await expect(page.getByText("A helpful seeded comment.", { exact: true })).toBeVisible();
 });

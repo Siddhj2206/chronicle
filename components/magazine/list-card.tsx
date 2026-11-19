@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+
+import { PostSummary } from "@/components/posts/post-summary";
 import { cn } from "@/lib/utils";
 import type { Post, User } from "@/lib/db/schema";
 import {
@@ -54,6 +56,7 @@ export function ListCard({ post, className }: ListCardProps) {
           <h3 className="mb-2 font-serif text-2xl font-bold leading-tight">
             {post.title}
           </h3>
+          <PostSummary post={post} />
           <p className="line-clamp-2 font-serif text-base leading-relaxed text-muted-foreground">
             {post.excerpt}
           </p>

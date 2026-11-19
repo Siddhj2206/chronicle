@@ -1,4 +1,6 @@
 import Link from "next/link";
+
+import { PostSummary } from "@/components/posts/post-summary";
 import { cn } from "@/lib/utils";
 import type { Post, User } from "@/lib/db/schema";
 import {
@@ -34,6 +36,7 @@ export function SidebarList({ title, posts, className }: SidebarListProps) {
               <h4 className="font-serif text-base font-bold leading-snug">
                 {post.title}
               </h4>
+              <PostSummary post={post} />
             </Link>
             <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               <Link href={`/@${post.author.username}`} className="hover:underline">

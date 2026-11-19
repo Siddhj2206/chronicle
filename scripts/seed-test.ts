@@ -9,6 +9,7 @@ async function seed(): Promise<void> {
   const article = await createPost(writer.id, {
     id: "seed-published", slug: "chronicle-testing", title: "Chronicle Testing Journal",
     excerpt: "A deterministic story for the testing newsroom.",
+    subtitle: "Stories from a reproducible newsroom",
     content: "## A reproducible newsroom\n\nThis seeded article makes smoke tests reliable.",
     searchVector: "Chronicle Testing Journal deterministic newsroom",
     createdAt: new Date("2025-01-01"), updatedAt: new Date("2025-01-02"),
