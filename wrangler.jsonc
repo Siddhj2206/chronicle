@@ -5,10 +5,17 @@
   "minify": true,
   "compatibility_date": "2026-11-19",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "routes": [{ "pattern": "chronicle.siddhant.foo", "custom_domain": true }],
+  "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://chronicle.siddhant.foo",
+    "BETTER_AUTH_URL": "https://chronicle.siddhant.foo",
+    "NEXT_PUBLIC_R2_DOMAIN": "replace-with-public-r2-domain.example.invalid",
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",
   },
+  "images": { "binding": "IMAGES" },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "chronicle" }],
   "r2_buckets": [
     { "binding": "R2", "bucket_name": "chronicle" },
