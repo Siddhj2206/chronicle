@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import {
   detectImageType,
   IMAGE_EXTENSIONS,
@@ -20,7 +20,9 @@ const uploadWindows = new Map<string, number[]>();
 
 export async function POST(request: Request) {
   try {
-    const session = await auth.api.getSession({
+    const session = await (
+      await getAuth()
+    ).api.getSession({
       headers: await headers(),
     });
 
