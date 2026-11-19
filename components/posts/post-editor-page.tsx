@@ -40,6 +40,8 @@ interface PostEditorPageProps {
 
 const AUTO_SAVE_DELAY = 30000; // 30 seconds
 
+type SaveResult = { ok: true; slug: string } | { ok: false };
+
 export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
@@ -95,12 +97,12 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
 
   // Optimized savePost using refs to minimize dependency array
   const savePost = useCallback(
-    async (isAutoSave = false) => {
+    async (isAutoSave = false): Promise<SaveResult> => {
       const { title, content, excerpt, coverImage } = formDataRef.current;
       
       if (!title.trim()) {
         if (!isAutoSave) toast.error("Title is required");
-        return;
+        return { ok: false };
       }
 
       if (isAutoSave) {
@@ -120,7 +122,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           const result = await createPost(formData);
           if (result.error) {
             toast.error(result.error);
-            return;
+            return { ok: false };
           }
           setCurrentSlug(result.slug!);
           // Update URL without full reload
@@ -129,11 +131,12 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           // Update initial data ref
           initialDataRef.current = { title, excerpt, content, coverImage };
           setHasChanges(false);
+          return { ok: true, slug: result.slug! };
         } else {
           const result = await updatePost(currentSlug, formData);
           if (result.error) {
             toast.error(result.error);
-            return;
+            return { ok: false };
           }
           if (!isAutoSave) {
             toast.success("Manuscript saved");
@@ -142,9 +145,11 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           // Update initial data ref
           initialDataRef.current = { title, excerpt, content, coverImage };
           setHasChanges(false);
+          return { ok: true, slug: result.slug! };
         }
       } catch {
         toast.error("Something went wrong");
+        return { ok: false };
       } finally {
         setIsPending(false);
         setIsSaving(false);
@@ -171,21 +176,32 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   }, [mode, hasChanges, currentSlug, savePost]);
 
   const handlePublish = useCallback(async () => {
+    let slug = currentSlug;
     // Save first if there are changes
     if (hasChanges || mode === "new") {
-      await savePost();
+      const result = await savePost();
+      if (!result.ok) return;
+      slug = result.slug;
     }
 
-    if (!currentSlug) return;
+    if (!slug) return;
 
     setIsPending(true);
     try {
       if (isPublished) {
-        await unpublishPost(currentSlug);
+        const result = await unpublishPost(slug);
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
         setIsPublished(false);
         toast.success("Manuscript unpublished");
       } else {
-        await publishPost(currentSlug);
+        const result = await publishPost(slug);
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
         setIsPublished(true);
         toast.success("Manuscript published!");
       }
