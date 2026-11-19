@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { highlightCode } from "@/lib/highlight-code";
+import { remarkHeadingIds } from "@/lib/reading";
 
 import type { Components } from "react-markdown";
 
@@ -12,25 +13,46 @@ const imageStyle = { width: "100%", height: "auto" };
 
 // Hoisted outside component to prevent recreation on every render
 const markdownComponents: Components = {
-  h1: ({ children }) => (
-    <h1 className="mb-2 mt-6 font-serif text-4xl font-bold">{children}</h1>
+  h1: ({ children, id }) => (
+    <h1 id={id} className="scroll-mt-28 !mb-4 !mt-14 !text-[44px]">
+      {children}
+    </h1>
   ),
-  h2: ({ children }) => (
-    <h2 className="mb-2 mt-6 font-serif text-3xl font-bold">{children}</h2>
+  h2: ({ children, id }) => (
+    <h2 id={id} className="scroll-mt-28 !mb-4 !mt-14 !text-[38px]">
+      {children}
+    </h2>
   ),
-  h3: ({ children }) => (
-    <h3 className="mb-2 mt-6 font-serif text-2xl font-bold">{children}</h3>
+  h3: ({ children, id }) => (
+    <h3 id={id} className="scroll-mt-28 !mb-3 !mt-10 !text-[30px]">
+      {children}
+    </h3>
   ),
-  h4: ({ children }) => (
-    <h4 className="mb-2 mt-6 font-serif text-xl font-bold">{children}</h4>
+  h4: ({ children, id }) => (
+    <h4 id={id} className="scroll-mt-28 !mb-3 !mt-10">
+      {children}
+    </h4>
   ),
-  h5: ({ children }) => (
-    <h5 className="mb-2 mt-6 font-serif text-lg font-bold">{children}</h5>
+  h5: ({ children, id }) => (
+    <h5 id={id} className="scroll-mt-28 !mb-3 !mt-10">
+      {children}
+    </h5>
   ),
-  h6: ({ children }) => (
-    <h6 className="mb-2 mt-6 font-serif text-base font-bold">{children}</h6>
+  h6: ({ children, id }) => (
+    <h6 id={id} className="scroll-mt-28 !mb-3 !mt-10">
+      {children}
+    </h6>
   ),
-  p: ({ children }) => <p className="mb-4">{children}</p>,
+  p: ({ children, node }) => {
+    if (
+      node?.children.some(
+        (child) => child.type === "element" && child.tagName === "img",
+      )
+    ) {
+      return <div className="my-10">{children}</div>;
+    }
+    return <p>{children}</p>;
+  },
   a: ({ href, children }) => (
     <a
       href={href}
@@ -45,22 +67,27 @@ const markdownComponents: Components = {
   ol: ({ children }) => <ol className="mb-4 list-decimal pl-6">{children}</ol>,
   li: ({ children }) => <li className="mb-1">{children}</li>,
   blockquote: ({ children }) => (
-    <blockquote className="my-4 border-l-4 border-border pl-4 italic text-muted-foreground">
+    <blockquote className="!my-10 border-l !border-primary pl-6 font-serif text-[28px] italic leading-snug !text-foreground [&>p:last-child]:mb-0">
       {children}
     </blockquote>
   ),
   hr: () => <hr className="my-8 border-border" />,
-  img: ({ src, alt }) => (
-    <span className="my-4 block">
+  img: ({ src, alt, title }) => (
+    <figure className="my-10 w-full md:w-[min(920px,calc(100vw-64px))] xl:w-[min(920px,calc(100vw-352px))]">
       <Image
         src={String(src || "")}
         alt={String(alt || "")}
-        width={800}
-        height={400}
-        className="border border-border"
+        width={960}
+        height={600}
+        sizes="(max-width: 768px) 100vw, 920px"
         style={imageStyle}
       />
-    </span>
+      {(title || alt) && (
+        <figcaption className="mt-3 font-sans text-xs leading-relaxed text-muted-foreground">
+          {title || alt}
+        </figcaption>
+      )}
+    </figure>
   ),
   code: ({ children }) => (
     <code className="bg-muted px-1.5 py-0.5 font-mono text-[0.9em]">
@@ -80,7 +107,7 @@ const markdownComponents: Components = {
       .replace(/\n$/, "");
     return (
       <div
-        className="my-4 overflow-x-auto [&_pre]:min-w-max [&_pre]:border [&_pre]:border-border [&_pre]:!bg-muted [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-[0.9em] [&_pre]:leading-[1.5] [&_code]:font-mono"
+        className="my-8 overflow-x-auto border border-border [&_pre]:min-w-max [&_pre]:!bg-card [&_pre]:p-5 [&_pre]:font-mono [&_pre]:text-sm [&_pre]:leading-relaxed [&_code]:font-mono"
         dangerouslySetInnerHTML={{
           __html: highlightCode(
             text,
@@ -91,20 +118,20 @@ const markdownComponents: Components = {
     );
   },
   table: ({ children }) => (
-    <div className="my-4 overflow-x-auto">
-      <table className="w-full border-collapse border border-border">
+    <div className="my-8 overflow-x-auto">
+      <table className="w-full border-collapse text-base leading-relaxed">
         {children}
       </table>
     </div>
   ),
   thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
   th: ({ children }) => (
-    <th className="border border-border px-4 py-2 text-left font-bold">
+    <th className="border-b border-border px-4 py-3 text-left font-medium">
       {children}
     </th>
   ),
   td: ({ children }) => (
-    <td className="border border-border px-4 py-2">{children}</td>
+    <td className="border-b border-border px-4 py-3 align-top">{children}</td>
   ),
   input: ({ type, checked }) => {
     if (type === "checkbox") {
@@ -120,9 +147,9 @@ interface PostContentProps {
 
 export function PostContent({ content }: PostContentProps): React.JSX.Element {
   return (
-    <div className="post-content">
+    <div className="post-content !text-[20px] !leading-[1.65] [&>:first-child]:!mt-0">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkHeadingIds]}
         components={markdownComponents}
       >
         {content}

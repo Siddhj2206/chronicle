@@ -22,8 +22,20 @@ async function seed(): Promise<void> {
     slug: "chronicle-testing",
     title: "Chronicle Testing Journal",
     excerpt: "A deterministic story for the testing newsroom.",
-    content:
+    content: [
       "## A reproducible newsroom\n\nThis seeded article makes smoke tests reliable.",
+      ...Array.from(
+        { length: 4 },
+        () =>
+          "A newsroom begins with attention. We walk through familiar streets, listening to the people who give a place its character. Each conversation invites us to look more closely, to ask better questions, and to make space for another perspective. These observations become a record of everyday life, connecting readers through the details that might otherwise go unnoticed.",
+      ),
+      "### Listening closely\n\n> A good story leaves room for the reader to see the world anew.",
+      "- Begin with curiosity.\n- Listen before writing.\n- Leave time to reflect.",
+      "## A thoughtful practice\n\nA simple tool can help us keep a record of what matters.",
+      '```typescript\nconst observation = { place: "The old station", story: "A city learning to pause" };\nconsole.log(observation.story);\n```',
+      "| Practice | Purpose |\n| --- | --- |\n| Observe | Notice the ordinary |\n| Reflect | Find a new perspective |",
+      "### Returning to the page\n\nThe work continues beyond the final paragraph. We share drafts, listen to feedback, and return to the places that first inspired us.",
+    ].join("\n\n"),
     searchVector: "Chronicle Testing Journal deterministic newsroom",
     createdAt: new Date("2025-01-01"),
     updatedAt: new Date("2025-01-02"),

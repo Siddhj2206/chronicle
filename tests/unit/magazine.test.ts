@@ -129,7 +129,7 @@ describe("Museum monograph components", () => {
   it("renders empty and untrusted Markdown safely while preserving links and highlighted code", () => {
     expect(
       renderToStaticMarkup(createElement(PostContent, { content: "" })),
-    ).toBe('<div class="post-content"></div>');
+    ).toMatch(/^<div class="post-content[^"]*"><\/div>$/);
     const html = renderToStaticMarkup(
       createElement(PostContent, {
         content:
