@@ -1,6 +1,8 @@
 import { readingTimeMinutes } from "@/lib/reading-time";
 import { cn } from "@/lib/utils";
 
+import type { ReactElement } from "react";
+
 import type { Post } from "@/lib/db/schema";
 
 interface PostSummaryProps {
@@ -8,7 +10,7 @@ interface PostSummaryProps {
   variant?: "card" | "article" | "compact";
 }
 
-export function PostSummary({ post, variant = "card" }: PostSummaryProps) {
+export function PostSummary({ post, variant = "card" }: PostSummaryProps): ReactElement {
   return (
     <div className="my-2 space-y-2 text-muted-foreground">
       {variant !== "compact" && post.subtitle && (
