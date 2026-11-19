@@ -932,8 +932,9 @@ function ImageUploadPlugin({ fileInputRef }: ImageUploadPluginProps) {
         if ($isRangeSelection(selection)) {
           selection.insertNodes([imageNode]);
         } else {
-          const root = $getRoot();
-          root.append(imageNode);
+          const paragraph = $createParagraphNode();
+          paragraph.append(imageNode);
+          $getRoot().append(paragraph);
         }
       });
     },
