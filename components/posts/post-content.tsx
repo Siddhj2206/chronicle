@@ -6,7 +6,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { highlightCode } from "@/lib/highlight-code";
 import { remarkHeadingIds } from "@/lib/reading";
 
-import type { Components } from "react-markdown";
+import type { Components, ExtraProps } from "react-markdown";
+
+function containsImage(node: ExtraProps["node"]): boolean {
+  return (
+    node?.tagName === "img" ||
+    (node?.children.some(
+      (child) => child.type === "element" && containsImage(child),
+    ) ??
+      false)
+  );
+}
 
 // Hoisted style objects to prevent recreation on every render
 const imageStyle = { width: "100%", height: "auto" };
@@ -44,11 +54,7 @@ const markdownComponents: Components = {
     </h6>
   ),
   p: ({ children, node }) => {
-    if (
-      node?.children.some(
-        (child) => child.type === "element" && child.tagName === "img",
-      )
-    ) {
+    if (containsImage(node)) {
       return <div className="my-10">{children}</div>;
     }
     return <p>{children}</p>;

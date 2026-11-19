@@ -47,6 +47,18 @@ describe("article reading metadata", () => {
 });
 
 describe("reading components", () => {
+  it.each([
+    "![A mountain](/mountain.jpg)",
+    "[![A mountain](/mountain.jpg)](https://example.com)",
+    "*![A mountain](/mountain.jpg)*",
+    "**[![A mountain](/mountain.jpg)](https://example.com)**",
+  ])("unwraps paragraphs containing images at any depth: %s", (content) => {
+    const html = renderToStaticMarkup(createElement(PostContent, { content }));
+    expect(html).toContain('<div class="my-10">');
+    expect(html).toContain("<figure");
+    expect(html).not.toContain("<p>");
+  });
+
   it("only offers contents for at least three headings", () => {
     const headings = analyzeReading(
       "## First\n\n## Second\n\n### Third",
