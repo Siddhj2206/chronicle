@@ -76,7 +76,9 @@ describe("posts", () => {
     }, async () => {
       const results = await Promise.all([createPost(validPost()), createPost(validPost())]);
       expect(results.every((result) => result.success)).toBe(true);
-      expect(results.map((result) => result.slug).sort()).toEqual(["testing-chronicle", "testing-chronicle-2"]);
+      expect(results.map((result) => result.slug)).toEqual(expect.arrayContaining([
+        "testing-chronicle", expect.stringMatching(/^testing-chronicle-[\w-]{6}$/),
+      ]));
     });
   });
 });
