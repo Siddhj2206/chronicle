@@ -1,12 +1,12 @@
 "use server";
 
 import { cache } from "react";
-import { revalidatePath } from "next/cache";
 import { eq, and, desc, asc, gte, notInArray, sql, like } from "drizzle-orm";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 
 import { getSession } from "@/lib/session";
+import { getVisiblePost, postVisibility } from "@/lib/post-visibility";
 import { db } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
@@ -14,13 +14,13 @@ import {
   uploadContent,
   deleteContent,
   getContent,
-  revalidateContent,
 } from "@/lib/r2-content";
+import { revalidatePosts } from "@/lib/revalidate-posts";
 
 import type { Post } from "@/lib/db/schema";
 
 // Generate a unique slug - tries clean slug first, then adds suffix only if needed
-async function generateUniqueSlug(title: string, authorId: string): Promise<string> {
+async function generateUniqueSlug(title: string): Promise<string> {
   const baseSlug = slugify(title, { lower: true, strict: true });
   
   if (!baseSlug) {
@@ -28,11 +28,11 @@ async function generateUniqueSlug(title: string, authorId: string): Promise<stri
     return nanoid(10);
   }
 
-  // Check for existing slugs by this author that start with baseSlug
+  // Check for existing slugs that start with baseSlug
   const existing = await db
     .select({ slug: post.slug })
     .from(post)
-    .where(and(eq(post.authorId, authorId), like(post.slug, `${baseSlug}%`)));
+    .where(like(post.slug, `${baseSlug}%`));
 
   if (existing.length === 0) {
     return baseSlug;
@@ -55,6 +55,17 @@ async function generateUniqueSlug(title: string, authorId: string): Promise<stri
 
   // Fallback to random suffix if somehow we have 100+ posts with same title
   return `${baseSlug}-${nanoid(6)}`;
+}
+
+function isSlugConflict(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  if (
+    "code" in error && error.code === "23505" &&
+    "constraint_name" in error && error.constraint_name === "post_slug_idx"
+  ) {
+    return true;
+  }
+  return "cause" in error && isSlugConflict(error.cause);
 }
 
 /**
@@ -108,46 +119,50 @@ export async function createPost(formData: FormData) {
 
   const { title, content, excerpt, coverImage } = parsed.data;
 
-  // Generate unique slug (clean, only adds suffix on conflict)
-  const slug = await generateUniqueSlug(title, session.user.id);
-
   // Generate a temporary ID for the post (will be replaced by DB)
   const tempId = crypto.randomUUID();
+  let contentPath: string | undefined;
+  let committed = false;
 
   try {
+    let slug = await generateUniqueSlug(title);
+
     // Upload content to R2 first
-    const contentPath = await uploadContent(tempId, content);
+    contentPath = await uploadContent(tempId, content);
 
     // Generate search vector for full-text search
     const searchVector = generateSearchVector(title, excerpt || null, content);
 
-    const [newPost] = await db
-      .insert(post)
-      .values({
-        id: tempId, // Use the same ID we used for R2
-        authorId: session.user.id,
-        title,
-        slug,
-        content, // Keep in DB for now (migration period)
-        contentPath,
-        excerpt: excerpt || null,
-        coverImage: coverImage || null,
-        published: false,
-        searchVector,
-      })
-      .returning();
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const [newPost] = await db
+          .insert(post)
+          .values({
+            id: tempId, // Use the same ID we used for R2
+            authorId: session.user.id,
+            title,
+            slug,
+            content, // Keep in DB for now (migration period)
+            contentPath,
+            excerpt: excerpt || null,
+            coverImage: coverImage || null,
+            published: false,
+            searchVector,
+          })
+          .returning();
 
-    revalidatePath("/manuscripts");
+        committed = true;
+        await revalidatePosts(session.user.id, { posts: [newPost], contentChanged: true });
 
-    return { success: true, slug: newPost.slug };
+        return { success: true, slug: newPost.slug };
+      } catch (error) {
+        if (!isSlugConflict(error) || attempt === 3) throw error;
+        slug = `${slugify(title, { lower: true, strict: true }) || "post"}-${nanoid(6)}`;
+      }
+    }
   } catch (error) {
     console.error("Create post error:", error);
-    // Try to clean up R2 content if DB insert failed
-    try {
-      await deleteContent(tempId);
-    } catch {
-      // Ignore cleanup errors
-    }
+    if (!committed && contentPath) await deleteContent(contentPath);
     return { error: "Failed to create post" };
   }
 }
@@ -172,10 +187,12 @@ export async function updatePost(slug: string, formData: FormData) {
 
   const { title, content, excerpt, coverImage } = parsed.data;
 
+  let contentPath: string | undefined;
+  let committed = false;
   try {
     // First get the post to get its ID
     const existingPost = await db
-      .select({ id: post.id })
+      .select({ id: post.id, contentPath: post.contentPath })
       .from(post)
       .where(and(eq(post.slug, slug), eq(post.authorId, session.user.id)))
       .limit(1);
@@ -187,7 +204,7 @@ export async function updatePost(slug: string, formData: FormData) {
     const postId = existingPost[0].id;
 
     // Upload new content to R2
-    const contentPath = await uploadContent(postId, content);
+    contentPath = await uploadContent(postId, content);
 
     // Generate updated search vector
     const searchVector = generateSearchVector(title, excerpt || null, content);
@@ -207,18 +224,19 @@ export async function updatePost(slug: string, formData: FormData) {
       .returning();
 
     if (!updatedPost) {
+      await deleteContent(contentPath);
       return { error: "Post not found" };
     }
 
-    // Revalidate content cache
-    await revalidateContent(postId);
-
-    revalidatePath("/manuscripts");
-    revalidatePath(`/@${(session.user as { username?: string }).username}/${slug}`);
+    committed = true;
+    const previousPath = existingPost[0].contentPath;
+    if (previousPath && previousPath !== contentPath) await deleteContent(previousPath);
+    await revalidatePosts(session.user.id, { posts: [updatedPost], contentChanged: true });
 
     return { success: true, slug: updatedPost.slug };
   } catch (error) {
     console.error("Update post error:", error);
+    if (!committed && contentPath) await deleteContent(contentPath);
     return { error: "Failed to update post" };
   }
 }
@@ -231,6 +249,10 @@ export async function deletePost(slug: string) {
   }
 
   try {
+    const [existingPost] = await db.select({ contentPath: post.contentPath })
+      .from(post).where(and(eq(post.slug, slug), eq(post.authorId, session.user.id))).limit(1);
+    if (!existingPost) return { error: "Post not found" };
+
     const [deletedPost] = await db
       .delete(post)
       .where(and(eq(post.slug, slug), eq(post.authorId, session.user.id)))
@@ -241,10 +263,9 @@ export async function deletePost(slug: string) {
     }
 
     // Delete content from R2
-    await deleteContent(deletedPost.id);
+    if (deletedPost.contentPath) await deleteContent(deletedPost.contentPath);
 
-    revalidatePath("/manuscripts");
-    revalidatePath("/");
+    await revalidatePosts(session.user.id, { posts: [deletedPost], contentChanged: true });
 
     return { success: true };
   } catch (error) {
@@ -275,8 +296,7 @@ export async function publishPost(slug: string) {
       return { error: "Post not found" };
     }
 
-    revalidatePath("/manuscripts");
-    revalidatePath("/");
+    await revalidatePosts(session.user.id, { posts: [publishedPost] });
 
     return { success: true };
   } catch (error) {
@@ -306,8 +326,7 @@ export async function unpublishPost(slug: string) {
       return { error: "Post not found" };
     }
 
-    revalidatePath("/manuscripts");
-    revalidatePath("/");
+    await revalidatePosts(session.user.id, { posts: [unpublishedPost] });
 
     return { success: true };
   } catch (error) {
@@ -325,6 +344,7 @@ export const getPost = cache(async function getPost(
   slug: string
 ): Promise<{ post: Post; author: { id: string; name: string; username: string | null; image: string | null } } | null> {
   try {
+    const session = await getSession();
     const result = await db
       .select({
         post: post,
@@ -337,7 +357,7 @@ export const getPost = cache(async function getPost(
       })
       .from(post)
       .innerJoin(user, eq(post.authorId, user.id))
-      .where(and(eq(post.slug, slug), eq(user.username, username)))
+      .where(and(eq(post.slug, slug), eq(user.username, username), postVisibility(session?.user?.id)))
       .limit(1);
 
     if (result.length === 0) {
@@ -356,21 +376,20 @@ export const getPost = cache(async function getPost(
  * Falls back to database content if R2 content not available (migration period)
  */
 export async function getPostContent(postId: string): Promise<string | null> {
-  // Try to get from R2 first
-  const r2Content = await getContent(postId);
-  if (r2Content) {
-    return r2Content;
-  }
-
-  // Fallback to database content during migration
   try {
+    if (!(await getVisiblePost(postId))) {
+      return null;
+    }
+
     const result = await db
-      .select({ content: post.content })
+      .select({ content: post.content, contentPath: post.contentPath })
       .from(post)
       .where(eq(post.id, postId))
       .limit(1);
 
-    return result[0]?.content || null;
+    if (!result[0]) return null;
+    const r2Content = await getContent(postId, result[0].contentPath ?? `content/${postId}.md`);
+    return r2Content ?? result[0].content;
   } catch (error) {
     console.error("Get post content fallback error:", error);
     return null;
@@ -511,7 +530,7 @@ export async function incrementViewCount(postId: string) {
     await db
       .update(post)
       .set({ viewCount: sql`${post.viewCount} + 1` })
-      .where(eq(post.id, postId));
+      .where(and(eq(post.id, postId), postVisibility()));
   } catch (error) {
     console.error("Increment view count error:", error);
   }

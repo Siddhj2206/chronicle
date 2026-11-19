@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+import { isAllowedImageUrl } from "@/lib/image-sources";
+
+export const imageUrlSchema = z
+  .string()
+  .url("Invalid image URL")
+  .refine(isAllowedImageUrl, "Image URL must use an allowed image host over HTTPS");
+
 // Reserved usernames that cannot be used
 const RESERVED_USERNAMES = [
   "admin",
@@ -38,7 +45,7 @@ export const postSchema = z.object({
     .string()
     .max(300, "Excerpt must be at most 300 characters")
     .optional(),
-  coverImage: z.string().url("Invalid URL").optional().or(z.literal("")),
+  coverImage: imageUrlSchema.optional().or(z.literal("")),
 });
 
 export const commentSchema = z.object({
@@ -67,5 +74,5 @@ export const profileSchema = z.object({
     )
     .optional(),
   bio: z.string().max(500, "Bio must be at most 500 characters").optional(),
-  image: z.string().url("Invalid image URL").optional().or(z.literal("")),
+  image: imageUrlSchema.optional().or(z.literal("")),
 });

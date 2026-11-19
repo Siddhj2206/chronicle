@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
-import { useDropzone } from "react-dropzone";
+import { useCallback, useState } from "react";
 import Image from "next/image";
+
+import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
+
+import { ALLOWED_IMAGE_TYPES, IMAGE_SIZE_ERROR, IMAGE_TYPE_ERROR, MAX_FILE_SIZE, readUploadResponse } from "@/lib/image-upload";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -23,12 +26,7 @@ export function ImageUpload({
   aspectRatio = "video" 
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(value || null);
-
-  // Sync preview with value prop changes
-  useEffect(() => {
-    setPreview(value || null);
-  }, [value]);
+  const preview = value || null;
 
   const aspectClass = aspectRatio === "square" ? "aspect-square" : "aspect-video";
 
@@ -48,14 +46,8 @@ export function ImageUpload({
           body: formData,
         });
 
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || "Upload failed");
-        }
+        const url = await readUploadResponse(response);
 
-        const { url } = await response.json();
-
-        setPreview(url);
         onChange(url);
         toast.success("Image uploaded");
       } catch (error) {
@@ -70,7 +62,15 @@ export function ImageUpload({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "image/*": [] },
+    accept: Object.fromEntries(ALLOWED_IMAGE_TYPES.map(type => [type, []])),
+    maxSize: MAX_FILE_SIZE,
+    minSize: 1,
+    onDropRejected: (rejections) => {
+      const codes = rejections.flatMap(({ errors }) => errors.map(({ code }) => code));
+      toast.error(codes.includes("file-too-large") ? IMAGE_SIZE_ERROR :
+        codes.includes("file-invalid-type") ? IMAGE_TYPE_ERROR :
+        codes.includes("file-too-small") ? "File is empty" : "Please select one image at a time");
+    },
     maxFiles: 1,
     disabled: disabled || isUploading,
   });
@@ -101,7 +101,6 @@ export function ImageUpload({
             className="font-mono text-xs font-bold uppercase tracking-widest"
             onClick={(e) => {
               e.stopPropagation();
-              setPreview(null);
               onChange("");
             }}
           >

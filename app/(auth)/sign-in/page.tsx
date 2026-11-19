@@ -2,15 +2,16 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { getSession } from "@/lib/session";
+import { safeCallbackUrl } from "@/lib/redirects";
 import { SignInButton } from "@/components/auth/sign-in-button";
 
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: Promise<{ callbackUrl?: string | string[] }>;
 }) {
   const session = await getSession();
-  const { callbackUrl = "/" } = await searchParams;
+  const callbackUrl = safeCallbackUrl((await searchParams).callbackUrl);
 
   if (session?.user) {
     const username = (session.user as { username?: string }).username;

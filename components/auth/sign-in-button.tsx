@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 
 import { authClient } from "@/lib/auth-client";
+import { safeCallbackUrl } from "@/lib/redirects";
 import { Button } from "@/components/ui/button";
 
 interface SignInButtonProps {
@@ -11,10 +12,11 @@ interface SignInButtonProps {
 
 export function SignInButton({ callbackURL = "/" }: SignInButtonProps) {
   const handleSignIn = useCallback(() => {
+    const destination = safeCallbackUrl(callbackURL);
     authClient.signIn.social({
       provider: "google",
-      callbackURL,
-      newUserCallbackURL: `/onboarding?callbackUrl=${encodeURIComponent(callbackURL)}`,
+      callbackURL: destination,
+      newUserCallbackURL: `/onboarding?callbackUrl=${encodeURIComponent(destination)}`,
     });
   }, [callbackURL]);
 

@@ -8,6 +8,7 @@ import { UserMenu } from "@/components/auth/user-menu";
 import { SearchInput } from "@/components/layout/search-input";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { cn } from "@/lib/utils";
+import { safeCallbackUrl } from "@/lib/redirects";
 
 interface NavbarProps {
   className?: string;
@@ -36,7 +37,7 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
               <UserMenu user={session.user} />
             </>
           ) : (
-            <Link href={`/sign-in?callbackUrl=${encodeURIComponent(pathname)}`} className="rounded-full bg-primary px-4 py-2 text-primary-foreground hover:opacity-90">
+            <Link href={`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackUrl(pathname))}`} className="rounded-full bg-primary px-4 py-2 text-primary-foreground hover:opacity-90">
               Sign in
             </Link>
           )}
