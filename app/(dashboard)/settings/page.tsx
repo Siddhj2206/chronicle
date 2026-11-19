@@ -2,11 +2,12 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 
 import { getSession } from "@/lib/session";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { SettingsForm } from "./settings-form";
 
 export default async function SettingsPage() {
+  const db = await getDb();
   const session = await getSession();
 
   if (!session?.user) {

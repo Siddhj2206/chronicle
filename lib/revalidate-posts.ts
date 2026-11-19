@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 import { revalidateContent } from "@/lib/r2-content";
 
@@ -16,6 +16,7 @@ export async function revalidatePosts(
   options: RevalidatePostsOptions = {},
 ): Promise<void> {
   try {
+    const db = await getDb();
     const [author] = await db
       .select({ username: user.username })
       .from(user)

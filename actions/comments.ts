@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 import { getSession } from "@/lib/session";
 import { getVisiblePost } from "@/lib/post-visibility";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { comment, post, user } from "@/lib/db/schema";
 import { commentSchema } from "@/lib/validators";
 
@@ -25,6 +25,7 @@ export async function addComment(postId: string, formData: FormData) {
   }
 
   try {
+    const db = await getDb();
     if (!(await getVisiblePost(postId))) {
       return { error: "Post not found" };
     }
@@ -66,6 +67,7 @@ export async function deleteComment(commentId: string) {
   }
 
   try {
+    const db = await getDb();
     // Get the comment to check ownership
     const commentData = await db
       .select()
@@ -124,6 +126,7 @@ export async function deleteComment(commentId: string) {
 
 export async function getComments(postId: string) {
   try {
+    const db = await getDb();
     if (!(await getVisiblePost(postId))) {
       return [];
     }

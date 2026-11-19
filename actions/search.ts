@@ -3,7 +3,7 @@
 import { eq, and, desc, sql, gte } from "drizzle-orm";
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 
 import type { Post } from "@/lib/db/schema";
@@ -131,6 +131,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
   END`;
 
   try {
+    const db = await getDb();
     if (after?.fallback) throw new Error("Continue fallback pagination");
     // Build WHERE conditions dynamically
     // Hybrid approach: full-text search with ILIKE fallback for stop words
@@ -214,6 +215,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
 
     // Fallback: Simple ILIKE search without full-text
     try {
+      const db = await getDb();
       const likePattern = `%${searchTerm}%`;
       const fallbackConditions = [
         eq(post.published, true),
@@ -291,6 +293,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
  */
 export async function getAuthorsWithPosts(): Promise<AuthorWithPosts[]> {
   try {
+    const db = await getDb();
     const result = await db
       .select({
         username: user.username,
