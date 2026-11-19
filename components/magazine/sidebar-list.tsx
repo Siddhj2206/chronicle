@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-import { PostSummary } from "@/components/posts/post-summary";
 import { cn } from "@/lib/utils";
+import { PostSummary } from "@/components/posts/post-summary";
+
 import type { Post, User } from "@/lib/db/schema";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SidebarListProps {
   title: string;
@@ -13,45 +13,33 @@ interface SidebarListProps {
   className?: string;
 }
 
-export function SidebarList({ title, posts, className }: SidebarListProps) {
+export function SidebarList({
+  title,
+  posts,
+  className,
+}: SidebarListProps): React.JSX.Element {
   return (
-    <Card
-      className={cn(
-        "rounded-none border-0 bg-transparent shadow-none",
-        className,
-      )}
-    >
-      <CardHeader className="border-b border-black px-0 pb-2 dark:border-white">
-        <CardTitle className="font-sans text-xs font-black uppercase tracking-widest">
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6 px-0 pt-6">
-        {posts.map((post, i) => (
-          <div key={post.id} className="group flex flex-col gap-1">
-            <span className="font-mono text-xs text-muted-foreground/50">
-              {String(i + 1).padStart(2, "0")}
-            </span>
+    <aside className={cn("reading-list", className)}>
+      <h2>{title}</h2>
+      <div className="reading-list-items">
+        {posts.map((post) => (
+          <div key={post.id}>
             <Link
               href={`/@${post.author.username}/${post.slug}`}
-              className="group-hover:text-neutral-700 dark:group-hover:text-neutral-300"
+              className="hover:text-primary"
             >
-              <h4 className="font-serif text-base font-bold leading-snug">
-                {post.title}
-              </h4>
-              <PostSummary post={post} variant="compact" />
+              <h3>{post.title}</h3>
             </Link>
-            <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              <Link
-                href={`/@${post.author.username}`}
-                className="hover:underline"
-              >
-                {post.author.name}
-              </Link>
-            </div>
+            <Link
+              href={`/@${post.author.username}`}
+              className="story-meta hover:text-primary"
+            >
+              {post.author.name}
+            </Link>
+            <PostSummary post={post} variant="compact" />
           </div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </aside>
   );
 }

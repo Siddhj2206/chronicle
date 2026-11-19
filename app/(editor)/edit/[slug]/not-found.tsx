@@ -43,7 +43,7 @@ export default function ManuscriptNotFound() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 border-t-2 border-black pt-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground dark:border-white">
+        <div className="mt-8 border-t-2 border-black pt-4 font-mono text-label uppercase tracking-widest text-muted-foreground dark:border-white">
           The Chronicle • Est. 2026
         </div>
       </div>

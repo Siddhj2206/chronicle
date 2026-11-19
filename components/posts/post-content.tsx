@@ -10,12 +10,6 @@ import type { Components } from "react-markdown";
 // Hoisted style objects to prevent recreation on every render
 const imageStyle = { width: "100%", height: "auto" };
 
-const articleStyle = {
-  fontFamily: "Libre Baskerville, serif",
-  fontSize: "1.25rem",
-  lineHeight: 1.875,
-};
-
 // Hoisted outside component to prevent recreation on every render
 const markdownComponents: Components = {
   h1: ({ children }) => (
@@ -114,13 +108,7 @@ const markdownComponents: Components = {
   ),
   input: ({ type, checked }) => {
     if (type === "checkbox") {
-      return (
-        <Checkbox
-          checked={checked}
-          disabled
-          className="mr-2 h-4 w-4 rounded-none border-neutral-400 data-[state=checked]:bg-black data-[state=checked]:text-white dark:data-[state=checked]:bg-white dark:data-[state=checked]:text-black"
-        />
-      );
+      return <Checkbox checked={checked} disabled />;
     }
     return null;
   },
@@ -130,15 +118,15 @@ interface PostContentProps {
   content: string;
 }
 
-export function PostContent({ content }: PostContentProps) {
+export function PostContent({ content }: PostContentProps): React.JSX.Element {
   return (
-    <article className="post-content" style={articleStyle}>
+    <div className="post-content">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={markdownComponents}
       >
         {content}
       </ReactMarkdown>
-    </article>
+    </div>
   );
 }

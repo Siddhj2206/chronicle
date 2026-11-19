@@ -1,26 +1,21 @@
 import type { Metadata } from "next";
-import { Libre_Baskerville, Lora, IBM_Plex_Mono } from "next/font/google";
+import { Inter, Instrument_Serif } from "next/font/google";
 
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
-const libreBaskerville = Libre_Baskerville({
-  variable: "--font-sans",
+const inter = Inter({
+  variable: "--font-ui",
   subsets: ["latin"],
-  weight: ["400", "700"],
 });
 
-const lora = Lora({
-  variable: "--font-serif",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-display",
+  weight: "400",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -32,33 +27,36 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>): React.JSX.Element {
   return (
-    <html lang="en" className="dark:color-scheme-dark" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${instrumentSerif.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <meta
           name="theme-color"
-          content="#ffffff"
+          content="#f6f7f9"
           media="(prefers-color-scheme: light)"
         />
         <meta
           name="theme-color"
-          content="#000000"
+          content="#111315"
           media="(prefers-color-scheme: dark)"
         />
-        <style>{`html { color-scheme: light dark; }`}</style>
       </head>
-      <body
-        className={`${libreBaskerville.variable} ${lora.variable} ${ibmPlexMono.variable} antialiased`}
-      >
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:ring-2 focus:ring-ring"
-        >
-          Skip to main content
-        </a>
-        {children}
-        <Toaster />
+      <body className="antialiased">
+        <ThemeProvider>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:ring-2 focus:ring-ring"
+          >
+            Skip to main content
+          </a>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
