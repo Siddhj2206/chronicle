@@ -6,6 +6,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { post, postTag, tag, user } from "@/lib/db/schema";
 import { withPostTags } from "@/lib/post-tags";
+import { postVisibility } from "@/lib/post-visibility";
+import { getSession } from "@/lib/session";
 
 import type { Tag } from "@/lib/db/schema";
 
@@ -24,7 +26,11 @@ export async function suggestTags(query: string = ""): Promise<Tag[]> {
   const parsed = z.string().trim().max(50).safeParse(query);
   if (!parsed.success) return [];
   try {
-    return await db.select().from(tag).where(ilike(tag.name, `${parsed.data.replace(/[\\%_]/g, "\\$&")}%`)).orderBy(asc(tag.name)).limit(20);
+    const session = await getSession();
+    return await db.selectDistinct({ id: tag.id, name: tag.name, slug: tag.slug, createdAt: tag.createdAt }).from(tag)
+      .innerJoin(postTag, eq(postTag.tagId, tag.id)).innerJoin(post, eq(post.id, postTag.postId))
+      .where(and(ilike(tag.name, `${parsed.data.replace(/[\\%_]/g, "\\$&")}%`), postVisibility(session?.user?.id)))
+      .orderBy(asc(tag.name)).limit(20);
   } catch (error) {
     console.error("Tag suggestions error:", error);
     return [];
@@ -35,7 +41,9 @@ export async function getTagPosts(slug: string, page = 1, limit = 10) {
   const parsed = z.object({ slug: z.string().min(1).max(200), page: z.number().int().min(1).max(100000), limit: z.number().int().min(1).max(50) }).safeParse({ slug, page, limit });
   if (!parsed.success) return { error: "Invalid tag query" } as const;
   try {
-    const [topic] = await db.select().from(tag).where(eq(tag.slug, slug)).limit(1);
+    const [topic] = await db.selectDistinct({ id: tag.id, name: tag.name, slug: tag.slug, createdAt: tag.createdAt }).from(tag)
+      .innerJoin(postTag, eq(postTag.tagId, tag.id)).innerJoin(post, eq(post.id, postTag.postId))
+      .where(and(eq(tag.slug, slug), eq(post.published, true))).limit(1);
     if (!topic) return null;
     const predicate = and(eq(postTag.tagId, topic.id), eq(post.published, true));
     const [[total], rows] = await Promise.all([
@@ -44,6 +52,7 @@ export async function getTagPosts(slug: string, page = 1, limit = 10) {
         .from(post).innerJoin(postTag, eq(postTag.postId, post.id)).innerJoin(user, eq(user.id, post.authorId))
         .where(predicate).orderBy(desc(post.publishedAt), desc(post.id)).limit(limit).offset((page - 1) * limit),
     ]);
+    if (!total.count) return null;
     return { tag: topic, posts: await withPostTags(rows), totalCount: total.count, totalPages: Math.ceil(total.count / limit), currentPage: page };
   } catch (error) {
     console.error("Tag stories error:", error);

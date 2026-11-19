@@ -5,8 +5,9 @@ import { expect, test } from "@playwright/test";
 import { inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { tag } from "@/lib/db/schema";
+import { postTag, tag } from "@/lib/db/schema";
 import { deleteTestUser, signIn } from "@/tests/e2e/helpers/auth";
+import { createPost } from "@/tests/helpers/db";
 
 import type { Page } from "@playwright/test";
 
@@ -25,7 +26,10 @@ async function capture(page: Page, surface: string): Promise<void> {
 
 test("publishes topics, browses a topic, filters search and edits tags", async ({ context, page }) => {
   const writer = await signIn(context, { name: "Amelia Reed" });
-  await db.insert(tag).values({ name: "Community", slug: "community" }).onConflictDoNothing();
+  const [community] = await db.insert(tag).values({ name: "Community", slug: "community" })
+    .onConflictDoUpdate({ target: tag.slug, set: { name: "Community" } }).returning();
+  const draft = await createPost(writer.id, { published: false });
+  await db.insert(postTag).values({ postId: draft.id, tagId: community.id });
   try {
     await page.goto("/new");
     await page.getByRole("textbox", { name: "Post title", exact: true }).fill("Gardens that bring us together");

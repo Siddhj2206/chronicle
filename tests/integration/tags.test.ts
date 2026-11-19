@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { eq } from "drizzle-orm";
 
-import { createPost, getPost, getPostForEditWithContent, publishPost, updatePost } from "@/actions/posts";
+import { createPost, getPost, getPostForEditWithContent, publishPost, unpublishPost, updatePost } from "@/actions/posts";
 import { getTagPosts, getTagsWithPosts, suggestTags } from "@/actions/tags";
 import { searchPosts } from "@/actions/search";
 import { db } from "@/lib/db";
@@ -81,7 +81,31 @@ describe("post topics", () => {
     expect((await searchPosts({ query: "gardens", tag: "missing" })).posts).toEqual([]);
     expect((await getPost(writer.username!, second.slug!))?.post.tags).toHaveLength(2);
     await db.delete(post).where(eq(post.slug, second.slug!));
-    expect(await getTagPosts("science")).toMatchObject({ posts: [], totalCount: 0 });
+    expect(await getTagPosts("science")).toBeNull();
+  });
+
+  it("suggests only published topics or the current writer's draft topics", async () => {
+    const writer = await createUser();
+    const reader = await createUser();
+    mockSession(writer);
+    const draft = await createPost(data(["Secret plans"]));
+    const published = await createPost(data(["Public gardens"]));
+    await publishPost(published.slug!);
+    await db.insert(tag).values({ name: "Unused", slug: "unused" });
+    expect((await suggestTags()).map((tag) => tag.slug)).toEqual(["public-gardens", "secret-plans"]);
+    expect(await getTagPosts("secret-plans")).toBeNull();
+    mockSession(reader);
+    expect((await suggestTags()).map((tag) => tag.slug)).toEqual(["public-gardens"]);
+    mockSession(null);
+    expect((await suggestTags()).map((tag) => tag.slug)).toEqual(["public-gardens"]);
+    expect(await suggestTags("Secret")).toEqual([]);
+    expect(await getTagPosts("secret-plans")).toBeNull();
+    expect(await getTagPosts("unused")).toBeNull();
+    mockSession(writer);
+    await publishPost(draft.slug!);
+    expect(await getTagPosts("secret-plans")).toMatchObject({ totalCount: 1 });
+    await unpublishPost(draft.slug!);
+    expect(await getTagPosts("secret-plans")).toBeNull();
   });
 
   it("rolls back post updates when tag storage fails", async () => {
