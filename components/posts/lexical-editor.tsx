@@ -1051,8 +1051,9 @@ function InitializePlugin({ initialContent }: { initialContent?: string }) {
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (initializedRef.current || !initialContent) return;
+    if (initializedRef.current) return;
     initializedRef.current = true;
+    if (!initialContent) return;
 
     editor.update(() => {
       // Convert markdown to Lexical nodes
