@@ -27,7 +27,7 @@ export default async function TagPage({
   return (
     <div className="catalogue">
       <header className="catalogue-intro">
-        <h1>{result.tag.name}</h1>
+        <h1 className="min-w-0 [overflow-wrap:anywhere]">{result.tag.name}</h1>
         <p>
           {result.totalCount} {result.totalCount === 1 ? "story" : "stories"}
         </p>
