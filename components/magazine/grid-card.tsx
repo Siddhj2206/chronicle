@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TagChips } from "@/components/posts/tag-chips";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { Post, User } from "@/lib/db/schema";
@@ -58,6 +59,7 @@ export function GridCard({ post, className }: GridCardProps) {
             {post.excerpt}
           </p>
         </Link>
+        <TagChips tags={post.tags} />
       </CardContent>
     </Card>
   );

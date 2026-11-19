@@ -9,6 +9,7 @@ import { LikeButton } from "@/components/posts/post-actions";
 import { CommentList } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
 import { getSession } from "@/lib/session";
+import { TagChips } from "@/components/posts/tag-chips";
 
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
@@ -98,6 +99,7 @@ export default async function PostPage({ params }: PostPageProps): Promise<React
             {post.excerpt}
           </p>
         )}
+        <div className="flex justify-center"><TagChips tags={post.tags} /></div>
       </header>
 
       {/* Cover Image (if exists) */}

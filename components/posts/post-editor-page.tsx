@@ -30,6 +30,7 @@ import {
   deletePost,
 } from "@/actions/posts";
 import { cn } from "@/lib/utils";
+import { TagInput } from "@/components/posts/tag-input";
 
 import type { Post } from "@/lib/db/schema";
 
@@ -53,18 +54,19 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   const [excerpt, setExcerpt] = useState(post?.excerpt || "");
   const [content, setContent] = useState(post?.content || "");
   const [coverImage, setCoverImage] = useState(post?.coverImage || "");
+  const [tags, setTags] = useState<string[]>(post?.tags?.map((tag) => tag.name) ?? []);
   const [isPublished, setIsPublished] = useState(post?.published || false);
   const [currentSlug, setCurrentSlug] = useState(post?.slug || "");
 
   // Track if there are unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
-  const initialDataRef = useRef({ title, excerpt, content, coverImage });
+  const initialDataRef = useRef({ title, excerpt, content, coverImage, tags });
   
   // Use ref to store form data for savePost to avoid recreation on every state change
-  const formDataRef = useRef({ title, excerpt, content, coverImage });
+  const formDataRef = useRef({ title, excerpt, content, coverImage, tags });
   useEffect(() => {
-    formDataRef.current = { title, excerpt, content, coverImage };
-  }, [title, excerpt, content, coverImage]);
+    formDataRef.current = { title, excerpt, content, coverImage, tags };
+  }, [title, excerpt, content, coverImage, tags]);
 
   // Track last change time for optimized auto-save
   const lastChangeTimeRef = useRef<number>(Date.now());
@@ -75,12 +77,13 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
       title !== initialDataRef.current.title ||
       excerpt !== initialDataRef.current.excerpt ||
       content !== initialDataRef.current.content ||
-      coverImage !== initialDataRef.current.coverImage;
+      coverImage !== initialDataRef.current.coverImage ||
+      JSON.stringify(tags) !== JSON.stringify(initialDataRef.current.tags);
     setHasChanges(hasChanged);
     if (hasChanged) {
       lastChangeTimeRef.current = Date.now();
     }
-  }, [title, excerpt, content, coverImage]);
+  }, [title, excerpt, content, coverImage, tags]);
 
   // Warn before navigation with unsaved changes
   useEffect(() => {
@@ -98,7 +101,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   // Optimized savePost using refs to minimize dependency array
   const savePost = useCallback(
     async (isAutoSave = false): Promise<SaveResult> => {
-      const { title, content, excerpt, coverImage } = formDataRef.current;
+      const { title, content, excerpt, coverImage, tags } = formDataRef.current;
       
       if (!title.trim()) {
         if (!isAutoSave) toast.error("Title is required");
@@ -117,6 +120,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
         formData.append("content", content);
         formData.append("excerpt", excerpt);
         formData.append("coverImage", coverImage);
+        tags.forEach((tag) => formData.append("tags", tag));
 
         if (mode === "new") {
           const result = await createPost(formData);
@@ -129,7 +133,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           router.replace(`/edit/${result.slug}`);
           toast.success("Manuscript created");
           // Update initial data ref
-          initialDataRef.current = { title, excerpt, content, coverImage };
+          initialDataRef.current = { title, excerpt, content, coverImage, tags };
           setHasChanges(false);
           return { ok: true, slug: result.slug! };
         } else {
@@ -143,7 +147,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           }
           setLastSaved(new Date());
           // Update initial data ref
-          initialDataRef.current = { title, excerpt, content, coverImage };
+          initialDataRef.current = { title, excerpt, content, coverImage, tags };
           setHasChanges(false);
           return { ok: true, slug: result.slug! };
         }
@@ -365,6 +369,8 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
             onChange={(e) => setExcerpt(e.target.value)}
             minRows={1}
           />
+
+          <TagInput value={tags} onChange={setTags} />
 
           {/* Content Editor - Lexical WYSIWYG */}
           <LexicalEditor

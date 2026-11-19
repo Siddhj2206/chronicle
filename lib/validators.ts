@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { isAllowedImageUrl } from "@/lib/image-sources";
+import { tagsSchema } from "@/lib/tags";
 
 export const imageUrlSchema = z
   .string()
@@ -36,6 +37,7 @@ export const usernameSchema = z
   );
 
 export const postSchema = z.object({
+  tags: tagsSchema.default([]),
   title: z
     .string()
     .min(1, "Title is required")

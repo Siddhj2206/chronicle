@@ -26,6 +26,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { getAuthorsWithPosts } from "@/actions/search";
+import { getTagsWithPosts } from "@/actions/tags";
 
 import type { AuthorWithPosts, DatePreset } from "@/actions/search";
 
@@ -37,6 +38,7 @@ interface SearchFiltersProps {
   query: string;
   currentAuthor?: string;
   currentDate?: DatePreset;
+  currentTag?: string;
 }
 
 // ============================================
@@ -58,18 +60,20 @@ export function SearchFilters({
   query,
   currentAuthor,
   currentDate,
+  currentTag,
 }: SearchFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
   // State
   const [authors, setAuthors] = useState<AuthorWithPosts[]>([]);
+  const [tags, setTags] = useState<{ name: string; slug: string }[]>([]);
   const [authorOpen, setAuthorOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Check if any filters are active
-  const hasFilters = !!(currentAuthor || currentDate);
+  const hasFilters = !!(currentAuthor || currentDate || currentTag);
 
   // Fetch authors on mount
   useEffect(() => {
@@ -80,6 +84,7 @@ export function SearchFilters({
       setIsLoading(false);
     }
     fetchAuthors();
+    getTagsWithPosts().then(setTags);
   }, []);
 
   // Build URL with updated params
@@ -265,6 +270,18 @@ export function SearchFilters({
 
   return (
     <div className="mb-8">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <label htmlFor="search-tag" className="text-sm">Topic</label>
+        <select id="search-tag" value={currentTag ?? ""} className="max-w-full rounded-md border border-input bg-background px-3 py-2 text-sm" onChange={(event) => {
+          const params = new URLSearchParams(searchParams.toString());
+          if (event.target.value) params.set("tag", event.target.value); else params.delete("tag");
+          router.push(`/search?${params.toString()}`);
+        }}>
+          <option value="">All topics</option>
+          {currentTag && !tags.some((tag) => tag.slug === currentTag) && <option value={currentTag}>{currentTag}</option>}
+          {tags.map((tag) => <option key={tag.slug} value={tag.slug}>{tag.name}</option>)}
+        </select>
+      </div>
       {/* Mobile: Collapsible filters */}
       <div className="sm:hidden">
         <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -281,7 +298,7 @@ export function SearchFilters({
                 Filters
                 {hasFilters && (
                   <span className="rounded-none bg-white px-1.5 text-black dark:bg-black dark:text-white">
-                    {[currentAuthor, currentDate].filter(Boolean).length}
+                    {[currentAuthor, currentDate, currentTag].filter(Boolean).length}
                   </span>
                 )}
               </span>
