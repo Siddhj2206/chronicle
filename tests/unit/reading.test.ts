@@ -8,6 +8,19 @@ import { PostContent } from "@/components/posts/post-content";
 import { analyzeReading } from "@/lib/reading";
 
 describe("article reading metadata", () => {
+  it("reserves the article navbar theme toggle id", () => {
+    const content = "## Theme toggle\n\n## Theme toggle\n\n## Theme toggle-1";
+    const { headings } = analyzeReading(content);
+    expect(headings.map(({ id }) => id)).toEqual([
+      "theme-toggle-1",
+      "theme-toggle-2",
+      "theme-toggle-1-1",
+    ]);
+    const html = renderToStaticMarkup(createElement(PostContent, { content }));
+    for (const { id } of headings) expect(html).toContain(`id="${id}"`);
+    expect(html).not.toContain('id="theme-toggle"');
+  });
+
   it("estimates at 230 words per minute, rounding up", () => {
     expect(analyzeReading("word ".repeat(230)).minutes).toBe(1);
     expect(analyzeReading("word ".repeat(231)).minutes).toBe(2);
