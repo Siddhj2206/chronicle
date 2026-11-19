@@ -26,6 +26,10 @@ export function useDraftSave(
   const [savedData, setSavedData] = useState(data);
   const dirty = !draftsMatch(data, savedData);
 
+  useEffect(() => {
+    if (!dirty && hasSaved && !saving && error) setError("");
+  }, [dirty, hasSaved, saving, error]);
+
   const save = useCallback(async function save(): Promise<string | null> {
     if (flight.current) {
       const result = await flight.current;
@@ -33,8 +37,11 @@ export function useDraftSave(
       if (!draftsMatch(latest.current, saved.current)) return save();
       return slug.current || null;
     }
-    if (slug.current && draftsMatch(latest.current, saved.current))
+    if (slug.current && draftsMatch(latest.current, saved.current)) {
+      setError("");
+      setHasSaved(true);
       return slug.current;
+    }
     const snapshot = { ...latest.current };
     if (!snapshot.title.trim()) {
       setError("Add a title to save your draft.");

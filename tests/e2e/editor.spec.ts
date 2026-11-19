@@ -240,6 +240,29 @@ test("empty paragraph image insertion reuses the upload endpoint", async ({
   await expect(editor.getByRole("img")).toHaveAttribute("src", imageUrl);
 });
 
+test("restoring a saved draft clears a failed save without another edit", async ({
+  page,
+}) => {
+  await page.goto("/edit/unfinished-notes");
+  const title = page.getByRole("textbox", { name: "Post title", exact: true });
+  const original = await title.inputValue();
+  await title.fill("");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const error = page.getByRole("alert").filter({ hasText: "Add a title" });
+  await expect(error).toBeVisible();
+  await expect(
+    page.getByRole("status").filter({ hasText: /^Save failed$/ }),
+  ).toBeVisible();
+  await title.fill(original);
+  await expect(
+    page.getByRole("status").filter({ hasText: /^Saved$/ }),
+  ).toBeVisible();
+  await expect(error).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Retry save", exact: true }),
+  ).not.toBeVisible();
+});
+
 test("published edits stay unsaved until explicitly saved", async ({
   page,
 }) => {
