@@ -264,6 +264,25 @@ describe("post topics", () => {
     ).toMatchObject([{ post: { slug: created.slug } }]);
   });
 
+  it("stores Hindi topics without merging distinct vowel marks", async () => {
+    const writer = await createUser();
+    mockSession(writer);
+    const created = await createPost(data(["कला", "किला"]));
+    expect(created).toHaveProperty("success", true);
+    expect(
+      (await getPostForEditWithContent(created.slug!))?.post.tags
+        ?.map((tag) => tag.slug)
+        .sort(),
+    ).toEqual(["कला", "किला"].sort());
+    await publishPost(created.slug!);
+    for (const slug of ["कला", "किला"]) {
+      expect(await getTagPosts(slug)).toMatchObject({
+        tag: { slug },
+        posts: [{ post: { slug: created.slug } }],
+      });
+    }
+  });
+
   it("keeps feed posts when tag enrichment fails, including every trending branch", async () => {
     expect(await tagStorage.withPostTags([])).toEqual([]);
     const writer = await createUser();

@@ -7,7 +7,10 @@ export function normalizeTag(value: string): string {
     .trim()
     .replace(/\+/g, " plus ")
     .replace(/#/g, " sharp ");
-  return slugify(normalized, { lower: true, remove: /[^\p{L}\p{N}\s-]/gu });
+  return slugify(normalized, {
+    lower: true,
+    remove: /[^\p{L}\p{N}\p{M}\s-]/gu,
+  }).normalize("NFC");
 }
 
 export const tagsSchema = z

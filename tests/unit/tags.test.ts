@@ -12,6 +12,8 @@ describe("topic slugs", () => {
     ["東京", "東京"],
     ["東京 2026", "東京-2026"],
     ["中文话题", "中文话题"],
+    ["कला", "कला"],
+    ["किला", "किला"],
   ])("normalizes %s to %s", (name, slug) => {
     expect(normalizeTag(name)).toBe(slug);
   });
@@ -23,6 +25,17 @@ describe("topic slugs", () => {
       { name: "C#", slug: "c-sharp" },
       { name: "東京", slug: "東京" },
     ]);
+  });
+
+  it("keeps vowel marks distinct and canonically normalizes combining marks", () => {
+    expect(tagsSchema.parse(["कला", "किला"])).toEqual([
+      { name: "कला", slug: "कला" },
+      { name: "किला", slug: "किला" },
+    ]);
+    expect(normalizeTag("\u0958")).toBe(normalizeTag("\u0915\u093c"));
+    expect(normalizeTag("\u0958")).toBe(
+      normalizeTag("\u0958").normalize("NFC"),
+    );
   });
 
   it("accepts no tags and rejects empty or punctuation-only names", () => {
