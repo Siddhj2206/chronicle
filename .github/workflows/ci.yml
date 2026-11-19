@@ -29,17 +29,29 @@ jobs:
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       GOOGLE_CLIENT_ID: dummy-google-client
       GOOGLE_CLIENT_SECRET: dummy-google-secret
-      R2_ACCESS_KEY_ID: dummy
-      R2_SECRET_ACCESS_KEY: dummy
+      R2_ACCESS_KEY_ID: S3RVER
+      R2_SECRET_ACCESS_KEY: S3RVER
       R2_BUCKET_NAME: test
-      R2_ENDPOINT: http://127.0.0.1:9
-      NEXT_PUBLIC_R2_DOMAIN: http://127.0.0.1:9
+      R2_ENDPOINT: http://127.0.0.1:4569
+      NEXT_PUBLIC_R2_DOMAIN: http://127.0.0.1:4569
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.5
       - run: bun install --frozen-lockfile
+      - name: Start local S3 storage
+        run: |
+          mkdir -p "$RUNNER_TEMP/r2"
+          bunx s3rver@3.7.1 --directory "$RUNNER_TEMP/r2" --port 4569 --address 127.0.0.1 --configure-bucket test > "$RUNNER_TEMP/s3rver.log" 2>&1 &
+          for attempt in {1..60}; do
+            if curl --silent --fail http://127.0.0.1:4569/test > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/s3rver.log"
+          exit 1
       - run: bun run lint
       - run: bunx tsc --noEmit
       - run: bunx drizzle-kit push --force
