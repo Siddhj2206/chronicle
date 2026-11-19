@@ -1,8 +1,10 @@
 import { $isParagraphNode, $isTextNode } from "lexical";
 
-import type { LexicalNode } from "lexical";
+import type { LexicalNode, ParagraphNode } from "lexical";
 
-export function $isEmptyWritingParagraph(node: LexicalNode | null): boolean {
+export function $isEmptyWritingParagraph(
+  node: LexicalNode | null,
+): node is ParagraphNode {
   return (
     $isParagraphNode(node) &&
     node

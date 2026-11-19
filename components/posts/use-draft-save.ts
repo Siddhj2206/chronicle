@@ -26,9 +26,7 @@ export function useDraftSave(
   const [savedData, setSavedData] = useState(data);
   const dirty = !draftsMatch(data, savedData);
 
-  useEffect(() => {
-    if (!dirty && hasSaved && !saving && error) setError("");
-  }, [dirty, hasSaved, saving, error]);
+  if (!dirty && hasSaved && error) setError("");
 
   const save = useCallback(async function save(): Promise<string | null> {
     if (flight.current) {
