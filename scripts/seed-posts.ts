@@ -1,7 +1,8 @@
+import { getPlatformProxy } from "wrangler";
+
 import { getDb } from "@/lib/db";
-import { post, user } from "../lib/db/schema";
-import { getR2, R2_BUCKET_NAME } from "../lib/r2";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { post, user } from "@/lib/db/schema";
+import { getR2PublicUrl } from "@/lib/r2";
 
 // Real images from Unsplash (direct URLs that exist)
 const UNSPLASH_IMAGES = {
@@ -28,26 +29,18 @@ async function downloadImage(url: string): Promise<Buffer> {
 }
 
 async function uploadToR2(
+  bucket: R2Bucket,
   buffer: Buffer,
   userId: string,
   filename: string,
 ): Promise<string> {
   const key = `uploads/${userId}/${crypto.randomUUID()}-${filename}`;
 
-  await getR2().send(
-    new PutObjectCommand({
-      Bucket: R2_BUCKET_NAME,
-      Key: key,
-      Body: buffer,
-      ContentType: "image/jpeg",
-    }),
-  );
-
-  const R2_DOMAIN = process.env.NEXT_PUBLIC_R2_DOMAIN;
-  if (R2_DOMAIN) {
-    return `https://${R2_DOMAIN.replace(/^https?:\/\//, "")}/${key}`;
-  }
-  return `${process.env.R2_ENDPOINT}/${R2_BUCKET_NAME}/${key}`;
+  const url = getR2PublicUrl(key);
+  await bucket.put(key, buffer, {
+    httpMetadata: { contentType: "image/jpeg" },
+  });
+  return url;
 }
 
 function generateSlug(title: string): string {
@@ -59,7 +52,7 @@ function generateSlug(title: string): string {
   return `${base}-${uniqueSuffix}`;
 }
 
-async function seed() {
+async function seed(bucket: R2Bucket) {
   const db = await getDb();
   console.log("🌱 Starting seed...\n");
 
@@ -67,7 +60,7 @@ async function seed() {
   const users = await db.select().from(user).limit(1);
   if (users.length === 0) {
     console.error("❌ No users found! Please sign in first to create a user.");
-    process.exit(1);
+    throw new Error("No seed author");
   }
 
   const author = users[0];
@@ -84,7 +77,7 @@ async function seed() {
       console.log(`  Downloading ${name}...`);
       const buffer = await downloadImage(url);
       console.log(`  Uploading ${name} to R2...`);
-      images[name] = await uploadToR2(buffer, author.id, `${name}.jpg`);
+      images[name] = await uploadToR2(bucket, buffer, author.id, `${name}.jpg`);
       console.log(`  ✓ ${name}: ${images[name]}`);
     } catch (error) {
       console.error(`  ✗ Failed to upload ${name}:`, error);
@@ -812,10 +805,24 @@ In a heartbeat. But maybe differently—slower, deeper, less checking boxes.
   }
 
   console.log("\n✅ Seed complete!");
-  process.exit(0);
 }
 
-seed().catch((error) => {
+async function main() {
+  if (!process.argv.includes("--local")) {
+    throw new Error(
+      "Pass --local to seed images into Wrangler's local R2 bucket; use a local database.",
+    );
+  }
+  const { env, dispose } = await getPlatformProxy<CloudflareEnv>();
+  try {
+    await seed(env.R2);
+  } finally {
+    await dispose();
+    await (await getDb()).$client.end();
+  }
+}
+
+main().catch((error) => {
   console.error("Seed failed:", error);
   process.exit(1);
 });
