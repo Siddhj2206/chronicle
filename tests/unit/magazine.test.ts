@@ -121,7 +121,7 @@ describe("Museum monograph components", () => {
     vi.mocked(getTrendingPosts).mockResolvedValue([row]);
     const html = renderToStaticMarkup(await FeedPage());
     expect(html).toContain('href="/archive"');
-    expect(html).toContain("Worth a read");
+    expect(html).toContain("Staff picks");
     expect(html.match(/An ordinary morning/g)?.length).toBeGreaterThan(1);
     expect(html).not.toContain("02—07");
   });
@@ -140,5 +140,55 @@ describe("Museum monograph components", () => {
     expect(html).toContain('href="/archive"');
     expect(html).toContain("--shiki-light:");
     expect(html).toContain("--shiki-dark:");
+  });
+
+  it("renders the feed layout with author portrait, excerpt, date and computed reading time", () => {
+    const html = renderToStaticMarkup(
+      createElement(ListCard, {
+        layout: "feed",
+        post: {
+          ...post,
+          content: "word ".repeat(500),
+          author: { ...post.author, image: "/avatar.jpg" },
+        },
+      }),
+    );
+    expect(html).toContain('href="/@alex/morning"');
+    expect(html).toContain('href="/@alex"');
+    expect(html).toContain("avatar.jpg");
+    expect(html).toContain("cover.jpg");
+    expect(html).toContain("A closer look.");
+    expect(html).toContain("3 min read");
+    expect(html).toContain('dateTime="2026-11-19T12:00:00.000Z"');
+  });
+
+  it("renders small title and author initials when feed images are absent", () => {
+    const html = renderToStaticMarkup(
+      createElement(ListCard, {
+        layout: "feed",
+        post: {
+          ...post,
+          coverImage: null,
+          excerpt: null,
+          publishedAt: null,
+          content: "",
+        },
+      }),
+    );
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("<time");
+    expect(html).toContain(">A</span>");
+    expect(html).toContain("1 min read");
+  });
+
+  it("keeps Latest selected and hides the feature and rail in an empty feed", async () => {
+    const html = renderToStaticMarkup(
+      await FeedPage({ searchParams: Promise.resolve({ tab: "following" }) }),
+    );
+    expect(html).toContain('role="tab" aria-selected="true"');
+    expect(html).toContain('href="/?tab=latest"');
+    expect(html).toContain("No stories yet.");
+    expect(html).not.toContain('aria-label="Featured story"');
+    expect(html).not.toContain('data-testid="home-rail"');
   });
 });
