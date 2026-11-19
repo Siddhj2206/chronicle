@@ -40,7 +40,18 @@ describe("topic slugs", () => {
 
   it("accepts no tags and rejects empty or punctuation-only names", () => {
     expect(tagsSchema.parse([])).toEqual([]);
-    for (const name of ["", "  ", "!!!", "😀"]) {
+    for (const name of [
+      "",
+      "  ",
+      "!!!",
+      "😀",
+      "#",
+      "+",
+      "# +",
+      "＃",
+      "＋",
+      "\u093e",
+    ]) {
       expect(normalizeTag(name)).toBe("");
       expect(tagsSchema.safeParse([name]).success).toBe(false);
     }

@@ -55,8 +55,21 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
         "A thoughtful guide to gardens and the communities that grow around them.",
       );
     const input = page.getByPlaceholder("Add a tag", { exact: true });
+    const invalidName = page.getByText(
+      "Use a tag of 1–50 characters with letters or numbers.",
+      { exact: true },
+    );
+    for (const name of ["#", "+"]) {
+      await input.fill(name);
+      await input.press("Enter");
+      await expect(invalidName).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: `Remove ${name}`, exact: true }),
+      ).toHaveCount(0);
+    }
     await input.fill("Gardens");
     await input.press("Enter");
+    await expect(invalidName).toHaveCount(0);
     await input.fill("Com");
     await page.getByRole("button", { name: "Community", exact: true }).click();
     for (const name of ["東京", "C++", "C#"]) {

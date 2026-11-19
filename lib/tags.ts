@@ -2,11 +2,9 @@ import slugify from "slugify";
 import { z } from "zod";
 
 export function normalizeTag(value: string): string {
-  const normalized = value
-    .normalize("NFKC")
-    .trim()
-    .replace(/\+/g, " plus ")
-    .replace(/#/g, " sharp ");
+  const name = value.normalize("NFKC").trim();
+  if (!/[\p{L}\p{N}]/u.test(name)) return "";
+  const normalized = name.replace(/\+/g, " plus ").replace(/#/g, " sharp ");
   return slugify(normalized, {
     lower: true,
     remove: /[^\p{L}\p{N}\p{M}\s-]/gu,
