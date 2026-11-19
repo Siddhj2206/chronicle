@@ -19,8 +19,9 @@ export function draftsMatch(a: DraftFields, b: DraftFields): boolean {
 export function draftFormData(draft: DraftFields): FormData {
   const data = new FormData();
   for (const [key, value] of Object.entries(draft)) {
-    if (value !== undefined)
-      data.set(key, Array.isArray(value) ? JSON.stringify(value) : value);
+    if (Array.isArray(value)) {
+      for (const item of value) data.append(key, item);
+    } else if (value !== undefined) data.set(key, value);
   }
   return data;
 }

@@ -64,6 +64,9 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
       .fill(
         "A thoughtful guide to gardens and the communities that grow around them.",
       );
+    const saved = page.getByRole("status").filter({ hasText: /^Saved$/ });
+    await expect(saved).toBeVisible({ timeout: 15000 });
+    await expect(page).toHaveURL(/\/edit\//);
     await page.getByRole("button", { name: "Publish", exact: true }).click();
     const panel = page.getByRole("dialog");
     const input = page.getByPlaceholder("Add a tag", { exact: true });
@@ -90,7 +93,6 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
     }
     await capture(page, "editor-tags");
     await panel.getByRole("button", { name: "Close", exact: true }).click();
-    const saved = page.getByRole("status").filter({ hasText: /^Saved$/ });
     await expect(saved).toBeVisible({ timeout: 15000 });
     await expect(page).toHaveURL(/\/edit\//);
     const editPath = new URL(page.url()).pathname;
