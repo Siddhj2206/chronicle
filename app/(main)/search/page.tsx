@@ -126,6 +126,32 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         )}
       </div>
 
+      <form
+        action="/search"
+        method="get"
+        role="search"
+        aria-label="Search the journal"
+        className="mb-8 flex items-end gap-3 md:hidden"
+      >
+        <label className="min-w-0 flex-1 text-sm">
+          <span className="mb-2 block">Search articles</span>
+          <input
+            type="search"
+            name="q"
+            defaultValue={query}
+            data-global-search
+            required
+            className="w-full border border-input bg-background px-3 py-3 text-base"
+          />
+        </label>
+        <button
+          type="submit"
+          className="border border-border px-4 py-3 text-sm hover:text-primary"
+        >
+          Search
+        </button>
+      </form>
+
       {/* Filters - only show when there's a query */}
       {query && (
         <Suspense fallback={<Skeleton className="mb-8 h-12 w-full" />}>
@@ -141,7 +167,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {!query ? (
         <EmptyState
           title="Find your next story."
-          description="Type above to search the archives…"
+          description="Search for a title, writer or idea."
         />
       ) : initialResults.posts.length === 0 ? (
         <NoResults query={query} hasFilters={hasFilters} />

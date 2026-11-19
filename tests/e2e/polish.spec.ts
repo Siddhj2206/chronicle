@@ -180,6 +180,37 @@ test("mobile slash opens a focused search dialog", async ({ page }) => {
   await expect(search).toBeHidden();
 });
 
+test("mobile readers can search from the navigation without keyboard shortcuts", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Open navigation" }).click();
+  await page
+    .getByRole("dialog", { name: "Explore Chronicle" })
+    .getByRole("link", { name: "Search", exact: true })
+    .click();
+  const search = page.getByRole("search", { name: "Search the journal" });
+  await expect(
+    search.getByRole("searchbox", { name: "Search articles" }),
+  ).toHaveValue("");
+  await search.getByRole("searchbox").fill("Chronicle");
+  await search.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(page).toHaveURL(/\/search\?q=Chronicle$/);
+  await expect(
+    page.getByRole("heading", {
+      name: "Chronicle Testing Journal",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(search.getByRole("searchbox")).toHaveValue("Chronicle");
+  await search.getByRole("searchbox").fill("no-such-story-33");
+  await search.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "No stories found." }),
+  ).toBeVisible();
+});
+
 test("home and new-story shortcuts navigate but ignore the editor", async ({
   page,
 }) => {
