@@ -86,10 +86,14 @@ export default async function FeedPage() {
                 View Full Archive →
               </Link>
             </div>
-            
+
             <div className="flex flex-col gap-8 divide-y divide-neutral-200 dark:divide-neutral-800">
               {mainListPosts.map((post) => (
-                <ListCard key={post.id} post={post} className="pt-8 first:pt-0" />
+                <ListCard
+                  key={post.id}
+                  post={post}
+                  className="pt-8 first:pt-0"
+                />
               ))}
               {mainListPosts.length === 0 && (
                 <p className="py-8 text-center font-serif text-muted-foreground italic">

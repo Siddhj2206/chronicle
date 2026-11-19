@@ -5,7 +5,10 @@ import { isAllowedImageUrl } from "@/lib/image-sources";
 export const imageUrlSchema = z
   .string()
   .url("Invalid image URL")
-  .refine(isAllowedImageUrl, "Image URL must use an allowed image host over HTTPS");
+  .refine(
+    isAllowedImageUrl,
+    "Image URL must use an allowed image host over HTTPS",
+  );
 
 // Reserved usernames that cannot be used
 const RESERVED_USERNAMES = [
@@ -28,11 +31,11 @@ export const usernameSchema = z
   .max(20, "Username must be at most 20 characters")
   .regex(
     /^[a-zA-Z0-9_]+$/,
-    "Username can only contain letters, numbers, and underscores"
+    "Username can only contain letters, numbers, and underscores",
   )
   .refine(
     (val) => !RESERVED_USERNAMES.includes(val.toLowerCase()),
-    "This username is reserved"
+    "This username is reserved",
   );
 
 export const postSchema = z.object({
@@ -67,11 +70,11 @@ export const profileSchema = z.object({
     .max(20, "Username must be at most 20 characters")
     .regex(
       /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores"
+      "Username can only contain letters, numbers, and underscores",
     )
     .refine(
       (val) => !RESERVED_USERNAMES.includes(val.toLowerCase()),
-      "This username is reserved"
+      "This username is reserved",
     )
     .optional(),
   bio: z.string().max(500, "Bio must be at most 500 characters").optional(),

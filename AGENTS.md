@@ -71,6 +71,7 @@ chronicle/
 ### Imports
 
 Order imports in this sequence, separated by blank lines:
+
 1. React/Next.js imports
 2. Third-party libraries
 3. Internal aliases (@/*)
@@ -132,16 +133,16 @@ export function PostCard({ title, excerpt }: PostCardProps) {
 
 ### Naming Conventions
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Files (components) | kebab-case | `post-card.tsx` |
-| Files (utilities) | kebab-case | `validators.ts` |
-| Components | PascalCase | `PostCard` |
-| Functions | camelCase | `createPost` |
-| Constants | SCREAMING_SNAKE_CASE | `MAX_FILE_SIZE` |
-| Types/Interfaces | PascalCase | `PostWithAuthor` |
-| Database tables | snake_case | `user_posts` |
-| CSS classes | Tailwind utilities | `className="flex items-center"` |
+| Type               | Convention           | Example                         |
+| ------------------ | -------------------- | ------------------------------- |
+| Files (components) | kebab-case           | `post-card.tsx`                 |
+| Files (utilities)  | kebab-case           | `validators.ts`                 |
+| Components         | PascalCase           | `PostCard`                      |
+| Functions          | camelCase            | `createPost`                    |
+| Constants          | SCREAMING_SNAKE_CASE | `MAX_FILE_SIZE`                 |
+| Types/Interfaces   | PascalCase           | `PostWithAuthor`                |
+| Database tables    | snake_case           | `user_posts`                    |
+| CSS classes        | Tailwind utilities   | `className="flex items-center"` |
 
 ### TypeScript
 
@@ -239,6 +240,7 @@ import { cn } from "@/lib/utils";
 ## Environment Variables
 
 Required variables (see `.env.example`):
+
 - `DATABASE_URL` - Neon PostgreSQL connection string
 - `AUTH_SECRET` - Auth.js secret (generate with `npx auth secret`)
 - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` - Google OAuth credentials

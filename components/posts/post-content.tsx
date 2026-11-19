@@ -47,12 +47,8 @@ const markdownComponents: Components = {
       {children}
     </a>
   ),
-  ul: ({ children }) => (
-    <ul className="mb-4 list-disc pl-6">{children}</ul>
-  ),
-  ol: ({ children }) => (
-    <ol className="mb-4 list-decimal pl-6">{children}</ol>
-  ),
+  ul: ({ children }) => <ul className="mb-4 list-disc pl-6">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-4 list-decimal pl-6">{children}</ol>,
   li: ({ children }) => <li className="mb-1">{children}</li>,
   blockquote: ({ children }) => (
     <blockquote className="my-4 border-l-4 border-border pl-4 italic text-muted-foreground">
@@ -85,14 +81,17 @@ const markdownComponents: Components = {
       ? classes.find((name) => String(name).startsWith("language-"))
       : undefined;
     const text = code.children
-      .map((child) => child.type === "text" ? child.value : "")
+      .map((child) => (child.type === "text" ? child.value : ""))
       .join("")
       .replace(/\n$/, "");
     return (
       <div
         className="my-4 overflow-x-auto [&_pre]:min-w-max [&_pre]:border [&_pre]:border-border [&_pre]:!bg-muted [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-[0.9em] [&_pre]:leading-[1.5] [&_code]:font-mono"
         dangerouslySetInnerHTML={{
-          __html: highlightCode(text, language ? String(language).slice(9) : undefined),
+          __html: highlightCode(
+            text,
+            language ? String(language).slice(9) : undefined,
+          ),
         }}
       />
     );
@@ -104,9 +103,7 @@ const markdownComponents: Components = {
       </table>
     </div>
   ),
-  thead: ({ children }) => (
-    <thead className="bg-muted">{children}</thead>
-  ),
+  thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
   th: ({ children }) => (
     <th className="border border-border px-4 py-2 text-left font-bold">
       {children}
@@ -136,7 +133,10 @@ interface PostContentProps {
 export function PostContent({ content }: PostContentProps) {
   return (
     <article className="post-content" style={articleStyle}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={markdownComponents}
+      >
         {content}
       </ReactMarkdown>
     </article>

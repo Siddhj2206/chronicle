@@ -157,7 +157,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <NoResults query={query} hasFilters={hasFilters} />
       ) : (
         <Suspense fallback={<ResultsSkeleton />}>
-          <SearchResults initialResults={initialResults} searchParams={params} />
+          <SearchResults
+            initialResults={initialResults}
+            searchParams={params}
+          />
         </Suspense>
       )}
     </div>
