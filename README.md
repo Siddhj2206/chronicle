@@ -67,13 +67,20 @@ bun run cf-typegen  # generate Cloudflare binding types
 
 `bun run dev` still uses the Next.js development server. Next.js was upgraded
 to 16.4.6 to meet OpenNext's supported peer range; `proxy.ts` support in OpenNext
-is experimental. This is scaffolding only: Hyperdrive database connectivity,
-R2 bindings, and incremental caching are not configured yet. Do not treat the
-deployment commands as production-ready until those follow-up migrations land.
-Local smoke testing against PostgreSQL reached the home page, but sequential
-database-backed requests can fail with Workers' "Cannot perform I/O on behalf
-of a different request" error from the shared postgres.js client. This is left
-for the Hyperdrive migration rather than changing database code here.
+is experimental. R2 bindings and incremental caching are not configured yet.
+Do not treat the deployment commands as production-ready until those follow-up
+migrations land.
+
+Create a Hyperdrive configuration against Neon's connection string with
+`bunx wrangler hyperdrive create chronicle-db --connection-string='<NEON_URL>'`
+and replace the placeholder Hyperdrive id in `wrangler.jsonc` with its id.
+Local previews use the disposable PostgreSQL `localConnectionString` in that
+file; override it with
+`CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` if needed.
+Workers create request-local `pg` clients through Hyperdrive; the runtime cleans
+up their edge connections when each request ends. Ordinary Node execution reuses
+one pool, preferring `DATABASE_URL` over any local development binding.
+Better Auth is also constructed per request, avoiding cross-request socket reuse.
 
 # Chronicle
 
@@ -223,6 +230,14 @@ Useful scripts:
 bunx tsx scripts/seed-posts.ts                       # seed sample manuscripts
 bunx tsx scripts/migrate-content-to-r2.ts --dry-run  # preview the R2 move
 ```
+
+## Type checking
+
+Run `bun run typecheck` locally and in CI. It uses the stable native
+TypeScript 7.0.2 compiler, installed as the `typescript-native` npm alias.
+The script invokes its CLI explicitly to avoid sharing the `tsc` binary name
+with TypeScript 5.9.3, which remains installed for Next.js's default compiler
+API integration. `bunx tsc --noEmit` still uses TypeScript 5.9.3.
 
 ## Linting and formatting
 

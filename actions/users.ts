@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 
 import { getSession } from "@/lib/session";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
 import {
   usernameSchema,
@@ -18,8 +18,8 @@ function isUsernameConflict(error: unknown): boolean {
   if (
     "code" in error &&
     error.code === "23505" &&
-    "constraint_name" in error &&
-    error.constraint_name === "user_username_unique"
+    "constraint" in error &&
+    error.constraint === "user_username_unique"
   )
     return true;
   return "cause" in error && isUsernameConflict(error.cause);
@@ -29,6 +29,7 @@ export async function checkUsernameAvailable(
   username: string,
 ): Promise<{ available: boolean; error?: string }> {
   try {
+    const db = await getDb();
     const parsed = usernameSchema.safeParse(username);
 
     if (!parsed.success) {
@@ -50,6 +51,7 @@ export async function setUsername(
   username: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const db = await getDb();
     const session = await getSession();
 
     if (!session?.user?.id) {
@@ -100,6 +102,7 @@ export async function updateProfile(
   formData: FormData,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const db = await getDb();
     const session = await getSession();
 
     if (!session?.user?.id) {
@@ -185,6 +188,7 @@ export async function updateAvatar(
   imageUrl: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const db = await getDb();
     const session = await getSession();
 
     if (!session?.user?.id) {
@@ -217,6 +221,7 @@ export async function deleteAccount(
   confirmationUsername: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const db = await getDb();
     const session = await getSession();
 
     if (!session?.user?.id) {

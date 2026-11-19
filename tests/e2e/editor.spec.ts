@@ -3,7 +3,7 @@ import { createHmac, randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { session } from "@/lib/db/schema";
 import { assertTestDatabase } from "@/tests/helpers/db";
 
@@ -12,6 +12,7 @@ const editorSelector = '[contenteditable="true"][data-lexical-editor="true"]';
 
 test.beforeAll(async () => {
   assertTestDatabase();
+  const db = await getDb();
   const now = new Date();
   await db.insert(session).values({
     id: randomUUID(),
@@ -39,6 +40,7 @@ test.beforeEach(async ({ context }) => {
 
 test.afterAll(async () => {
   assertTestDatabase();
+  const db = await getDb();
   await db.delete(session).where(eq(session.token, token));
   await db.$client.end();
 });

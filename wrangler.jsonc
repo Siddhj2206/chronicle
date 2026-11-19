@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "chronicle",
   "main": ".open-next/worker.js",
+  "minify": true,
   "compatibility_date": "2026-11-19",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
@@ -9,4 +10,11 @@
     "binding": "ASSETS",
   },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "chronicle" }],
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "00000000000000000000000000000000",
+      "localConnectionString": "postgres://chronicle:chronicle@localhost:5432/chronicle_test",
+    },
+  ],
 }
