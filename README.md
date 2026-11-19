@@ -50,6 +50,31 @@ explicitly; suites run serially against the same database. The shared setup mock
 CI runs lint, TypeScript, schema push, Vitest, production build, seed, and Chromium
 smoke tests. Playwright reports and traces are uploaded on failure.
 
+## Cloudflare Workers
+
+Workers scaffolding uses the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare).
+Copy `.dev.vars.example` to `.dev.vars` and fill in local environment values;
+also export build-time variables (including `NEXT_PUBLIC_*`), or use a Next.js
+`.env.local` file. Never commit secrets. For disposable testing, the `.env.test`
+values above can be used with `bun --env-file=.env.test run preview`.
+
+```bash
+bun run preview     # build and serve locally in the Workers runtime
+bun run deploy      # build and deploy (requires Cloudflare authentication)
+bun run upload      # build and upload a version without deploying
+bun run cf-typegen  # generate Cloudflare binding types
+```
+
+`bun run dev` still uses the Next.js development server. Next.js was upgraded
+to 16.4.6 to meet OpenNext's supported peer range; `proxy.ts` support in OpenNext
+is experimental. This is scaffolding only: Hyperdrive database connectivity,
+R2 bindings, and incremental caching are not configured yet. Do not treat the
+deployment commands as production-ready until those follow-up migrations land.
+Local smoke testing against PostgreSQL reached the home page, but sequential
+database-backed requests can fail with Workers' "Cannot perform I/O on behalf
+of a different request" error from the shared postgres.js client. This is left
+for the Hyperdrive migration rather than changing database code here.
+
 # Chronicle
 
 A writing and publishing workspace for long-form manuscripts. Chronicle separates
