@@ -8,7 +8,7 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts --env-file .dev.vars.example",
     "start": "next start",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
@@ -20,8 +20,6 @@
     "db:seed": "bun --env-file=.env.test scripts/seed-test.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1172.0",
-    "@aws-sdk/s3-request-presigner": "^3.1172.0",
     "@hookform/resolvers": "^7.0.7",
     "@lexical/code": "^0.53.0",
     "@lexical/history": "^0.53.0",

@@ -1,7 +1,5 @@
 import { headers } from "next/headers";
 
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-
 import { getAuth } from "@/lib/auth";
 import {
   detectImageType,
@@ -10,7 +8,7 @@ import {
   IMAGE_TYPE_ERROR,
   MAX_FILE_SIZE,
 } from "@/lib/image-upload";
-import { getR2, getR2PublicUrl, R2_BUCKET_NAME } from "@/lib/r2";
+import { getR2, getR2PublicUrl } from "@/lib/r2";
 
 const MAX_REQUEST_SIZE = MAX_FILE_SIZE + 64 * 1024;
 const UPLOAD_LIMIT = 10;
@@ -87,18 +85,16 @@ export async function POST(request: Request) {
     }
     const key = `uploads/${session.user.id}/${crypto.randomUUID()}.${IMAGE_EXTENSIONS[detectedType]}`;
 
-    const command = new PutObjectCommand({
-      Bucket: R2_BUCKET_NAME,
-      Key: key,
-      Body: buffer,
-      ContentType: detectedType,
-      ContentLength: file.size,
-      CacheControl: "public, max-age=31536000, immutable",
+    const url = getR2PublicUrl(key);
+    await (
+      await getR2()
+    ).put(key, buffer, {
+      httpMetadata: {
+        contentType: detectedType,
+        cacheControl: "public, max-age=31536000, immutable",
+      },
     });
-
-    await getR2().send(command);
-
-    return Response.json({ url: getR2PublicUrl(key), key });
+    return Response.json({ url, key });
   } catch (error) {
     console.error("Upload error:", error);
     return Response.json({ error: "Failed to upload file" }, { status: 500 });

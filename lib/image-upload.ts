@@ -35,13 +35,15 @@ export function detectImageType(bytes: Uint8Array): ImageType | null {
 
 export async function readUploadResponse(response: Response): Promise<string> {
   const data = await response.json().catch(() => null);
+  const body = data && typeof data === "object" ? data : {};
   if (!response.ok) {
     throw new Error(
-      typeof data?.error === "string"
-        ? data.error
+      "error" in body && typeof body.error === "string"
+        ? body.error
         : `Upload failed (${response.status})`,
     );
   }
-  if (typeof data?.url !== "string") throw new Error("Invalid upload response");
-  return data.url;
+  if (!("url" in body) || typeof body.url !== "string")
+    throw new Error("Invalid upload response");
+  return body.url;
 }

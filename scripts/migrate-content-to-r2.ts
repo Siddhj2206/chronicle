@@ -8,7 +8,7 @@
  *
  * Usage:
  *   bunx tsx scripts/migrate-content-to-r2.ts --dry-run  # Preview changes
- *   bunx tsx scripts/migrate-content-to-r2.ts            # Execute migration
+ *   bunx tsx scripts/migrate-content-to-r2.ts --local    # Migrate into local R2
  *
  * Note: Ensure .env.local is present with required environment variables
  */
@@ -17,7 +17,7 @@ import { readFileSync, existsSync } from "fs";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { eq, isNull } from "drizzle-orm";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getPlatformProxy } from "wrangler";
 
 // Load environment variables from .env.local
 function loadEnv() {
@@ -82,28 +82,6 @@ const post = pgTable(
 const DRY_RUN = process.argv.includes("--dry-run");
 const BATCH_SIZE = 10;
 
-// R2 client setup
-function getR2Client(): S3Client {
-  const endpoint = process.env.R2_ENDPOINT;
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-
-  if (!endpoint || !accessKeyId || !secretAccessKey) {
-    throw new Error(
-      "R2 credentials not set. Required: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY",
-    );
-  }
-
-  return new S3Client({
-    region: "auto",
-    endpoint,
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
-  });
-}
-
 // Strip markdown for search indexing
 function stripMarkdown(markdown: string): string {
   return markdown
@@ -145,19 +123,19 @@ async function main() {
 
   // Validate environment
   const databaseUrl = process.env.DATABASE_URL;
-  const bucketName = process.env.R2_BUCKET_NAME;
 
   if (!databaseUrl) {
     console.error("❌ DATABASE_URL not set");
     process.exit(1);
   }
 
-  if (!bucketName) {
-    console.error("❌ R2_BUCKET_NAME not set");
-    process.exit(1);
+  if (!DRY_RUN && !process.argv.includes("--local")) {
+    throw new Error(
+      "Pass --local to migrate into Wrangler's local R2 bucket; use a local database.",
+    );
   }
 
-  console.log(`📦 R2 Bucket: ${bucketName}`);
+  console.log("📦 R2 Bucket: local R2 binding from wrangler.jsonc");
   console.log(
     `🗄️  Database: ${databaseUrl.split("@")[1]?.split("/")[0] || "connected"}`,
   );
@@ -167,8 +145,9 @@ async function main() {
   const client = postgres(databaseUrl);
   const db = drizzle(client);
 
-  // Get R2 client
-  const r2 = getR2Client();
+  const platform = DRY_RUN
+    ? undefined
+    : await getPlatformProxy<CloudflareEnv>();
 
   try {
     // Fetch posts that need migration (no contentPath set)
@@ -225,14 +204,9 @@ async function main() {
             );
           } else {
             // Upload to R2
-            await r2.send(
-              new PutObjectCommand({
-                Bucket: bucketName,
-                Key: contentKey,
-                Body: postData.content,
-                ContentType: "text/markdown; charset=utf-8",
-              }),
-            );
+            await platform!.env.R2.put(contentKey, postData.content, {
+              httpMetadata: { contentType: "text/markdown; charset=utf-8" },
+            });
 
             // Update database
             await db
@@ -293,6 +267,7 @@ async function main() {
       }
     }
   } finally {
+    await platform?.dispose();
     await client.end();
   }
 }
