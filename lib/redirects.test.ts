@@ -11,9 +11,18 @@ test("preserves local paths, query strings and fragments", () => {
 
 test("defaults missing or invalid callback destinations to home", () => {
   for (const value of [
-    undefined, null, "", ["/manuscripts"], "https://example.com",
-    "//example.com", "/\\example.com", "javascript:alert(1)",
-    "manuscripts", " /manuscripts", "/\n/example.com", "/a/..//example.com",
+    undefined,
+    null,
+    "",
+    ["/manuscripts"],
+    "https://example.com",
+    "//example.com",
+    "/\\example.com",
+    "javascript:alert(1)",
+    "manuscripts",
+    " /manuscripts",
+    "/\n/example.com",
+    "/a/..//example.com",
     "/%2e%2e//example.com",
   ]) {
     assert.equal(safeCallbackUrl(value), "/");

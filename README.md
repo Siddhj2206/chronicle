@@ -113,17 +113,17 @@ Live: **[chronicle-lyart.vercel.app](https://chronicle-lyart.vercel.app)**
 
 ## Stack
 
-| Layer | Technology |
-| --- | --- |
-| Framework | Next.js 16 (App Router), React 19, TypeScript (strict) |
-| Styling | Tailwind CSS 4, shadcn/ui |
-| Editor | Lexical (`@lexical/react`, `@lexical/markdown`) |
-| Rendering | `react-markdown` + `remark-gfm` + `react-syntax-highlighter` |
-| Database | PostgreSQL (Neon), Drizzle ORM, `postgres` driver |
-| Auth | Better Auth with Google OAuth |
-| Storage | Cloudflare R2 (S3-compatible) via `@aws-sdk/client-s3` |
-| Validation | Zod + `react-hook-form` + `@hookform/resolvers` |
-| Package manager | Bun |
+| Layer           | Technology                                                   |
+| --------------- | ------------------------------------------------------------ |
+| Framework       | Next.js 16 (App Router), React 19, TypeScript (strict)       |
+| Styling         | Tailwind CSS 4, shadcn/ui                                    |
+| Editor          | Lexical (`@lexical/react`, `@lexical/markdown`)              |
+| Rendering       | `react-markdown` + `remark-gfm` + `react-syntax-highlighter` |
+| Database        | PostgreSQL (Neon), Drizzle ORM, `postgres` driver            |
+| Auth            | Better Auth with Google OAuth                                |
+| Storage         | Cloudflare R2 (S3-compatible) via `@aws-sdk/client-s3`       |
+| Validation      | Zod + `react-hook-form` + `@hookform/resolvers`              |
+| Package manager | Bun                                                          |
 
 ## Implementation notes
 
@@ -196,17 +196,17 @@ bun install
 
 Copy `env.example` to `.env.local` and fill it in:
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Postgres connection string |
-| `NEXT_PUBLIC_APP_URL` | Public app origin (required for the auth client in production) |
-| `BETTER_AUTH_SECRET` | Better Auth signing secret |
-| `BETTER_AUTH_URL` | Auth base URL |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
-| `R2_ENDPOINT` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
-| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 credentials |
-| `R2_BUCKET_NAME` | Manuscript-content and image bucket |
-| `NEXT_PUBLIC_R2_DOMAIN` | Public domain for serving uploaded media |
+| Variable                                    | Purpose                                                        |
+| ------------------------------------------- | -------------------------------------------------------------- |
+| `DATABASE_URL`                              | Postgres connection string                                     |
+| `NEXT_PUBLIC_APP_URL`                       | Public app origin (required for the auth client in production) |
+| `BETTER_AUTH_SECRET`                        | Better Auth signing secret                                     |
+| `BETTER_AUTH_URL`                           | Auth base URL                                                  |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials                                       |
+| `R2_ENDPOINT`                               | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`                |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 credentials                                                 |
+| `R2_BUCKET_NAME`                            | Manuscript-content and image bucket                            |
+| `NEXT_PUBLIC_R2_DOMAIN`                     | Public domain for serving uploaded media                       |
 
 Then run migrations and start the dev server:
 
@@ -223,6 +223,31 @@ Useful scripts:
 bunx tsx scripts/seed-posts.ts                       # seed sample manuscripts
 bunx tsx scripts/migrate-content-to-r2.ts --dry-run  # preview the R2 move
 ```
+
+## Linting and formatting
+
+```bash
+bun run lint          # oxlint
+bun run lint:fix      # safe automatic lint fixes
+bun run format        # oxfmt, write changes
+bun run format:check  # CI formatting check
+```
+
+Oxlint preserves the supported Next core-web-vitals and TypeScript ESLint rules,
+including React hooks and experimental React Compiler checks. Hook rules use the
+`react` plugin, not a separate `react-hooks` plugin. The mount-time masthead date
+has a targeted `react/purity` suppression to preserve its existing behavior.
+
+The migration cannot retain Next's `no-location-assign-relative-destination`,
+React's `no-deprecated`, or the React Compiler `config` and `gating` rules natively.
+JSX usage rules are covered by unused-variable analysis and the modern JSX
+transform. No ESLint runtime or compatibility plugins are retained.
+
+Oxfmt uses double quotes, semicolons, two-space indentation, and an 80-column
+print width. Import, package-key, and Tailwind class sorting are disabled to
+preserve existing ordering; Oxfmt supports Tailwind sorting if desired later.
+Generated shadcn components (`components/ui`), Drizzle migrations, and build/test
+artifacts are excluded from formatting. Both tools also respect `.gitignore`.
 
 ## Project structure
 

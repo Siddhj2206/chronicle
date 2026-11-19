@@ -9,7 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageUpload } from "@/components/layout/image-upload";
-import { checkUsernameAvailable, setUsername, updateAvatar } from "@/actions/users";
+import {
+  checkUsernameAvailable,
+  setUsername,
+  updateAvatar,
+} from "@/actions/users";
 import { useSession } from "@/lib/auth-client";
 import { safeCallbackUrl } from "@/lib/redirects";
 
@@ -108,7 +112,10 @@ function OnboardingContent() {
 
           {/* Username Input */}
           <div className="space-y-2">
-            <Label htmlFor="username" className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <Label
+              htmlFor="username"
+              className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground"
+            >
               Requested Handle
             </Label>
             <div className="relative">
@@ -131,24 +138,24 @@ function OnboardingContent() {
                 onBlur={handleCheck}
               />
             </div>
-            
+
             {/* Status Messages */}
             <div className="h-6 pt-2 font-mono text-label uppercase tracking-widest">
-              {error && (
-                <p className="text-destructive">Error: {error}</p>
-              )}
+              {error && <p className="text-destructive">Error: {error}</p>}
               {isAvailable && (
-                <p className="text-green-600 dark:text-green-400">Status: Available</p>
+                <p className="text-green-600 dark:text-green-400">
+                  Status: Available
+                </p>
               )}
               {!error && !isAvailable && username && (
-                 <p className="text-muted-foreground">Status: Checking…</p>
+                <p className="text-muted-foreground">Status: Checking…</p>
               )}
             </div>
           </div>
 
-          <Button 
-            type="submit" 
-            disabled={isPending || !isAvailable} 
+          <Button
+            type="submit"
+            disabled={isPending || !isAvailable}
             className="w-full rounded-none bg-black py-6 font-mono text-xs font-bold uppercase tracking-widest text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
           >
             {isPending ? "Issuing..." : "Confirm Credentials"}

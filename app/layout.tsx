@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Inter,
-  Source_Serif_4,
-} from "next/font/google";
+import { Inter, Source_Serif_4 } from "next/font/google";
 
 import "./globals.css";
 
@@ -31,10 +28,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${sourceSerif.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${sourceSerif.variable}`}
+      suppressHydrationWarning
+    >
       <head>
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+        <meta
+          name="theme-color"
+          content="#ffffff"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#000000"
+          media="(prefers-color-scheme: dark)"
+        />
       </head>
       <body className="antialiased">
         <ThemeProvider>

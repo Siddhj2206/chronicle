@@ -17,14 +17,25 @@ export function ThemeToggle(): React.JSX.Element {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button id="theme-toggle" variant="ghost" size="icon" aria-label="Choose color theme">
+        <Button
+          id="theme-toggle"
+          variant="ghost"
+          size="icon"
+          aria-label="Choose color theme"
+        >
           <Monitor aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={() => setTheme("light")}>Light</DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => setTheme("dark")}>Dark</DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => setTheme("system")}>System</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => setTheme("light")}>
+          Light
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => setTheme("dark")}>
+          Dark
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => setTheme("system")}>
+          System
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -71,7 +71,9 @@ export default async function FeedPage() {
           {/* Main Feed (Left) */}
           <div className="md:col-span-8 md:pr-8">
             <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
-              <h2 className="font-serif text-3xl font-normal">Latest stories</h2>
+              <h2 className="font-serif text-3xl font-normal">
+                Latest stories
+              </h2>
               <Link
                 href="/archive"
                 className="font-sans text-sm text-muted-foreground hover:text-primary"
@@ -79,7 +81,7 @@ export default async function FeedPage() {
                 View archive →
               </Link>
             </div>
-            
+
             <div className="flex flex-col gap-12">
               {mainListPosts.map((post) => (
                 <ListCard key={post.id} post={post} />

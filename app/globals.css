@@ -66,47 +66,47 @@
 }
 
 :root {
-  --background: oklch(0.9660 0.0070 95);
-  --foreground: oklch(0.2300 0.0060 80);
-  --card: oklch(0.9920 0.0030 95);
-  --card-foreground: oklch(0.2300 0.0060 80);
-  --popover: oklch(0.9920 0.0030 95);
-  --popover-foreground: oklch(0.2300 0.0060 80);
-  --primary: oklch(0.4900 0.1200 40);
-  --primary-foreground: oklch(0.9950 0.0020 95);
-  --secondary: oklch(0.9350 0.0070 95);
-  --secondary-foreground: oklch(0.2300 0.0060 80);
-  --muted: oklch(0.9350 0.0070 95);
-  --muted-foreground: oklch(0.4700 0.0080 80);
-  --accent: oklch(0.9350 0.0070 95);
-  --accent-foreground: oklch(0.4900 0.1200 40);
-  --destructive: oklch(0.4800 0.1400 28);
-  --border: oklch(0.6400 0.0080 80);
-  --input: oklch(0.6400 0.0080 80);
-  --ring: oklch(0.5700 0.1400 40);
-  --destructive-foreground: oklch(0.9950 0.0020 95);
+  --background: oklch(0.966 0.007 95);
+  --foreground: oklch(0.23 0.006 80);
+  --card: oklch(0.992 0.003 95);
+  --card-foreground: oklch(0.23 0.006 80);
+  --popover: oklch(0.992 0.003 95);
+  --popover-foreground: oklch(0.23 0.006 80);
+  --primary: oklch(0.49 0.12 40);
+  --primary-foreground: oklch(0.995 0.002 95);
+  --secondary: oklch(0.935 0.007 95);
+  --secondary-foreground: oklch(0.23 0.006 80);
+  --muted: oklch(0.935 0.007 95);
+  --muted-foreground: oklch(0.47 0.008 80);
+  --accent: oklch(0.935 0.007 95);
+  --accent-foreground: oklch(0.49 0.12 40);
+  --destructive: oklch(0.48 0.14 28);
+  --border: oklch(0.64 0.008 80);
+  --input: oklch(0.64 0.008 80);
+  --ring: oklch(0.57 0.14 40);
+  --destructive-foreground: oklch(0.995 0.002 95);
 }
 
 .dark {
-  --background: oklch(0.2680 0.0040 95);
-  --foreground: oklch(0.9450 0.0070 95);
-  --card: oklch(0.3080 0.0040 95);
-  --card-foreground: oklch(0.9450 0.0070 95);
-  --popover: oklch(0.3080 0.0040 95);
-  --popover-foreground: oklch(0.9450 0.0070 95);
-  --primary: oklch(0.7500 0.1000 40);
-  --primary-foreground: oklch(0.2300 0.0060 80);
-  --secondary: oklch(0.3450 0.0040 95);
-  --secondary-foreground: oklch(0.9450 0.0070 95);
-  --muted: oklch(0.3450 0.0040 95);
-  --muted-foreground: oklch(0.7700 0.0070 95);
-  --accent: oklch(0.3450 0.0040 95);
-  --accent-foreground: oklch(0.7500 0.1000 40);
-  --destructive: oklch(0.7500 0.1000 28);
-  --border: oklch(0.5800 0.0080 80);
-  --input: oklch(0.5800 0.0080 80);
-  --ring: oklch(0.7500 0.1000 40);
-  --destructive-foreground: oklch(0.2300 0.0060 80);
+  --background: oklch(0.268 0.004 95);
+  --foreground: oklch(0.945 0.007 95);
+  --card: oklch(0.308 0.004 95);
+  --card-foreground: oklch(0.945 0.007 95);
+  --popover: oklch(0.308 0.004 95);
+  --popover-foreground: oklch(0.945 0.007 95);
+  --primary: oklch(0.75 0.1 40);
+  --primary-foreground: oklch(0.23 0.006 80);
+  --secondary: oklch(0.345 0.004 95);
+  --secondary-foreground: oklch(0.945 0.007 95);
+  --muted: oklch(0.345 0.004 95);
+  --muted-foreground: oklch(0.77 0.007 95);
+  --accent: oklch(0.345 0.004 95);
+  --accent-foreground: oklch(0.75 0.1 40);
+  --destructive: oklch(0.75 0.1 28);
+  --border: oklch(0.58 0.008 80);
+  --input: oklch(0.58 0.008 80);
+  --ring: oklch(0.75 0.1 40);
+  --destructive-foreground: oklch(0.23 0.006 80);
 }
 
 @layer base {
@@ -117,7 +117,12 @@
     @apply bg-background font-serif text-lg leading-relaxed text-foreground;
     letter-spacing: var(--tracking-normal);
   }
-  button, input, select, textarea, label, [role="menu"] {
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  [role="menu"] {
     @apply font-sans;
   }
   a:focus-visible {
@@ -196,18 +201,38 @@
   margin-bottom: 0.5em;
 }
 
-.lexical-h1 { font-size: 2.25rem; }
-.lexical-h2 { font-size: 1.75rem; }
-.lexical-h3 { font-size: 1.5rem; }
-.lexical-h4 { font-size: 1.25rem; }
-.lexical-h5 { font-size: 1.125rem; }
-.lexical-h6 { font-size: 1rem; }
+.lexical-h1 {
+  font-size: 2.25rem;
+}
+.lexical-h2 {
+  font-size: 1.75rem;
+}
+.lexical-h3 {
+  font-size: 1.5rem;
+}
+.lexical-h4 {
+  font-size: 1.25rem;
+}
+.lexical-h5 {
+  font-size: 1.125rem;
+}
+.lexical-h6 {
+  font-size: 1rem;
+}
 
 /* Text Formatting */
-.lexical-bold { font-weight: 700; }
-.lexical-italic { font-style: italic; }
-.lexical-strikethrough { text-decoration: line-through; }
-.lexical-underline { text-decoration: underline; }
+.lexical-bold {
+  font-weight: 700;
+}
+.lexical-italic {
+  font-style: italic;
+}
+.lexical-strikethrough {
+  text-decoration: line-through;
+}
+.lexical-underline {
+  text-decoration: underline;
+}
 
 .lexical-code {
   font-family: var(--font-mono);

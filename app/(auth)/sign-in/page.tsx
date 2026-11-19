@@ -29,7 +29,7 @@ export default async function SignInPage({
 
         <div className="mb-8 mt-4">
           <Link href="/" className="inline-block">
-             <h1 className="font-serif text-3xl font-black tracking-tight hover:underline">
+            <h1 className="font-serif text-3xl font-black tracking-tight hover:underline">
               The Chronicle
             </h1>
           </Link>
