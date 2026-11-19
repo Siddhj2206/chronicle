@@ -41,6 +41,7 @@ jobs:
           bun-version: 1.4.5
       - run: bun install --frozen-lockfile
       - run: bun run lint
+      - run: bun run format:check
       - run: bunx tsc --noEmit
       - run: bunx drizzle-kit push --force
       - run: bun run test

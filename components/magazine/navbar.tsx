@@ -22,6 +22,7 @@ export function Navbar({ className }: NavbarProps) {
 
   // Memoize date formatting to avoid recreation on every render
   const { shortDate, fullDate } = useMemo(() => {
+    // oxlint-disable-next-line react/purity -- Preserve the existing mount-time masthead date.
     const now = new Date();
     return {
       shortDate: now.toLocaleDateString("en-US", {

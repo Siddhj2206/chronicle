@@ -160,7 +160,7 @@ export class ImageNode extends DecoratorNode<ReactNode> {
 
   decorate(): ReactNode {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
+      // oxlint-disable-next-line nextjs/no-img-element
       <img
         src={this.getSrc()}
         alt={this.getAltText()}

@@ -199,6 +199,31 @@ bunx tsx scripts/seed-posts.ts                       # seed sample manuscripts
 bunx tsx scripts/migrate-content-to-r2.ts --dry-run  # preview the R2 move
 ```
 
+## Linting and formatting
+
+```bash
+bun run lint          # oxlint
+bun run lint:fix      # safe automatic lint fixes
+bun run format        # oxfmt, write changes
+bun run format:check  # CI formatting check
+```
+
+Oxlint preserves the supported Next core-web-vitals and TypeScript ESLint rules,
+including React hooks and experimental React Compiler checks. Hook rules use the
+`react` plugin, not a separate `react-hooks` plugin. The mount-time masthead date
+has a targeted `react/purity` suppression to preserve its existing behavior.
+
+The migration cannot retain Next's `no-location-assign-relative-destination`,
+React's `no-deprecated`, or the React Compiler `config` and `gating` rules natively.
+JSX usage rules are covered by unused-variable analysis and the modern JSX
+transform. No ESLint runtime or compatibility plugins are retained.
+
+Oxfmt uses double quotes, semicolons, two-space indentation, and an 80-column
+print width. Import, package-key, and Tailwind class sorting are disabled to
+preserve existing ordering; Oxfmt supports Tailwind sorting if desired later.
+Generated shadcn components (`components/ui`), Drizzle migrations, and build/test
+artifacts are excluded from formatting. Both tools also respect `.gitignore`.
+
 ## Project structure
 
 ```
