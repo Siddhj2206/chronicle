@@ -47,14 +47,14 @@ export function TagInput({
     setError("");
   }
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 font-sans">
       <Label htmlFor="post-tags">Topics</Label>
       <p className="text-sm text-muted-foreground">
         Add up to 5 tags. Press Enter to add a topic.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         {value.map((name) => (
-          <Badge key={normalizeTag(name)} variant="secondary">
+          <Badge key={normalizeTag(name)} variant="outline">
             {name}
             <button
               type="button"

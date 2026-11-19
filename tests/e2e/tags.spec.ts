@@ -7,6 +7,7 @@ import { inArray } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { postTag, tag } from "@/lib/db/schema";
 import { deleteTestUser, signIn } from "@/tests/e2e/helpers/auth";
+import { captureThemes } from "@/tests/e2e/helpers/theme";
 import { createPost } from "@/tests/helpers/db";
 
 import type { Page } from "@playwright/test";
@@ -30,6 +31,7 @@ async function capture(page: Page, surface: string): Promise<void> {
     });
   }
   await page.setViewportSize({ width: 1280, height: 900 });
+  if (surface === "editor-tags") await captureThemes(page, directory, surface);
 }
 
 test("publishes topics, browses a topic, filters search and edits tags", async ({

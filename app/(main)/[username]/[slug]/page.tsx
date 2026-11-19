@@ -99,9 +99,11 @@ export default async function PostPage({
         <h1 className="reader-title">{post.title}</h1>
 
         {post.excerpt && <p className="reader-deck">{post.excerpt}</p>}
-        <div className="mt-4">
-          <TagChips tags={post.tags} />
-        </div>
+        {!!post.tags?.length && (
+          <div className="reader-deck">
+            <TagChips tags={post.tags} />
+          </div>
+        )}
       </header>
 
       {/* Cover Image (if exists) */}

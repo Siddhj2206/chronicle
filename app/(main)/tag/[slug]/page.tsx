@@ -25,14 +25,14 @@ export default async function TagPage({
   if ("error" in result)
     return <p role="alert">Unable to load stories. Please try again.</p>;
   return (
-    <div className="mx-auto max-w-4xl pb-12">
-      <header className="mb-10 space-y-3 border-b border-border pb-8">
-        <h1 className="font-serif text-4xl md:text-5xl">{result.tag.name}</h1>
-        <p className="text-muted-foreground">
+    <div className="catalogue">
+      <header className="catalogue-intro">
+        <h1>{result.tag.name}</h1>
+        <p>
           {result.totalCount} {result.totalCount === 1 ? "story" : "stories"}
         </p>
       </header>
-      <div className="space-y-10">
+      <div className="catalogue-entries">
         {result.posts.map(({ post, author }) => (
           <ListCard key={post.id} post={{ ...post, author }} />
         ))}
