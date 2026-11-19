@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 
 import { deleteTestUser, signIn } from "@/tests/e2e/helpers/auth";
+import { captureThemes } from "@/tests/e2e/helpers/theme";
 
 test("publishes a story with a subtitle and updates it through the editor", async ({
   context,
@@ -133,6 +134,12 @@ test("publishes a story with a subtitle and updates it through the editor", asyn
         fullPage: true,
       });
       await page.setViewportSize({ width: 1280, height: 900 });
+      await captureThemes(
+        page,
+        screenshotDir,
+        "article",
+        page.locator("article header"),
+      );
     }
     await page.goto("/");
     await expect(page.locator("article").first()).toContainText(

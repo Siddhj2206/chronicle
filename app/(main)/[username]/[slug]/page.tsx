@@ -102,9 +102,6 @@ export default async function PostPage({
           post={{ ...post, content: postContent }}
           variant="article"
         />
-        {!post.subtitle && post.excerpt && (
-          <p className="reader-deck">{post.excerpt}</p>
-        )}
       </header>
 
       {/* Cover Image (if exists) */}

@@ -9,6 +9,7 @@ import { GridCard } from "@/components/magazine/grid-card";
 import { ListCard } from "@/components/magazine/list-card";
 import { SidebarList } from "@/components/magazine/sidebar-list";
 import { PostContent } from "@/components/posts/post-content";
+import { PostSummary } from "@/components/posts/post-summary";
 
 import type { StoryCardProps } from "@/components/magazine/story-card";
 
@@ -38,6 +39,33 @@ const post: StoryCardProps["post"] = {
 };
 
 describe("Museum monograph components", () => {
+  it("keeps the subtitle or excerpt above article reading time in the reader deck", () => {
+    for (const subtitle of ["A subtitle", null]) {
+      const html = renderToStaticMarkup(
+        createElement(PostSummary, {
+          post: { ...post, subtitle },
+          variant: "article",
+        }),
+      );
+      expect(html).toContain("reader-deck");
+      expect(html).toContain(subtitle || post.excerpt!);
+      if (subtitle) expect(html).not.toContain(post.excerpt!);
+      expect(html.indexOf(subtitle || post.excerpt!)).toBeLessThan(
+        html.indexOf("min read"),
+      );
+    }
+  });
+
+  it("keeps reading time when an article has no subtitle or excerpt", () => {
+    const html = renderToStaticMarkup(
+      createElement(PostSummary, {
+        post: { ...post, subtitle: null, excerpt: null },
+        variant: "article",
+      }),
+    );
+    expect(html).toContain("min read");
+    expect(html.match(/<p /g)).toHaveLength(1);
+  });
   it("shows subtitles instead of excerpts with reading time on every card", () => {
     for (const Card of [HeroCard, GridCard, ListCard]) {
       const html = renderToStaticMarkup(

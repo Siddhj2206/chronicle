@@ -14,21 +14,21 @@ export function PostSummary({
   post,
   variant = "card",
 }: PostSummaryProps): ReactElement {
+  const description =
+    post.subtitle || (variant === "article" ? post.excerpt : null);
   return (
-    <div className="my-2 space-y-2 text-muted-foreground">
-      {variant !== "compact" && post.subtitle && (
-        <p
-          className={cn(
-            "font-serif leading-relaxed",
-            variant === "article"
-              ? "mx-auto max-w-2xl text-xl italic md:text-2xl"
-              : "text-lg",
-          )}
-        >
-          {post.subtitle}
+    <div
+      className={cn(
+        "space-y-2 text-muted-foreground",
+        variant === "article" ? "reader-deck" : "my-2",
+      )}
+    >
+      {variant !== "compact" && description && (
+        <p className={variant === "article" ? undefined : "story-excerpt"}>
+          {description}
         </p>
       )}
-      <p className="font-mono text-xs tracking-wide">
+      <p className="story-meta">
         {post.readingTimeMinutes ?? readingTimeMinutes(post.content)} min read
       </p>
     </div>

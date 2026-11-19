@@ -383,7 +383,7 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
             aria-describedby="subtitle-limit"
             placeholder="Subtitle (optional)…"
             maxLength={200}
-            className="w-full resize-none bg-transparent font-serif text-2xl leading-relaxed text-muted-foreground placeholder:text-muted-foreground/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="w-full resize-none bg-transparent font-serif text-2xl leading-relaxed text-muted-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             value={subtitle}
             onChange={(e) => setSubtitle(e.target.value)}
             minRows={1}
