@@ -94,6 +94,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { ALLOWED_IMAGE_TYPES, IMAGE_SIZE_ERROR, IMAGE_TYPE_ERROR, MAX_FILE_SIZE, readUploadResponse } from "@/lib/image-upload";
 
 // ============================================
 // Image Node
@@ -915,16 +916,10 @@ function ImageUploadPlugin({ fileInputRef }: ImageUploadPluginProps) {
         body: formData,
       });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        console.error("Upload error:", data.error);
-        throw new Error(data.error || "Upload failed");
-      }
-
-      return data.url;
+      return await readUploadResponse(response);
     } catch (error) {
       console.error("Image upload failed:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to upload image");
       return null;
     }
   }, []);
@@ -947,23 +942,23 @@ function ImageUploadPlugin({ fileInputRef }: ImageUploadPluginProps) {
 
   const handleImageFile = useCallback(
     async (file: File) => {
-      if (!file.type.startsWith("image/")) {
-        toast.error("Invalid file type. Please select an image.");
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        toast.error(IMAGE_TYPE_ERROR);
         return;
       }
 
-      // Check file size (5MB limit)
-      const MAX_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-      if (file.size > MAX_SIZE) {
-        toast.error("Image must be smaller than 5MB");
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(IMAGE_SIZE_ERROR);
+        return;
+      }
+      if (file.size === 0) {
+        toast.error("File is empty");
         return;
       }
 
       const url = await uploadImage(file);
       if (url) {
         insertImage(url, file.name);
-      } else {
-        toast.error("Failed to upload image. Please try again.");
       }
     },
     [uploadImage, insertImage]
@@ -1230,7 +1225,7 @@ export function LexicalEditor({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept={ALLOWED_IMAGE_TYPES.join(",")}
           className="hidden"
           aria-hidden="true"
         />
