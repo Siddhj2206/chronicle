@@ -7,13 +7,16 @@ import {
   getFollowingPosts,
   toggleFollow,
 } from "@/actions/follows";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { follow, user } from "@/lib/db/schema";
 import { createPost, createUser, resetDatabase } from "@/tests/helpers/db";
 import { mockSession } from "@/tests/helpers/session";
 
+let db: Awaited<ReturnType<typeof getDb>>;
+
 beforeEach(async () => {
   await resetDatabase();
+  db = await getDb();
   mockSession(null);
 });
 

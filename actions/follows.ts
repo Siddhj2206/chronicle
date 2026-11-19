@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { and, count, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { follow, post, user } from "@/lib/db/schema";
 import { getSession } from "@/lib/session";
 import { revalidatePosts } from "@/lib/revalidate-posts";
@@ -46,6 +46,7 @@ export async function toggleFollow(authorId: string): Promise<FollowResult> {
     return { error: "You cannot follow yourself" };
 
   try {
+    const db = await getDb();
     const [author] = await db
       .select({ id: user.id })
       .from(user)
@@ -90,6 +91,7 @@ export async function getFollowInfo(authorId: string): Promise<FollowInfo> {
   const parsed = authorIdSchema.safeParse(authorId);
   if (!parsed.success) return empty;
   try {
+    const db = await getDb();
     const [[followers], [following], relationship] = await Promise.all([
       db
         .select({ count: count() })
@@ -137,6 +139,7 @@ export async function getFollowingPosts(
     eq(post.published, true),
   );
   try {
+    const db = await getDb();
     const [[total], posts] = await Promise.all([
       db
         .select({ count: count() })
