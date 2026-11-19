@@ -54,7 +54,7 @@ jobs:
           exit 1
       - run: bun run lint
       - run: bun run format:check
-      - run: bunx tsc --noEmit
+      - run: bun run typecheck
       - run: bunx drizzle-kit push --force
       - run: bun run test
       - run: bun run db:seed
