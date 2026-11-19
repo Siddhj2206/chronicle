@@ -30,7 +30,7 @@ export function CommentForm({
       e.preventDefault();
 
       if (!content.trim()) {
-        setError("Your letter cannot be empty");
+        setError("Your note cannot be empty");
         return;
       }
 
@@ -43,7 +43,7 @@ export function CommentForm({
         if (result.error) {
           setError(
             result.error === "Unauthorized"
-              ? "Your session has expired. Please sign in again to submit your letter."
+              ? "Your session has expired. Please sign in again to submit your note."
               : result.error,
           );
         } else {
@@ -57,11 +57,9 @@ export function CommentForm({
 
   if (!isLoggedIn) {
     return (
-      <div className="border-2 border-dashed border-neutral-300 p-8 text-center dark:border-neutral-700">
-        <p className="font-serif italic text-muted-foreground">
-          Sign in to join the conversation.
-        </p>
-        <div className="mt-4">
+      <div className="comment-guest">
+        <p>Sign in to join the conversation.</p>
+        <div>
           <Button asChild>
             <Link
               href={`/sign-in?callbackUrl=${encodeURIComponent(articlePath)}`}
@@ -77,12 +75,7 @@ export function CommentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-3">
-        <Label
-          htmlFor="comment"
-          className="block font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground"
-        >
-          ━━━ Write to the Editor ━━━
-        </Label>
+        <Label htmlFor="comment">Leave a note</Label>
         <Textarea
           id="comment"
           name="comment"
@@ -90,20 +83,17 @@ export function CommentForm({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={4}
-          className="rounded-none border-2 border-black font-serif dark:border-white"
+          aria-invalid={!!error}
+          aria-describedby={error ? "comment-error" : undefined}
         />
       </div>
       {error && (
-        <p className="font-mono text-sm font-medium text-destructive">
+        <p id="comment-error" role="alert" className="text-sm text-destructive">
           {error}
         </p>
       )}
-      <Button
-        type="submit"
-        disabled={isPending}
-        className="rounded-none border-2 border-black bg-black px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white dark:bg-white dark:text-black dark:hover:bg-neutral-200"
-      >
-        {isPending ? "Submitting..." : "Submit Letter"}
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "Submitting..." : "Send your note"}
       </Button>
     </form>
   );

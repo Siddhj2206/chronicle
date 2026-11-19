@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-function SearchInputContent() {
+function SearchInputContent(): React.JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
@@ -44,6 +44,7 @@ function SearchInputContent() {
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <Input
           type="search"
+          aria-label="Search articles"
           placeholder="Search…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -61,18 +62,19 @@ function SearchInputContent() {
     <form onSubmit={handleSubmit}>
       <Input
         type="search"
+        aria-label="Search articles"
         placeholder="Search posts…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="w-64"
+        className="w-48"
       />
     </form>
   );
 }
 
-export function SearchInput() {
+export function SearchInput(): React.JSX.Element {
   return (
-    <Suspense fallback={<Skeleton className="h-8 w-8 md:h-10 md:w-64" />}>
+    <Suspense fallback={<Skeleton className="h-8 w-8 md:h-9 md:w-48" />}>
       <SearchInputContent />
     </Suspense>
   );

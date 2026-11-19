@@ -154,7 +154,7 @@ export function ImageUpload({
                   ? "Add Photo"
                   : "Add Cover Image"}
             </div>
-            <div className="font-mono text-[10px] uppercase tracking-widest opacity-50">
+            <div className="font-mono text-label uppercase tracking-widest opacity-50">
               Drag & Drop or Click
             </div>
           </>
