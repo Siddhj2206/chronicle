@@ -33,3 +33,16 @@ describe("readingTimeMinutes", () => {
     expect(readingTimeMinutes("![unfinished ** [link]( `code")).toBe(1);
   });
 });
+
+describe("readingTimeMinutes edge cases", () => {
+  it("treats a longer closing fence as the end of a code block", () => {
+    const prose = Array.from({ length: 238 }, () => "word").join(" ");
+    const code = Array.from({ length: 2000 }, () => "code").join(" ");
+    expect(readingTimeMinutes(`\`\`\`js\n${code}\n\`\`\`\`\n\n${prose}`)).toBe(1);
+  });
+
+  it("adds image time for shortcut reference images", () => {
+    const images = Array.from({ length: 6 }, () => "![photo]").join("\n\n");
+    expect(readingTimeMinutes(`${images}\n\n[photo]: https://example.com/a.png`)).toBe(2);
+  });
+});
