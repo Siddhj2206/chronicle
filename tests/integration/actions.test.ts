@@ -5,7 +5,7 @@ import { addComment, deleteComment, getComments } from "@/actions/comments";
 import { getLikeCount, hasUserLiked, toggleLike } from "@/actions/likes";
 import { createPost, deletePost, publishPost, updatePost } from "@/actions/posts";
 import { searchPosts } from "@/actions/search";
-import { updateProfile } from "@/actions/users";
+import { setUsername, updateProfile } from "@/actions/users";
 import { getDb } from "@/lib/db";
 import { uploadContent } from "@/lib/r2-content";
 import { createPost as seedPost, createUser, formData, resetDatabase } from "@/tests/helpers/db";
@@ -63,6 +63,22 @@ describe("posts", () => {
     expect(await db.query.post.findMany()).toEqual([]);
     log.mockRestore();
   });
+
+  it("retries a raced slug conflict using pg constraint metadata", async () => {
+    mockSession(await createUser());
+    let uploads = 0;
+    let release!: () => void;
+    const ready = new Promise<void>((resolve) => { release = resolve; });
+    await vi.mocked(uploadContent).withImplementation(async (id: string) => {
+      if (++uploads === 2) release();
+      await ready;
+      return `content/${id}.md`;
+    }, async () => {
+      const results = await Promise.all([createPost(validPost()), createPost(validPost())]);
+      expect(results.every((result) => result.success)).toBe(true);
+      expect(results.map((result) => result.slug).sort()).toEqual(["testing-chronicle", "testing-chronicle-2"]);
+    });
+  });
 });
 
 describe("comments and likes", () => {
@@ -106,6 +122,20 @@ describe("comments and likes", () => {
 });
 
 describe("search and profiles", () => {
+  it("reports a raced username conflict using pg constraint metadata", async () => {
+    const db = await getDb();
+    await createUser({ username: "taken_name" });
+    mockSession(await createUser());
+    const lookup = vi.spyOn(db.query.user, "findFirst").mockResolvedValueOnce(undefined);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      expect(await setUsername("taken_name")).toEqual({ success: false, error: "Username is already taken" });
+    } finally {
+      lookup.mockRestore();
+      log.mockRestore();
+    }
+  });
+
   it("preserves pg execute rows and timestamp values", async () => {
     const db = await getDb();
     const owner = await createUser();

@@ -8,9 +8,11 @@ import * as schema from "./schema";
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
-let nodeDb: NodePgDatabase<typeof schema> | undefined;
+type Database = NodePgDatabase<typeof schema> & { $client: Client | Pool };
 
-export const getDb = cache(async (): Promise<NodePgDatabase<typeof schema>> => {
+let nodeDb: Database | undefined;
+
+export const getDb = cache(async (): Promise<Database> => {
   const isWorker = globalThis.navigator?.userAgent === "Cloudflare-Workers";
   let context;
   if (process.env.NEXT_PHASE === "phase-production-build") {
