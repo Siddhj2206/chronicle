@@ -63,9 +63,8 @@ bun run cf-typegen  # generate Cloudflare binding types
 
 `bun run dev` still uses the Next.js development server. Next.js was upgraded
 to 16.4.6 to meet OpenNext's supported peer range; `proxy.ts` support in OpenNext
-is experimental. R2 uses a native bucket binding; incremental caching is not configured yet.
-Do not treat the deployment commands as production-ready until those follow-up
-migrations land.
+is experimental. R2 uses a native bucket binding. Before deploying, provision the
+Hyperdrive, storage and cache resources below and replace their placeholders.
 
 Create a Hyperdrive configuration against Neon's connection string with
 `bunx wrangler hyperdrive create chronicle-db --connection-string='<NEON_URL>'`
@@ -77,6 +76,40 @@ Workers create request-local `pg` clients through Hyperdrive; the runtime cleans
 up their edge connections when each request ends. Ordinary Node execution reuses
 one pool, preferring `DATABASE_URL` over any local development binding.
 Better Auth is also constructed per request, avoiding cross-request socket reuse.
+
+### Workers caching and revalidation
+
+Following the [OpenNext caching guide](https://opennext.js.org/cloudflare/caching),
+the incremental/data cache uses a separate R2 bucket, ISR uses the Durable Object
+queue, and on-demand invalidation uses `D1NextModeTagCache`. D1 Next mode is the
+guide's recommendation for a small site using `revalidatePath`/`revalidateTag`;
+it also supports Next 16's immediate `updateTag` invalidation used for Markdown.
+Sharded DO tags are intended for higher traffic or frequent invalidations. No
+regional Cache API layer is enabled, so no zone purge API token is required.
+
+```bash
+bunx wrangler r2 bucket create chronicle-cache
+bunx wrangler d1 create chronicle-tags
+```
+
+Set `NEXT_INC_CACHE_R2_BUCKET.bucket_name` and `NEXT_TAG_CACHE_D1.database_id`
+in `wrangler.jsonc` to those resources, retain the `WORKER_SELF_REFERENCE`
+service binding, and run `bun run cf-typegen`. The `v1` migration provisions
+`DOQueueHandler` automatically on deployment; it does not need a separate queue
+creation command. The cache bucket must remain separate from the `R2` content
+bucket.
+
+Use `bun run preview`, `bun run deploy`, or `bun run upload`: these invoke the
+OpenNext CLI, which automatically populates build-time cache entries and creates
+the D1 revalidation table for each build before starting/deploying the Worker.
+Do not replace these with bare Wrangler deployment commands. For a separately
+built local Worker, run `bun run cache:populate:local` before `bunx wrangler dev`.
+Local preview uses simulated R2, D1 and DO bindings under `.wrangler/state`;
+it does not provision or access remote resources. `next dev` uses Next's own dev
+cache behavior, so test Workers invalidation through the built preview.
+Wrangler's Node binding proxy can warn that internal Durable Objects are not
+available during builds or `next dev`; the built Worker exports `DOQueueHandler`
+and runs it in Wrangler preview instead of through that Node proxy.
 
 # Chronicle
 
