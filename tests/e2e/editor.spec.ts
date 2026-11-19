@@ -34,7 +34,6 @@ test.beforeEach(async ({ context }) => {
 test.afterAll(async () => {
   assertTestDatabase();
   await db.delete(session).where(eq(session.token, token));
-  await db.$client.end();
 });
 
 test("typing into an empty Lexical editor preserves character order", async ({ page }) => {
