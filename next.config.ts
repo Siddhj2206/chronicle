@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+
 import { imageRemotePatterns } from "./lib/image-sources";
 
 const nextConfig: NextConfig = {
@@ -9,3 +11,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+initOpenNextCloudflareForDev();
