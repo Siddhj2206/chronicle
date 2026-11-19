@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-function SearchInputContent() {
+function SearchInputContent(): React.JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
@@ -72,7 +72,7 @@ function SearchInputContent() {
   );
 }
 
-export function SearchInput() {
+export function SearchInput(): React.JSX.Element {
   return (
     <Suspense fallback={<Skeleton className="h-8 w-8 md:h-9 md:w-48" />}>
       <SearchInputContent />

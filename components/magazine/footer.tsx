@@ -2,11 +2,11 @@ import Link from "next/link";
 
 export function Footer(): React.JSX.Element {
   return (
-    <footer className="bg-background font-sans text-sm text-muted-foreground">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-12 md:flex-row md:items-center md:justify-between">
+    <footer className="site-footer-wrap">
+      <div className="site-footer">
         <Link
           href="/"
-          className="font-serif text-xl text-foreground hover:text-primary"
+          className="text-foreground"
         >
           Chronicle
         </Link>
@@ -27,7 +27,6 @@ export function Footer(): React.JSX.Element {
             Write an article
           </Link>
         </nav>
-        <p className="text-label">A space for thoughtful stories.</p>
       </div>
     </footer>
   );

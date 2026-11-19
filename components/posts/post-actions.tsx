@@ -4,7 +4,6 @@ import { useOptimistic, useTransition } from "react";
 
 import { toggleLike } from "@/actions/likes";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface LikeButtonProps {
   postId: string;
@@ -16,7 +15,7 @@ export function LikeButton({
   postId,
   initialLiked,
   initialCount,
-}: LikeButtonProps) {
+}: LikeButtonProps): React.JSX.Element {
   const [isPending, startTransition] = useTransition();
   const [optimistic, setOptimistic] = useOptimistic(
     { liked: initialLiked, count: initialCount },
@@ -35,25 +34,19 @@ export function LikeButton({
 
   const likeText =
     optimistic.count === 0
-      ? "Like This Story"
+      ? "Like this story"
       : optimistic.count === 1
-        ? "1 Reader Liked This Story"
-        : `${optimistic.count} Readers Liked This Story`;
+        ? "1 reader liked this story"
+        : `${optimistic.count} readers liked this story`;
 
   return (
     <Button
       onClick={handleClick}
       disabled={isPending}
-      className={cn(
-        "flex items-center gap-3 rounded-none border-2 px-6 py-3 font-mono text-xs uppercase tracking-widest transition-colors",
-        "border-black dark:border-white",
-        "hover:bg-neutral-100 dark:hover:bg-neutral-900",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        optimistic.liked && "bg-black text-white dark:bg-white dark:text-black",
-        optimistic.liked && "hover:bg-neutral-800 dark:hover:bg-neutral-200",
-      )}
+      aria-pressed={optimistic.liked}
+      variant={optimistic.liked ? "default" : "outline"}
     >
-      <span className="text-base">{optimistic.liked ? "♥" : "♡"}</span>
+      <span aria-hidden="true">{optimistic.liked ? "♥" : "♡"}</span>
       <span>{likeText}</span>
     </Button>
   );

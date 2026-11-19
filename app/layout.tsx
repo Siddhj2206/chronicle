@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Source_Serif_4 } from "next/font/google";
+import { Inter, Instrument_Serif } from "next/font/google";
 
 import "./globals.css";
 
@@ -11,8 +11,9 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const sourceSerif = Source_Serif_4({
-  variable: "--font-reading",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-display",
+  weight: "400",
   subsets: ["latin"],
   style: ["normal", "italic"],
 });
@@ -26,22 +27,22 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>): React.JSX.Element {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${sourceSerif.variable}`}
+      className={`${inter.variable} ${instrumentSerif.variable}`}
       suppressHydrationWarning
     >
       <head>
         <meta
           name="theme-color"
-          content="#ffffff"
+          content="#f6f7f9"
           media="(prefers-color-scheme: light)"
         />
         <meta
           name="theme-color"
-          content="#000000"
+          content="#111315"
           media="(prefers-color-scheme: dark)"
         />
       </head>

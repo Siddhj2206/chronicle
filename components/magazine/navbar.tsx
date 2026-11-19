@@ -19,24 +19,24 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
   const pathname = usePathname();
 
   return (
-    <header className={cn("bg-background font-sans text-sm", className)}>
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-5 md:py-7">
+    <header className={cn("site-header", className)}>
+      <div className="site-nav">
         <Link
           href="/"
-          className="font-serif text-2xl font-medium tracking-tight hover:text-primary"
+          className="site-brand"
         >
           Chronicle
         </Link>
         <nav
           aria-label="Main navigation"
-          className="hidden items-center gap-6 text-muted-foreground md:flex"
+          className="site-links"
         >
           <Link
             href="/"
             aria-current={pathname === "/" ? "page" : undefined}
             className="hover:text-primary aria-[current=page]:text-foreground"
           >
-            Stories
+            Journal
           </Link>
           <Link
             href="/archive"
@@ -46,14 +46,14 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
             Archive
           </Link>
         </nav>
-        <div className="flex items-center gap-1 sm:gap-3">
+        <div className="site-tools">
           <SearchInput />
           <ThemeToggle />
           {session?.user ? (
             <>
               <Link
                 href="/new"
-                className="rounded-full bg-primary px-4 py-2 text-primary-foreground hover:opacity-90"
+                className="site-signin"
               >
                 Write
               </Link>
@@ -62,7 +62,7 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
           ) : (
             <Link
               href={`/sign-in?callbackUrl=${encodeURIComponent(safeCallbackUrl(pathname))}`}
-              className="rounded-full bg-primary px-4 py-2 text-primary-foreground hover:opacity-90"
+              className="site-signin"
             >
               Sign in
             </Link>
