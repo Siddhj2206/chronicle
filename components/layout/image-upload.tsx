@@ -1,9 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
 import Image from "next/image";
+
+import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
+
+import { ALLOWED_IMAGE_TYPES, IMAGE_SIZE_ERROR, IMAGE_TYPE_ERROR, MAX_FILE_SIZE, readUploadResponse } from "@/lib/image-upload";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -43,12 +46,7 @@ export function ImageUpload({
           body: formData,
         });
 
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || "Upload failed");
-        }
-
-        const { url } = await response.json();
+        const url = await readUploadResponse(response);
 
         onChange(url);
         toast.success("Image uploaded");
@@ -64,7 +62,15 @@ export function ImageUpload({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "image/*": [] },
+    accept: Object.fromEntries(ALLOWED_IMAGE_TYPES.map(type => [type, []])),
+    maxSize: MAX_FILE_SIZE,
+    minSize: 1,
+    onDropRejected: (rejections) => {
+      const codes = rejections.flatMap(({ errors }) => errors.map(({ code }) => code));
+      toast.error(codes.includes("file-too-large") ? IMAGE_SIZE_ERROR :
+        codes.includes("file-invalid-type") ? IMAGE_TYPE_ERROR :
+        codes.includes("file-too-small") ? "File is empty" : "Please select one image at a time");
+    },
     maxFiles: 1,
     disabled: disabled || isUploading,
   });

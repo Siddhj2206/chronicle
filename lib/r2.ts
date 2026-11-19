@@ -33,10 +33,10 @@ export function getR2(): S3Client {
 
 export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || "";
 
-export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-export const ALLOWED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-];
+export function getR2PublicUrl(key: string): string {
+  const domain = process.env.NEXT_PUBLIC_R2_DOMAIN;
+  if (domain) {
+    return `https://${domain.replace(/^https?:\/\//, "")}/${key}`;
+  }
+  return `${process.env.R2_ENDPOINT}/${R2_BUCKET_NAME}/${key}`;
+}
