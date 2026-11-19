@@ -125,6 +125,16 @@
   }
 }
 
+.post-content .shiki,
+.post-content .shiki span {
+  color: var(--shiki-light);
+}
+
+.dark .post-content .shiki,
+.dark .post-content .shiki span {
+  color: var(--shiki-dark);
+}
+
 /* Reading and editor typography */
 
 /* Editor Container */

@@ -1,40 +1,14 @@
-"use client";
-
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { highlightCode } from "@/lib/highlight-code";
 
 import type { Components } from "react-markdown";
 
-// Lazy load SyntaxHighlighter to reduce initial bundle size (~200KB savings)
-const SyntaxHighlighter = dynamic(
-  () => import("react-syntax-highlighter").then((mod) => mod.Prism),
-  {
-    loading: () => (
-      <div className="my-4 h-24 animate-pulse bg-muted p-4" />
-    ),
-    ssr: false,
-  }
-);
-
 // Hoisted style objects to prevent recreation on every render
 const imageStyle = { width: "100%", height: "auto" };
-
-const codeBlockCustomStyle = {
-  margin: 0,
-  padding: "1rem",
-  background: "var(--muted)",
-  borderRadius: 0,
-  fontSize: "0.9em",
-  lineHeight: 1.5,
-};
-
-const codeTagStyle = {
-  fontFamily: "var(--font-mono)",
-};
 
 const articleStyle = {
   fontFamily: "var(--font-serif)",
@@ -98,42 +72,31 @@ const markdownComponents: Components = {
       />
     </span>
   ),
-  code: ({ className, children, ...props }) => {
-    const match = /language-(\w+)/.exec(className || "");
-    const codeString = String(children).replace(/\n$/, "");
-
-    // Check if it's an inline code or code block
-    const isInline = !match && !className;
-
-    if (isInline) {
-      return (
-        <code
-          className="bg-muted px-1.5 py-0.5 font-mono text-[0.9em]"
-          {...props}
-        >
-          {children}
-        </code>
-      );
-    }
-
+  code: ({ children }) => (
+    <code className="bg-muted px-1.5 py-0.5 font-mono text-[0.9em]">
+      {children}
+    </code>
+  ),
+  pre: ({ node }) => {
+    const code = node?.children[0];
+    if (code?.type !== "element" || code.tagName !== "code") return null;
+    const classes = code.properties.className;
+    const language = Array.isArray(classes)
+      ? classes.find((name) => String(name).startsWith("language-"))
+      : undefined;
+    const text = code.children
+      .map((child) => child.type === "text" ? child.value : "")
+      .join("")
+      .replace(/\n$/, "");
     return (
-      <div className="my-4 overflow-x-auto">
-        <SyntaxHighlighter
-          language={match?.[1] || "text"}
-          PreTag="div"
-          className="!min-w-max !border !border-border !bg-muted !font-mono"
-          style={{}}
-          customStyle={codeBlockCustomStyle}
-          codeTagProps={{
-            style: codeTagStyle,
-          }}
-        >
-          {codeString}
-        </SyntaxHighlighter>
-      </div>
+      <div
+        className="my-4 overflow-x-auto [&_pre]:min-w-max [&_pre]:border [&_pre]:border-border [&_pre]:!bg-muted [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-[0.9em] [&_pre]:leading-[1.5] [&_code]:font-mono"
+        dangerouslySetInnerHTML={{
+          __html: highlightCode(text, language ? String(language).slice(9) : undefined),
+        }}
+      />
     );
   },
-  pre: ({ children }) => <>{children}</>,
   table: ({ children }) => (
     <div className="my-4 overflow-x-auto">
       <table className="w-full border-collapse border border-border">
