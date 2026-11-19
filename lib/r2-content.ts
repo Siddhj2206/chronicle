@@ -1,9 +1,6 @@
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
-import { unstable_cache, revalidateTag } from "next/cache";
+import { GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { unstable_cache, updateTag } from "next/cache";
+import { nanoid } from "nanoid";
 
 import { getR2, R2_BUCKET_NAME } from "@/lib/r2";
 
@@ -14,7 +11,7 @@ const CONTENT_PREFIX = "content";
  * Generate the R2 key (path) for a post's content
  */
 export function getContentKey(postId: string): string {
-  return `${CONTENT_PREFIX}/${postId}.md`;
+  return `${CONTENT_PREFIX}/${postId}/${nanoid()}.md`;
 }
 
 /**
@@ -23,10 +20,7 @@ export function getContentKey(postId: string): string {
  * @param markdown - The markdown content to store
  * @returns The R2 path where content was stored
  */
-export async function uploadContent(
-  postId: string,
-  markdown: string,
-): Promise<string> {
+export async function uploadContent(postId: string, markdown: string): Promise<string> {
   const key = getContentKey(postId);
   const r2 = getR2();
 
@@ -36,7 +30,7 @@ export async function uploadContent(
       Key: key,
       Body: markdown,
       ContentType: "text/markdown; charset=utf-8",
-    }),
+    })
   );
 
   return key;
@@ -44,44 +38,40 @@ export async function uploadContent(
 
 /**
  * Delete content from R2
- * @param postId - The post's unique ID
+ * @param contentPath - The stored R2 key
  */
-export async function deleteContent(postId: string): Promise<void> {
-  const key = getContentKey(postId);
-  const r2 = getR2();
-
+export async function deleteContent(contentPath: string): Promise<void> {
   try {
+    const r2 = getR2();
     await r2.send(
       new DeleteObjectCommand({
         Bucket: R2_BUCKET_NAME,
-        Key: key,
-      }),
+        Key: contentPath,
+      })
     );
   } catch (error) {
-    // Log but don't throw - content may not exist
-    console.error(`Failed to delete content for post ${postId}:`, error);
+    // Best-effort cleanup can leave orphan objects after an outage or process exit.
+    console.error(`Failed to delete content ${contentPath}:`, error);
   }
 }
 
 /**
  * Fetch raw content from R2 (uncached)
- * @param postId - The post's unique ID
+ * @param contentPath - The stored R2 key
  * @returns The markdown content or null if not found
  */
-async function fetchContentFromR2(postId: string): Promise<string | null> {
-  const key = getContentKey(postId);
-  const r2 = getR2();
-
+async function fetchContentFromR2(contentPath: string): Promise<string | null> {
   try {
+    const r2 = getR2();
     const response = await r2.send(
       new GetObjectCommand({
         Bucket: R2_BUCKET_NAME,
-        Key: key,
-      }),
+        Key: contentPath,
+      })
     );
 
     if (!response.Body) {
-      return null;
+      throw new Error("R2 content response has no body");
     }
 
     // Convert stream to string
@@ -92,8 +82,7 @@ async function fetchContentFromR2(postId: string): Promise<string | null> {
     if (error instanceof Error && error.name === "NoSuchKey") {
       return null;
     }
-    console.error(`Failed to fetch content for post ${postId}:`, error);
-    return null;
+    throw error;
   }
 }
 
@@ -103,18 +92,23 @@ async function fetchContentFromR2(postId: string): Promise<string | null> {
  * @param postId - The post's unique ID
  * @returns The markdown content or null if not found
  */
-export async function getContent(postId: string): Promise<string | null> {
+export async function getContent(postId: string, contentPath: string): Promise<string | null> {
   // Create a cached version of the fetch function
   const getCachedContent = unstable_cache(
-    async () => fetchContentFromR2(postId),
-    [`post-content-${postId}`],
+    async () => fetchContentFromR2(contentPath),
+    [`post-content-${postId}`, contentPath],
     {
       tags: [`post-content-${postId}`],
       revalidate: false, // Only revalidate via tag
-    },
+    }
   );
 
-  return getCachedContent();
+  try {
+    return await getCachedContent();
+  } catch (error) {
+    console.error(`Failed to fetch content ${contentPath}:`, error);
+    return null;
+  }
 }
 
 /**
@@ -123,28 +117,23 @@ export async function getContent(postId: string): Promise<string | null> {
  * @param postId - The post's unique ID
  */
 export async function revalidateContent(postId: string): Promise<void> {
-  // Second argument is the cache profile/duration - use "default" for immediate revalidation
-  revalidateTag(`post-content-${postId}`, "default");
+  updateTag(`post-content-${postId}`);
 }
 
 /**
  * Generate a search vector string from post content
  * This creates a weighted tsvector for PostgreSQL full-text search
  * Title gets weight A (highest), excerpt gets B, content gets C
- *
+ * 
  * @param title - Post title
  * @param excerpt - Post excerpt (can be null)
  * @param content - Post markdown content
  * @returns SQL-ready tsvector expression
  */
-export function generateSearchVectorSQL(
-  title: string,
-  excerpt: string | null,
-  content: string,
-): string {
+export function generateSearchVectorSQL(title: string, excerpt: string | null, content: string): string {
   // Escape single quotes for SQL safety
   const escapeSQL = (str: string) => str.replace(/'/g, "''");
-
+  
   const safeTitle = escapeSQL(title);
   const safeExcerpt = escapeSQL(excerpt || "");
   // Strip markdown syntax for cleaner text search
@@ -161,29 +150,27 @@ export function generateSearchVectorSQL(
  * Strip common markdown syntax for cleaner search indexing
  */
 function stripMarkdown(markdown: string): string {
-  return (
-    markdown
-      // Remove code blocks
-      .replace(/```[\s\S]*?```/g, "")
-      // Remove inline code
-      .replace(/`[^`]+`/g, "")
-      // Remove images
-      .replace(/!\[.*?\]\(.*?\)/g, "")
-      // Remove links but keep text
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-      // Remove headers markers
-      .replace(/^#{1,6}\s+/gm, "")
-      // Remove bold/italic markers
-      .replace(/[*_]{1,3}([^*_]+)[*_]{1,3}/g, "$1")
-      // Remove blockquote markers
-      .replace(/^>\s+/gm, "")
-      // Remove horizontal rules
-      .replace(/^[-*_]{3,}\s*$/gm, "")
-      // Remove list markers
-      .replace(/^[\s]*[-*+]\s+/gm, "")
-      .replace(/^[\s]*\d+\.\s+/gm, "")
-      // Collapse whitespace
-      .replace(/\s+/g, " ")
-      .trim()
-  );
+  return markdown
+    // Remove code blocks
+    .replace(/```[\s\S]*?```/g, "")
+    // Remove inline code
+    .replace(/`[^`]+`/g, "")
+    // Remove images
+    .replace(/!\[.*?\]\(.*?\)/g, "")
+    // Remove links but keep text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    // Remove headers markers
+    .replace(/^#{1,6}\s+/gm, "")
+    // Remove bold/italic markers
+    .replace(/[*_]{1,3}([^*_]+)[*_]{1,3}/g, "$1")
+    // Remove blockquote markers
+    .replace(/^>\s+/gm, "")
+    // Remove horizontal rules
+    .replace(/^[-*_]{3,}\s*$/gm, "")
+    // Remove list markers
+    .replace(/^[\s]*[-*+]\s+/gm, "")
+    .replace(/^[\s]*\d+\.\s+/gm, "")
+    // Collapse whitespace
+    .replace(/\s+/g, " ")
+    .trim();
 }
