@@ -27,7 +27,7 @@ describe("comment form identifiers", () => {
         createElement(CommentForm, props),
       ),
     );
-    const ids = [...html.matchAll(/<textarea[^>]*id="([^"]+)"/g)].map(
+    const ids = [...html.matchAll(/<textarea[^>]*\sid="([^"]+)"/g)].map(
       ([, id]) => id,
     );
     expect(ids).toHaveLength(2);
