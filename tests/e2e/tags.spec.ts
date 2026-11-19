@@ -2,13 +2,13 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
-import { inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { getDb } from "@/lib/db";
 import { postTag, tag } from "@/lib/db/schema";
 import { deleteTestUser, signIn } from "@/tests/e2e/helpers/auth";
 import { captureThemes } from "@/tests/e2e/helpers/theme";
-import { createPost } from "@/tests/helpers/db";
+import { createPost, createUser } from "@/tests/helpers/db";
 
 import type { Page } from "@playwright/test";
 
@@ -31,7 +31,13 @@ async function capture(page: Page, surface: string): Promise<void> {
     });
   }
   await page.setViewportSize({ width: 1280, height: 900 });
-  if (surface === "editor-tags") await captureThemes(page, directory, surface);
+  if (surface === "editor-tags")
+    await captureThemes(
+      page,
+      directory,
+      surface,
+      page.getByRole("textbox", { name: "Topics", exact: true }),
+    );
 }
 
 test("publishes topics, browses a topic, filters search and edits tags", async ({
@@ -175,5 +181,60 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
           "c-sharp",
         ]),
       );
+  }
+});
+
+test("keeps long topic chips inside both catalogue columns", async ({
+  page,
+}) => {
+  const writer = await createUser({ name: "Topic Layout Writer" });
+  const db = await getDb();
+  const name = "W".repeat(50);
+  const slug = name.toLowerCase();
+  const [topic] = await db.insert(tag).values({ name, slug }).returning();
+  try {
+    for (let index = 1; index <= 3; index++) {
+      const article = await createPost(writer.id, {
+        title: `Long topic story ${index}`,
+      });
+      await db.insert(postTag).values({ postId: article.id, tagId: topic.id });
+    }
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(`/tag/${slug}`);
+    const entries = page.locator(".catalogue-entries");
+    const chips = entries.getByRole("link", { name, exact: true });
+    await expect(chips).toHaveCount(3);
+    for (const chip of await chips.all()) {
+      await expect(chip).toHaveAttribute("title", name);
+      const bounds = await chip.evaluate((element) => {
+        const card = element.closest("article")!.getBoundingClientRect();
+        const rect = element.getBoundingClientRect();
+        const label = element.querySelector("span")!;
+        return {
+          left: rect.left,
+          right: rect.right,
+          cardLeft: card.left,
+          cardRight: card.right,
+          truncated: label.scrollWidth > label.clientWidth,
+        };
+      });
+      expect(bounds.left).toBeGreaterThanOrEqual(bounds.cardLeft - 1);
+      expect(bounds.right).toBeLessThanOrEqual(bounds.cardRight + 1);
+      expect(bounds.truncated).toBe(true);
+    }
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBe(1280);
+    const directory = process.env.F3_SCREENSHOTS;
+    if (directory) {
+      await mkdir(directory, { recursive: true });
+      await entries.screenshot({
+        path: path.join(directory, "long-topic-cards.png"),
+        animations: "disabled",
+      });
+    }
+  } finally {
+    await deleteTestUser(writer.id);
+    await db.delete(tag).where(eq(tag.id, topic.id));
   }
 });
