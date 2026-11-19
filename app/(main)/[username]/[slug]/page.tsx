@@ -12,6 +12,12 @@ import { CommentList } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
 import { getSession } from "@/lib/session";
 import { analyzeReading } from "@/lib/reading";
+import {
+  articleJsonLd,
+  articleMetadata,
+  cleanUsername,
+  serializeJsonLd,
+} from "@/lib/seo";
 
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
@@ -27,7 +33,7 @@ export async function generateMetadata({
   params,
 }: PostPageProps): Promise<Metadata> {
   const { username, slug } = await params;
-  const decodedUsername = decodeURIComponent(username).replace("@", "");
+  const decodedUsername = cleanUsername(username);
   const result = await getPost(decodedUsername, slug);
 
   if (!result) {
@@ -36,26 +42,14 @@ export async function generateMetadata({
     };
   }
 
-  const { post, author } = result;
-
-  return {
-    title: `${post.title} | The Chronicle`,
-    description: post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt || "",
-      type: "article",
-      url: `/@${author.username}/${post.slug}`,
-      images: post.coverImage ? [{ url: post.coverImage }] : undefined,
-    },
-  };
+  return articleMetadata(result.post, result.author);
 }
 
 export default async function PostPage({
   params,
 }: PostPageProps): Promise<ReactElement> {
   const { username, slug } = await params;
-  const decodedUsername = decodeURIComponent(username).replace("@", "");
+  const decodedUsername = cleanUsername(username);
   const result = await getPost(decodedUsername, slug);
 
   if (!result) {
@@ -78,9 +72,16 @@ export default async function PostPage({
   // Use R2 content, fallback to DB content if not available
   const postContent = content || post.content;
   const { minutes, headings } = analyzeReading(postContent);
+  const jsonLd = articleJsonLd(post, author);
 
   return (
     <article className="reader">
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+        />
+      )}
       <ReadingProgress />
       {/* Article Header */}
       <header className="grid gap-x-12 gap-y-6 py-10 md:grid-cols-[1fr_3fr] md:py-16">

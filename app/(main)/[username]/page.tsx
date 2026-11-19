@@ -1,40 +1,48 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { eq } from "drizzle-orm";
 
-import { getDb } from "@/lib/db";
-import { user } from "@/lib/db/schema";
 import { getPostsByUser } from "@/actions/posts";
 import { ListCard } from "@/components/magazine/list-card";
+import { getPublicAuthor } from "@/lib/distribution";
+import { authorPath, cleanUsername, pageMetadata } from "@/lib/seo";
+
+import type { Metadata } from "next";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
 }
 
+export async function generateMetadata({
+  params,
+}: ProfilePageProps): Promise<Metadata> {
+  const { username } = await params;
+  const author = await getPublicAuthor(cleanUsername(username));
+  if (!author)
+    return {
+      title: "Author Not Found",
+      robots: { index: false, follow: false },
+    };
+  return pageMetadata({
+    title: `${author.name} (@${author.username}) | Chronicle`,
+    description: author.bio || `Read stories by ${author.name} on Chronicle.`,
+    path: authorPath(author.username),
+    username: author.username,
+  });
+}
+
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const db = await getDb();
   const { username } = await params;
 
   if (!username) {
     notFound();
   }
 
-  // Remove @ prefix if present
-  const cleanUsername = username.startsWith("%40")
-    ? username.slice(3)
-    : username.startsWith("@")
-      ? username.slice(1)
-      : username;
+  const normalizedUsername = cleanUsername(username);
 
   // Fetch user data and posts in parallel to eliminate waterfall
   const [userData, posts] = await Promise.all([
-    db
-      .select()
-      .from(user)
-      .where(eq(user.username, cleanUsername))
-      .limit(1)
-      .then((rows) => rows[0]),
-    getPostsByUser(cleanUsername),
+    getPublicAuthor(normalizedUsername),
+    getPostsByUser(normalizedUsername),
   ]);
 
   if (!userData) {

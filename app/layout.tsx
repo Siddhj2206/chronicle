@@ -5,6 +5,7 @@ import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { feedAlternates, siteUrl } from "@/lib/seo";
 
 const inter = Inter({
   variable: "--font-ui",
@@ -19,8 +20,10 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: "Chronicle",
   description: "Share your stories with the world",
+  alternates: { types: feedAlternates() },
 };
 
 export default function RootLayout({

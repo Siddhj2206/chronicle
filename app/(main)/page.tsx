@@ -5,8 +5,19 @@ import { HeroCard } from "@/components/magazine/hero-card";
 import { ListCard } from "@/components/magazine/list-card";
 import { SidebarList } from "@/components/magazine/sidebar-list";
 import { Masthead } from "@/components/magazine/masthead";
+import { pageMetadata, SITE_DESCRIPTION } from "@/lib/seo";
+
+import type { Metadata } from "next";
 
 export const revalidate = 60;
+
+export function generateMetadata(): Metadata {
+  return pageMetadata({
+    title: "Chronicle",
+    description: SITE_DESCRIPTION,
+    path: "/",
+  });
+}
 
 export default async function FeedPage(): Promise<React.JSX.Element> {
   const [rawPosts, rawTrendingPosts] = await Promise.all([
