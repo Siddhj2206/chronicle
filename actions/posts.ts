@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
+import { z } from "zod";
 
 import { getSession } from "@/lib/session";
 import { getVisiblePost, postVisibility } from "@/lib/post-visibility";
@@ -509,10 +510,18 @@ export async function getPostForEditWithContent(
   }
 }
 
+const relatedPostsSchema = z.object({
+  authorId: z.string().trim().min(1).max(256),
+  currentPostId: z.string().trim().min(1).max(256),
+});
+
 export async function getMoreFromAuthor(
   authorId: string,
   currentPostId: string,
 ): Promise<Post[]> {
+  const parsed = relatedPostsSchema.safeParse({ authorId, currentPostId });
+  if (!parsed.success) return [];
+
   try {
     const db = await getDb();
     return await db
@@ -520,9 +529,9 @@ export async function getMoreFromAuthor(
       .from(post)
       .where(
         and(
-          eq(post.authorId, authorId),
+          eq(post.authorId, parsed.data.authorId),
           eq(post.published, true),
-          ne(post.id, currentPostId),
+          ne(post.id, parsed.data.currentPostId),
         ),
       )
       .orderBy(desc(post.publishedAt), desc(post.id))

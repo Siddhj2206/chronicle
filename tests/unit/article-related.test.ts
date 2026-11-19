@@ -22,6 +22,20 @@ function mockQuery(rows: { id: string }[]) {
 }
 
 describe("more from author", () => {
+  it.each(["", "   ", "x".repeat(257), null, undefined, 42, {}])(
+    "rejects invalid IDs without accessing the database: %s",
+    async (invalid) => {
+      vi.mocked(getDb).mockClear();
+      await expect(
+        getMoreFromAuthor(invalid as string, "current"),
+      ).resolves.toEqual([]);
+      await expect(
+        getMoreFromAuthor("writer", invalid as string),
+      ).resolves.toEqual([]);
+      expect(getDb).not.toHaveBeenCalled();
+    },
+  );
+
   it("queries only the author's other published posts, newest first, limited to three", async () => {
     const rows = [{ id: "other" }];
     const query = mockQuery(rows);
