@@ -4,17 +4,24 @@ import { normalizeTag, tagsSchema } from "@/lib/tags";
 
 describe("topic slugs", () => {
   it.each([
-    ["C", "c"], ["C++", "c-plus-plus"], ["C#", "c-sharp"],
-    ["Ｃ＋＋", "c-plus-plus"], ["  Café Life  ", "cafe-life"],
-    ["東京", "東京"], ["東京 2026", "東京-2026"], ["中文话题", "中文话题"],
+    ["C", "c"],
+    ["C++", "c-plus-plus"],
+    ["C#", "c-sharp"],
+    ["Ｃ＋＋", "c-plus-plus"],
+    ["  Café Life  ", "cafe-life"],
+    ["東京", "東京"],
+    ["東京 2026", "東京-2026"],
+    ["中文话题", "中文话题"],
   ])("normalizes %s to %s", (name, slug) => {
     expect(normalizeTag(name)).toBe(slug);
   });
 
   it("deduplicates equivalent names without merging distinct languages or topics", () => {
     expect(tagsSchema.parse(["C", "C++", "C#", "Ｃ＋＋", "東京"])).toEqual([
-      { name: "C", slug: "c" }, { name: "Ｃ＋＋", slug: "c-plus-plus" },
-      { name: "C#", slug: "c-sharp" }, { name: "東京", slug: "東京" },
+      { name: "C", slug: "c" },
+      { name: "Ｃ＋＋", slug: "c-plus-plus" },
+      { name: "C#", slug: "c-sharp" },
+      { name: "東京", slug: "東京" },
     ]);
   });
 

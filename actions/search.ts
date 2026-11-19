@@ -99,8 +99,17 @@ const searchCursorSchema = z.object({
  * @returns Paginated search results
  */
 export async function searchPosts(params: SearchParams): Promise<SearchResult> {
-  const { query, author, datePreset, cursor, limit = 10, tag: tagSlug } = params;
-  const tagFilter = tagSlug ? sql`exists (select 1 from ${postTag} inner join ${tag} on ${tag.id} = ${postTag.tagId} where ${postTag.postId} = ${post.id} and ${tag.slug} = ${tagSlug})` : undefined;
+  const {
+    query,
+    author,
+    datePreset,
+    cursor,
+    limit = 10,
+    tag: tagSlug,
+  } = params;
+  const tagFilter = tagSlug
+    ? sql`exists (select 1 from ${postTag} inner join ${tag} on ${tag.id} = ${postTag.tagId} where ${postTag.postId} = ${post.id} and ${tag.slug} = ${tagSlug})`
+    : undefined;
 
   // Empty query returns empty results
   if (!query || !/[\p{L}\p{N}]/u.test(query)) {

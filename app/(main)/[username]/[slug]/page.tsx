@@ -106,7 +106,9 @@ export default async function PostPage({
             {post.excerpt}
           </p>
         )}
-        <div className="flex justify-center"><TagChips tags={post.tags} /></div>
+        <div className="flex justify-center">
+          <TagChips tags={post.tags} />
+        </div>
       </header>
 
       {/* Cover Image (if exists) */}

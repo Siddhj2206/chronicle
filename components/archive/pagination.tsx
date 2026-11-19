@@ -9,8 +9,14 @@ interface PaginationProps {
   basePath?: string;
 }
 
-export function Pagination({ currentPage, totalPages, sort, basePath = "/archive" }: PaginationProps) {
-  const pageHref = (page: number) => `${basePath}?page=${page}${sort ? `&sort=${sort}` : ""}`;
+export function Pagination({
+  currentPage,
+  totalPages,
+  sort,
+  basePath = "/archive",
+}: PaginationProps) {
+  const pageHref = (page: number) =>
+    `${basePath}?page=${page}${sort ? `&sort=${sort}` : ""}`;
   // Generate page numbers to show (e.g., 1 2 3 ... 10)
   const getPageNumbers = () => {
     const pages: (number | "...")[] = [];

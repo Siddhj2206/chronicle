@@ -9,7 +9,10 @@ import { assertTestDatabase, createUser } from "@/tests/helpers/db";
 import type { BrowserContext } from "@playwright/test";
 import type { User } from "@/lib/db/schema";
 
-export async function signIn(context: BrowserContext, overrides: Partial<User> = {}): Promise<User> {
+export async function signIn(
+  context: BrowserContext,
+  overrides: Partial<User> = {},
+): Promise<User> {
   assertTestDatabase();
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret) throw new Error("BETTER_AUTH_SECRET must be set in .env.test");
@@ -20,12 +23,28 @@ export async function signIn(context: BrowserContext, overrides: Partial<User> =
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   try {
-    await db.insert(session).values({ id: randomUUID(), userId: writer.id, token, createdAt: now, updatedAt: now, expiresAt });
-    const signature = createHmac("sha256", secret).update(token).digest("base64");
-    await context.addCookies([{
-      name: `${secure ? "__Secure-" : ""}better-auth.session_token`, value: encodeURIComponent(`${token}.${signature}`),
-      url: baseURL, httpOnly: true, secure, sameSite: "Lax", expires: Math.floor(expiresAt.getTime() / 1000),
-    }]);
+    await db.insert(session).values({
+      id: randomUUID(),
+      userId: writer.id,
+      token,
+      createdAt: now,
+      updatedAt: now,
+      expiresAt,
+    });
+    const signature = createHmac("sha256", secret)
+      .update(token)
+      .digest("base64");
+    await context.addCookies([
+      {
+        name: `${secure ? "__Secure-" : ""}better-auth.session_token`,
+        value: encodeURIComponent(`${token}.${signature}`),
+        url: baseURL,
+        httpOnly: true,
+        secure,
+        sameSite: "Lax",
+        expires: Math.floor(expiresAt.getTime() / 1000),
+      },
+    ]);
     return writer;
   } catch (error) {
     await deleteTestUser(writer.id);

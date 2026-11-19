@@ -54,7 +54,9 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
   const [excerpt, setExcerpt] = useState(post?.excerpt || "");
   const [content, setContent] = useState(post?.content || "");
   const [coverImage, setCoverImage] = useState(post?.coverImage || "");
-  const [tags, setTags] = useState<string[]>(post?.tags?.map((tag) => tag.name) ?? []);
+  const [tags, setTags] = useState<string[]>(
+    post?.tags?.map((tag) => tag.name) ?? [],
+  );
   const [isPublished, setIsPublished] = useState(post?.published || false);
   const [currentSlug, setCurrentSlug] = useState(post?.slug || "");
 
@@ -133,7 +135,13 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           router.replace(`/edit/${result.slug}`);
           toast.success("Manuscript created");
           // Update initial data ref
-          initialDataRef.current = { title, excerpt, content, coverImage, tags };
+          initialDataRef.current = {
+            title,
+            excerpt,
+            content,
+            coverImage,
+            tags,
+          };
           setHasChanges(false);
           return { ok: true, slug: result.slug! };
         } else {
@@ -147,7 +155,13 @@ export function PostEditorPage({ mode, post }: PostEditorPageProps) {
           }
           setLastSaved(new Date());
           // Update initial data ref
-          initialDataRef.current = { title, excerpt, content, coverImage, tags };
+          initialDataRef.current = {
+            title,
+            excerpt,
+            content,
+            coverImage,
+            tags,
+          };
           setHasChanges(false);
           return { ok: true, slug: result.slug! };
         }

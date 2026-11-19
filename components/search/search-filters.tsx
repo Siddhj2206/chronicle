@@ -275,15 +275,29 @@ export function SearchFilters({
   return (
     <div className="mb-8">
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <label htmlFor="search-tag" className="text-sm">Topic</label>
-        <select id="search-tag" value={currentTag ?? ""} className="max-w-full rounded-md border border-input bg-background px-3 py-2 text-sm" onChange={(event) => {
-          const params = new URLSearchParams(searchParams.toString());
-          if (event.target.value) params.set("tag", event.target.value); else params.delete("tag");
-          router.push(`/search?${params.toString()}`);
-        }}>
+        <label htmlFor="search-tag" className="text-sm">
+          Topic
+        </label>
+        <select
+          id="search-tag"
+          value={currentTag ?? ""}
+          className="max-w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          onChange={(event) => {
+            const params = new URLSearchParams(searchParams.toString());
+            if (event.target.value) params.set("tag", event.target.value);
+            else params.delete("tag");
+            router.push(`/search?${params.toString()}`);
+          }}
+        >
           <option value="">All topics</option>
-          {currentTag && !tags.some((tag) => tag.slug === currentTag) && <option value={currentTag}>{currentTag}</option>}
-          {tags.map((tag) => <option key={tag.slug} value={tag.slug}>{tag.name}</option>)}
+          {currentTag && !tags.some((tag) => tag.slug === currentTag) && (
+            <option value={currentTag}>{currentTag}</option>
+          )}
+          {tags.map((tag) => (
+            <option key={tag.slug} value={tag.slug}>
+              {tag.name}
+            </option>
+          ))}
         </select>
       </div>
       {/* Mobile: Collapsible filters */}
@@ -303,7 +317,10 @@ export function SearchFilters({
                 Filters
                 {hasFilters && (
                   <span className="rounded-none bg-white px-1.5 text-black dark:bg-black dark:text-white">
-                    {[currentAuthor, currentDate, currentTag].filter(Boolean).length}
+                    {
+                      [currentAuthor, currentDate, currentTag].filter(Boolean)
+                        .length
+                    }
                   </span>
                 )}
               </span>

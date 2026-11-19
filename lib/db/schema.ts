@@ -137,20 +137,30 @@ export const like = pgTable(
 );
 
 export const tag = pgTable("tag", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
 
-export const postTag = pgTable("post_tag", {
-  postId: text("post_id").notNull().references(() => post.id, { onDelete: "cascade" }),
-  tagId: text("tag_id").notNull().references(() => tag.id, { onDelete: "cascade" }),
-}, (table) => [
-  primaryKey({ columns: [table.postId, table.tagId] }),
-  index("post_tag_post_idx").on(table.postId),
-  index("post_tag_tag_idx").on(table.tagId),
-]);
+export const postTag = pgTable(
+  "post_tag",
+  {
+    postId: text("post_id")
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tag.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.postId, table.tagId] }),
+    index("post_tag_post_idx").on(table.postId),
+    index("post_tag_tag_idx").on(table.tagId),
+  ],
+);
 
 // ============================================================================
 // Types
