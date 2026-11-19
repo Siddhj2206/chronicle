@@ -4,6 +4,7 @@ import { eq, and, desc, sql, gte } from "drizzle-orm";
 import { z } from "zod";
 
 import { getDb } from "@/lib/db";
+import { withResponseCounts } from "@/lib/response-counts";
 import { post, user } from "@/lib/db/schema";
 
 import type { Post } from "@/lib/db/schema";
@@ -30,7 +31,7 @@ export interface AuthorInfo {
 }
 
 export interface SearchResultPost {
-  post: Post;
+  post: Post & { responseCount?: number };
   author: AuthorInfo;
 }
 
@@ -208,7 +209,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
           ).toString("base64url")
         : null;
 
-    return { posts, hasMore, nextCursor };
+    return { posts: await withResponseCounts(posts), hasMore, nextCursor };
   } catch (error) {
     if (!after?.fallback) console.error("Search posts error:", error);
     if (after && !after.fallback) return empty;
@@ -273,7 +274,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
             ).toString("base64url")
           : null;
 
-      return { posts, hasMore, nextCursor };
+      return { posts: await withResponseCounts(posts), hasMore, nextCursor };
     } catch (fallbackError) {
       console.error("Search fallback error:", fallbackError);
       return { posts: [], hasMore: false, nextCursor: null };

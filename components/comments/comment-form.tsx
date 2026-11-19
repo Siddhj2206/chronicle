@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { addComment } from "@/actions/comments";
+import { addComment, replyToComment } from "@/actions/comments";
 
 import type { ReactElement } from "react";
 
@@ -14,12 +14,16 @@ interface CommentFormProps {
   postId: string;
   isLoggedIn: boolean;
   articlePath: string;
+  parentId?: string;
+  onSuccess?: () => void;
 }
 
 export function CommentForm({
   postId,
   isLoggedIn,
   articlePath,
+  parentId,
+  onSuccess,
 }: CommentFormProps): ReactElement {
   const commentId = useId();
   const errorId = `${commentId}-error`;
@@ -40,21 +44,28 @@ export function CommentForm({
       formData.set("content", content);
 
       startTransition(async () => {
-        const result = await addComment(postId, formData);
+        try {
+          const result = parentId
+            ? await replyToComment(postId, parentId, formData)
+            : await addComment(postId, formData);
 
-        if (result.error) {
-          setError(
-            result.error === "Unauthorized"
-              ? "Your session has expired. Please sign in again to submit your note."
-              : result.error,
-          );
-        } else {
-          setContent("");
-          setError(null);
+          if (result.error) {
+            setError(
+              result.error === "Unauthorized"
+                ? "Your session has expired. Please sign in again to submit your note."
+                : result.error,
+            );
+          } else {
+            setContent("");
+            setError(null);
+            onSuccess?.();
+          }
+        } catch {
+          setError("Could not send your response. Please try again.");
         }
       });
     },
-    [content, postId],
+    [content, postId, parentId, onSuccess],
   );
 
   if (!isLoggedIn) {
@@ -77,7 +88,9 @@ export function CommentForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-3">
-        <Label htmlFor={commentId}>Leave a note</Label>
+        <Label htmlFor={commentId}>
+          {parentId ? "Your reply" : "Leave a note"}
+        </Label>
         <Textarea
           id={commentId}
           name="comment"
@@ -85,6 +98,7 @@ export function CommentForm({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={4}
+          maxLength={2000}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
         />
@@ -95,7 +109,11 @@ export function CommentForm({
         </p>
       )}
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Submitting..." : "Send your note"}
+        {isPending
+          ? "Submitting..."
+          : parentId
+            ? "Send reply"
+            : "Send your note"}
       </Button>
     </form>
   );

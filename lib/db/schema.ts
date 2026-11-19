@@ -9,6 +9,8 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+
 // ============================================================================
 // Better Auth Tables
 // ============================================================================
@@ -113,10 +115,17 @@ export const comment = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     content: text("content").notNull(),
+    parentId: text("parent_id").references((): AnyPgColumn => comment.id, {
+      onDelete: "cascade",
+    }),
+    likedByAuthor: boolean("liked_by_author").default(false).notNull(),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
   },
-  (table) => [index("comment_post_idx").on(table.postId)],
+  (table) => [
+    index("comment_post_idx").on(table.postId),
+    index("comment_parent_idx").on(table.parentId),
+  ],
 );
 
 export const like = pgTable(

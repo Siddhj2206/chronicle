@@ -8,6 +8,7 @@ import { nanoid } from "nanoid";
 import { getSession } from "@/lib/session";
 import { getVisiblePost, postVisibility } from "@/lib/post-visibility";
 import { getDb } from "@/lib/db";
+import { withResponseCounts } from "@/lib/response-counts";
 import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
 import { uploadContent, deleteContent, getContent } from "@/lib/r2-content";
@@ -364,7 +365,7 @@ export const getPost = cache(async function getPost(
   username: string,
   slug: string,
 ): Promise<{
-  post: Post;
+  post: Post & { responseCount?: number };
   author: {
     id: string;
     name: string;
@@ -400,7 +401,7 @@ export const getPost = cache(async function getPost(
       return null;
     }
 
-    return result[0];
+    return (await withResponseCounts(result))[0];
   } catch (error) {
     console.error("Get post error:", error);
     return null;
@@ -515,7 +516,7 @@ export async function getPostsByUser(username: string) {
       .where(and(eq(user.username, username), eq(post.published, true)))
       .orderBy(desc(post.publishedAt));
 
-    return result;
+    return withResponseCounts(result);
   } catch (error) {
     console.error("Get posts by user error:", error);
     return [];
@@ -564,7 +565,7 @@ export async function getNewestPosts(limit = 10, offset = 0) {
       .limit(limit)
       .offset(offset);
 
-    return result;
+    return withResponseCounts(result);
   } catch (error) {
     console.error("Get newest posts error:", error);
     return [];
@@ -612,7 +613,7 @@ export async function getTrendingPosts(limit = 5) {
 
     // If we have enough recent posts, return them
     if (recentTrending.length >= limit) {
-      return recentTrending;
+      return withResponseCounts(recentTrending);
     }
 
     // Backfill with all-time top viewed posts
@@ -636,7 +637,7 @@ export async function getTrendingPosts(limit = 5) {
         .orderBy(desc(post.viewCount))
         .limit(limit);
 
-      return allTimeTrending;
+      return withResponseCounts(allTimeTrending);
     }
 
     const backfill = await db
@@ -655,7 +656,7 @@ export async function getTrendingPosts(limit = 5) {
       .orderBy(desc(post.viewCount))
       .limit(limit - recentTrending.length);
 
-    return [...recentTrending, ...backfill];
+    return withResponseCounts([...recentTrending, ...backfill]);
   } catch (error) {
     console.error("Get trending posts error:", error);
     return [];
@@ -710,7 +711,7 @@ export async function getAllPosts(
       .offset(offset);
 
     return {
-      posts,
+      posts: await withResponseCounts(posts),
       totalCount,
       totalPages: Math.ceil(totalCount / limit),
       currentPage: page,

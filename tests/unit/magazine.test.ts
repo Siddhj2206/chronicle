@@ -36,6 +36,20 @@ const post: StoryCardProps["post"] = {
 };
 
 describe("Museum monograph components", () => {
+  it("links real response counts, pluralizes zero and one, and omits unavailable counts", () => {
+    for (const responseCount of [0, 1, 3]) {
+      const html = renderToStaticMarkup(
+        createElement(ListCard, { post: { ...post, responseCount } }),
+      );
+      expect(html).toContain('href="/@alex/morning#responses"');
+      expect(html).toContain(
+        `${responseCount} ${responseCount === 1 ? "response" : "responses"}`,
+      );
+    }
+    expect(
+      renderToStaticMarkup(createElement(ListCard, { post })),
+    ).not.toContain("#responses");
+  });
   beforeEach(() => {
     vi.mocked(getNewestPosts).mockResolvedValue([]);
     vi.mocked(getTrendingPosts).mockResolvedValue([]);
