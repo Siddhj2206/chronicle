@@ -10,6 +10,7 @@ test("publishes a story with a subtitle and updates it through the editor", asyn
   context,
   page,
 }) => {
+  test.setTimeout(60_000);
   const writer = await signIn(context, { name: "The Local Desk" });
   const title = "The Quiet Revival of the Neighborhood Press";
   const subtitle =
@@ -25,7 +26,7 @@ test("publishes a story with a subtitle and updates it through the editor", asyn
       .getByRole("textbox", { name: "Post title", exact: true })
       .fill(title);
     const subtitleInput = page.getByRole("textbox", {
-      name: "Post subtitle (optional)",
+      name: "Post subtitle",
       exact: true,
     });
     await subtitleInput.fill("x".repeat(201));
@@ -45,15 +46,23 @@ test("publishes a story with a subtitle and updates it through the editor", asyn
       page.getByText("Up to 200 characters.", { exact: true }),
     ).toBeVisible();
     await page
-      .getByRole("textbox", { name: "Post excerpt", exact: true })
-      .fill(
-        "A dispatch from independent publishers rebuilding the daily conversation, one edition at a time.",
-      );
-    await page
       .locator('[contenteditable="true"]')
       .fill(
         "The first edition arrived on a Saturday morning. At the corner cafe, readers unfolded its pages and found something familiar: the names of their neighbors, the streets they walked, and the questions they had been asking.\n\nAcross the city, small independent newsrooms are bringing local reporting back to the breakfast table. Their stories begin at school meetings, on shop floors, and in the quiet conversations that rarely make national headlines.\n\nFor these publishers, the ambition is simple. Listen carefully, report fairly, and give the neighborhood a place to see itself. The next edition is already taking shape.",
       );
+    await page.getByRole("button", { name: "Publish", exact: true }).click();
+    const panel = page.getByRole("dialog");
+    await expect(
+      panel.getByRole("textbox", { name: "Subtitle / SEO description" }),
+    ).toHaveValue(subtitle);
+    await panel
+      .getByRole("textbox", { name: "Post excerpt", exact: true })
+      .fill(
+        "A dispatch from independent publishers rebuilding the daily conversation, one edition at a time.",
+      );
+    await panel.getByRole("button", { name: "Close", exact: true }).click();
+    const saved = page.getByRole("status").filter({ hasText: /^Saved$/ });
+    await expect(saved).toBeVisible({ timeout: 15000 });
     if (screenshotDir) {
       await mkdir(screenshotDir, { recursive: true });
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -62,7 +71,6 @@ test("publishes a story with a subtitle and updates it through the editor", asyn
         fullPage: true,
       });
     }
-    await page.getByRole("button", { name: "Save Draft", exact: true }).click();
     await expect(page).toHaveURL(/\/edit\//);
     const editURL = page.url();
     await page.goto("/manuscripts");
@@ -75,13 +83,22 @@ test("publishes a story with a subtitle and updates it through the editor", asyn
     await page.reload();
     await expect(
       page.getByRole("textbox", {
-        name: "Post subtitle (optional)",
+        name: "Post subtitle",
         exact: true,
       }),
     ).toHaveValue(subtitle);
+    await subtitleInput.fill("A subtitle-only autosave");
+    await expect(saved).toBeVisible({ timeout: 15000 });
+    await page.reload();
+    await expect(subtitleInput).toHaveValue("A subtitle-only autosave");
+    await subtitleInput.fill(subtitle);
+    await expect(saved).toBeVisible({ timeout: 15000 });
     await page.getByRole("button", { name: "Publish", exact: true }).click();
+    await panel
+      .getByRole("button", { name: "Confirm publish", exact: true })
+      .click();
     await expect(
-      page.getByRole("button", { name: "Unpublish", exact: true }),
+      page.getByRole("button", { name: "Publishing settings", exact: true }),
     ).toBeEnabled();
 
     const slug = new URL(editURL).pathname.split("/").pop();
@@ -99,12 +116,10 @@ test("publishes a story with a subtitle and updates it through the editor", asyn
 
     await page.goto(editURL);
     await page
-      .getByRole("textbox", { name: "Post subtitle (optional)", exact: true })
+      .getByRole("textbox", { name: "Post subtitle", exact: true })
       .fill(revisedSubtitle);
-    await page.getByRole("button", { name: "Save Draft", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "Save Draft", exact: true }),
-    ).toBeDisabled();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(saved).toBeVisible();
     await page.goto(articleURL);
     await expect(
       page
@@ -156,10 +171,8 @@ test("publishes a story with a subtitle and updates it through the editor", asyn
     }
     await page.goto(editURL);
     await subtitleInput.fill("");
-    await page.getByRole("button", { name: "Save Draft", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "Save Draft", exact: true }),
-    ).toBeDisabled();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(saved).toBeVisible();
     await page.goto("/manuscripts");
     await expect(manuscript).toContainText(
       "A dispatch from independent publishers",
