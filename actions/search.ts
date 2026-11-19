@@ -1,6 +1,7 @@
 "use server";
 
 import { eq, and, desc, sql, gte } from "drizzle-orm";
+import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { post, user } from "@/lib/db/schema";
@@ -71,6 +72,13 @@ function getDateThreshold(preset: DatePreset): Date {
 // Main Search Function
 // ============================================
 
+const searchCursorSchema = z.object({
+  rank: z.string().refine((value) => Number.isFinite(Number(value))),
+  publishedAt: z.string().refine((value) => value === "infinity" || Number.isFinite(Date.parse(value))),
+  id: z.string(),
+  fallback: z.boolean(),
+});
+
 /**
  * Search posts with full-text search, pagination, and filters
  * 
@@ -95,17 +103,17 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
   const searchTerm = query.trim();
   const likePattern = `%${searchTerm}%`;
   const empty: SearchResult = { posts: [], hasMore: false, nextCursor: null };
-  let after: { rank: string; publishedAt: string; id: string; fallback: boolean } | undefined;
+  let after: z.infer<typeof searchCursorSchema> | undefined;
   if (cursor) {
+    let decoded: unknown;
     try {
-      after = JSON.parse(Buffer.from(cursor, "base64url").toString());
-      if (!after || typeof after.rank !== "string" || !Number.isFinite(Number(after.rank)) ||
-          typeof after.publishedAt !== "string" ||
-          (after.publishedAt !== "infinity" && !Number.isFinite(Date.parse(after.publishedAt))) ||
-          typeof after.id !== "string" || typeof after.fallback !== "boolean") return empty;
+      decoded = JSON.parse(Buffer.from(cursor, "base64url").toString());
     } catch {
       return empty;
     }
+    const parsed = searchCursorSchema.safeParse(decoded);
+    if (!parsed.success) return empty;
+    after = parsed.data;
   }
   // Preserve PostgreSQL's microseconds and DESC NULLS FIRST ordering.
   const publishedAt = sql`COALESCE(${post.publishedAt}, 'infinity'::timestamp)`;
