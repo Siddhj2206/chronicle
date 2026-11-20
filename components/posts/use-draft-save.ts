@@ -84,6 +84,7 @@ export function useDraftSave(
   }, [
     data.title,
     data.excerpt,
+    data.subtitle,
     data.tags,
     data.content,
     data.coverImage,

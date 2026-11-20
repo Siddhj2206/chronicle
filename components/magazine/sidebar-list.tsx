@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
+import { PostSummary } from "@/components/posts/post-summary";
 
 import type { Post, User } from "@/lib/db/schema";
 
@@ -48,6 +49,7 @@ export function SidebarList({
             >
               {post.author.name}
             </Link>
+            <PostSummary post={post} variant="compact" />
           </div>
         ))}
       </div>

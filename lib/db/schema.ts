@@ -80,6 +80,8 @@ export const post = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
+    subtitle: text("subtitle"),
+    readingTimeMinutes: integer("reading_time_minutes"),
     slug: text("slug").notNull(),
     content: text("content").notNull(), // Will be removed after migration to R2
     contentPath: text("content_path"), // R2 path: "content/{postId}.md"

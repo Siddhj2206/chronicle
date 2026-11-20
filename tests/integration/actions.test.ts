@@ -30,6 +30,66 @@ beforeEach(async () => {
 });
 
 describe("posts", () => {
+  it("stores subtitle and calculated reading time on create and update", async () => {
+    const db = await getDb();
+    mockSession(await createUser());
+    const result = await createPost(
+      formData({
+        title: "Reading",
+        subtitle: " A subtitle ",
+        content: "word ".repeat(239),
+      }),
+    );
+    expect(result).toMatchObject({ success: true });
+    expect(await db.query.post.findFirst()).toMatchObject({
+      subtitle: "A subtitle",
+      readingTimeMinutes: 2,
+    });
+    expect(
+      await updatePost(
+        result.slug!,
+        formData({ title: "Reading", subtitle: "Revised", content: "Short" }),
+      ),
+    ).toMatchObject({ success: true });
+    expect(await db.query.post.findFirst()).toMatchObject({
+      subtitle: "Revised",
+      readingTimeMinutes: 1,
+    });
+    expect(
+      await updatePost(
+        result.slug!,
+        formData({ title: "Reading", subtitle: "", content: "Short" }),
+      ),
+    ).toMatchObject({ success: true });
+    expect(await db.query.post.findFirst()).toMatchObject({
+      subtitle: null,
+      readingTimeMinutes: 1,
+    });
+  });
+
+  it("rejects overlong subtitles without uploading or changing a post", async () => {
+    const db = await getDb();
+    const owner = await createUser();
+    mockSession(owner);
+    const article = await seedPost(owner.id);
+    const invalid = formData({
+      title: "Reading",
+      content: "Short",
+      subtitle: "x".repeat(201),
+    });
+    expect(await createPost(invalid)).toEqual({
+      error: "Subtitle must be at most 200 characters",
+    });
+    expect(await updatePost(article.slug, invalid)).toEqual({
+      error: "Subtitle must be at most 200 characters",
+    });
+    expect(uploadContent).not.toHaveBeenCalled();
+    expect(await db.query.post.findFirst()).toMatchObject({
+      title: article.title,
+      subtitle: null,
+    });
+  });
+
   it("requires authentication for all mutations", async () => {
     expect(await createPost(validPost())).toEqual({ error: "Unauthorized" });
     expect(await updatePost("missing", validPost())).toEqual({

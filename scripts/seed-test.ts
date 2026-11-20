@@ -22,6 +22,7 @@ async function seed(): Promise<void> {
     slug: "chronicle-testing",
     title: "Chronicle Testing Journal",
     excerpt: "A deterministic story for the testing newsroom.",
+    subtitle: "Stories from a reproducible newsroom",
     content: [
       "## A reproducible newsroom\n\nThis seeded article makes smoke tests reliable.",
       ...Array.from(

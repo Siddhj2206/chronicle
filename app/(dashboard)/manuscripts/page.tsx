@@ -1,4 +1,6 @@
 import Link from "next/link";
+
+import { PostSummary } from "@/components/posts/post-summary";
 import { getMyPosts } from "@/actions/posts";
 import { cn } from "@/lib/utils";
 
@@ -71,9 +73,12 @@ export default async function DashboardPage() {
                         {post.title}
                       </h3>
                     </Link>
-                    <p className="mt-2 line-clamp-1 font-serif text-sm italic text-muted-foreground">
-                      {post.excerpt || "No excerpt…"}
-                    </p>
+                    <PostSummary post={post} />
+                    {!post.subtitle && (
+                      <p className="mt-2 line-clamp-1 font-serif text-sm italic text-muted-foreground">
+                        {post.excerpt || "No excerpt…"}
+                      </p>
+                    )}
                   </td>
                   <td className="whitespace-nowrap py-6 text-right align-top font-mono text-xs font-bold uppercase tracking-widest">
                     <Link

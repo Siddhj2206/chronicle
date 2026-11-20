@@ -9,6 +9,7 @@ import { GridCard } from "@/components/magazine/grid-card";
 import { ListCard } from "@/components/magazine/list-card";
 import { SidebarList } from "@/components/magazine/sidebar-list";
 import { PostContent } from "@/components/posts/post-content";
+import { PostSummary } from "@/components/posts/post-summary";
 
 import type { StoryCardProps } from "@/components/magazine/story-card";
 
@@ -32,16 +33,86 @@ const post: StoryCardProps["post"] = {
   createdAt: new Date("2026-11-19T12:00:00Z"),
   updatedAt: new Date("2026-11-19T12:00:00Z"),
   searchVector: null,
+  subtitle: null,
+  readingTimeMinutes: null,
   author: { id: "author", name: "Alex Morgan", username: "alex", image: null },
 };
 
 describe("Museum monograph components", () => {
+  it("keeps subtitle precedence and stored reading time in the new feed layout", () => {
+    for (const subtitle of ["A subtitle", null]) {
+      const html = renderToStaticMarkup(
+        createElement(ListCard, {
+          layout: "feed",
+          post: { ...post, subtitle, readingTimeMinutes: 7 },
+        }),
+      );
+      expect(html).toContain(subtitle || post.excerpt!);
+      if (subtitle) expect(html).not.toContain(post.excerpt!);
+      expect(html).toContain("7 min read");
+    }
+    const empty = renderToStaticMarkup(
+      createElement(ListCard, {
+        layout: "feed",
+        post: {
+          ...post,
+          subtitle: null,
+          excerpt: null,
+          content: "",
+          readingTimeMinutes: null,
+        },
+      }),
+    );
+    expect(empty).toContain("1 min read");
+    expect(empty).not.toContain(post.excerpt!);
+  });
+  it("keeps the subtitle or excerpt above article reading time in the reader deck", () => {
+    for (const subtitle of ["A subtitle", null]) {
+      const html = renderToStaticMarkup(
+        createElement(PostSummary, {
+          post: { ...post, subtitle },
+          variant: "article",
+        }),
+      );
+      expect(html).toContain("reader-deck");
+      expect(html).toContain(subtitle || post.excerpt!);
+      if (subtitle) expect(html).not.toContain(post.excerpt!);
+      expect(html.indexOf(subtitle || post.excerpt!)).toBeLessThan(
+        html.indexOf("min read"),
+      );
+    }
+  });
+
+  it("keeps reading time when an article has no subtitle or excerpt", () => {
+    const html = renderToStaticMarkup(
+      createElement(PostSummary, {
+        post: { ...post, subtitle: null, excerpt: null },
+        variant: "article",
+      }),
+    );
+    expect(html).toContain("min read");
+    expect(html.match(/<p /g)).toHaveLength(1);
+  });
+  it("shows subtitles instead of excerpts with reading time on every card", () => {
+    for (const Card of [HeroCard, GridCard, ListCard]) {
+      const html = renderToStaticMarkup(
+        createElement(Card, {
+          post: { ...post, subtitle: "A subtitle", readingTimeMinutes: 3 },
+        }),
+      );
+      expect(html).toContain("A subtitle");
+      expect(html).not.toContain("A closer look.");
+      expect(html).toContain("min read");
+    }
+  });
+
   it("preserves linked topics in the feed layout without inventing empty topics", () => {
     const render = (tags?: StoryCardProps["post"]["tags"]) =>
       renderToStaticMarkup(
         createElement(ListCard, { layout: "feed", post: { ...post, tags } }),
       );
     expect(render()).not.toContain('aria-label="Topics"');
+    expect(render()).toContain('aria-label="Sign in to save story"');
     expect(render([])).not.toContain('aria-label="Topics"');
     const html = render([
       { id: "topic", name: "東京", slug: "東京", createdAt: post.createdAt },
@@ -129,7 +200,7 @@ describe("Museum monograph components", () => {
     expect(html).toContain("url=%2Fcover.jpg");
     expect(html).toContain("url=%2Fauthor.jpg");
     expect(html).toContain("A closer look.");
-    expect(html).toContain("3 min read");
+    expect(html).toContain("2 min read");
     expect(html).toContain('dateTime="2026-11-19T12:00:00.000Z"');
   });
 

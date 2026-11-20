@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
+import { PostSummary } from "@/components/posts/post-summary";
 import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { TagChips } from "@/components/posts/tag-chips";
 
@@ -71,7 +72,10 @@ export function StoryCard({
         <Link href={href}>
           <Heading className="story-title">{post.title}</Heading>
         </Link>
-        {post.excerpt && <p className="story-excerpt">{post.excerpt}</p>}
+        {(post.subtitle || post.excerpt) && (
+          <p className="story-excerpt">{post.subtitle || post.excerpt}</p>
+        )}
+        <PostSummary post={post} variant="compact" />
         <TagChips tags={post.tags} />
       </div>
     </article>

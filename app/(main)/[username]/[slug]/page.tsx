@@ -14,6 +14,7 @@ import { CommentForm } from "@/components/comments/comment-form";
 import { getSession } from "@/lib/session";
 import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { analyzeReading } from "@/lib/reading";
+import { readingTimeMinutes } from "@/lib/reading-time";
 
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
@@ -79,7 +80,8 @@ export default async function PostPage({
 
   // Use R2 content, fallback to DB content if not available
   const postContent = content || post.content;
-  const { minutes, headings } = analyzeReading(postContent);
+  const { headings } = analyzeReading(postContent);
+  const minutes = post.readingTimeMinutes ?? readingTimeMinutes(postContent);
 
   return (
     <article className="reader">
@@ -107,9 +109,9 @@ export default async function PostPage({
           {post.title}
         </h1>
 
-        {post.excerpt && (
+        {(post.subtitle || post.excerpt) && (
           <p className="max-w-[680px] text-lg leading-relaxed text-muted-foreground md:col-start-2 md:text-xl">
-            {post.excerpt}
+            {post.subtitle || post.excerpt}
           </p>
         )}
         {!!post.tags?.length && (

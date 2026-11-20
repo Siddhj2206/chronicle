@@ -3,7 +3,8 @@ import Link from "next/link";
 
 import { StoryCard } from "@/components/magazine/story-card";
 import { TagChips } from "@/components/posts/tag-chips";
-import { analyzeReading } from "@/lib/reading";
+import { BookmarkButton } from "@/components/posts/bookmark-button";
+import { readingTimeMinutes } from "@/lib/reading-time";
 import { cn } from "@/lib/utils";
 
 import type { StoryCardProps } from "@/components/magazine/story-card";
@@ -18,7 +19,7 @@ export function ListCard({
 
 function FeedStory({ post, className }: StoryCardProps): React.JSX.Element {
   const href = `/@${post.author.username}/${post.slug}`;
-  const minutes = analyzeReading(post.content).minutes;
+  const minutes = post.readingTimeMinutes ?? readingTimeMinutes(post.content);
   return (
     <article
       data-feed-story
@@ -54,9 +55,9 @@ function FeedStory({ post, className }: StoryCardProps): React.JSX.Element {
             {post.title || "Untitled story"}
           </h3>
         </Link>
-        {post.excerpt && (
+        {(post.subtitle || post.excerpt) && (
           <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-            {post.excerpt}
+            {post.subtitle || post.excerpt}
           </p>
         )}
         <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -70,6 +71,7 @@ function FeedStory({ post, className }: StoryCardProps): React.JSX.Element {
             </time>
           )}
           <span>{minutes} min read</span>
+          <BookmarkButton postId={post.id} compact />
         </div>
         <TagChips tags={post.tags} />
       </div>

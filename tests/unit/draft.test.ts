@@ -10,6 +10,23 @@ const draft = {
 };
 
 describe("draft helpers", () => {
+  it("saves subtitles and repeated topics together, including clearing both", () => {
+    const fields = { ...draft, subtitle: "A deck", tags: ["Gardens", "東京"] };
+    const data = draftFormData(fields);
+    expect(data.get("subtitle")).toBe(fields.subtitle);
+    expect(data.getAll("tags")).toEqual(fields.tags);
+    const cleared = { ...fields, subtitle: "", tags: [] };
+    expect(draftsMatch(fields, cleared)).toBe(false);
+    expect(draftFormData(cleared).get("subtitle")).toBe("");
+    expect(draftFormData(cleared).getAll("tags")).toEqual([]);
+  });
+  it("tracks subtitle-only edits and clearing through draft saves", () => {
+    const fields = { ...draft, subtitle: "A deck" };
+    expect(draftsMatch(fields, { ...fields })).toBe(true);
+    expect(draftsMatch(fields, { ...fields, subtitle: "" })).toBe(false);
+    expect(draftFormData(fields).get("subtitle")).toBe("A deck");
+    expect(draftFormData({ ...fields, subtitle: "" }).get("subtitle")).toBe("");
+  });
   it("tracks topic-only edits and clearing as repeated draft fields", () => {
     const fields = { ...draft, tags: ["Gardens", "東京"] };
     expect(draftsMatch(fields, { ...fields, tags: [...fields.tags] })).toBe(

@@ -1,6 +1,7 @@
 export interface DraftFields {
   title: string;
   excerpt: string;
+  subtitle?: string;
   tags?: string[];
   content: string;
   coverImage: string;
@@ -10,6 +11,7 @@ export function draftsMatch(a: DraftFields, b: DraftFields): boolean {
   return (
     a.title === b.title &&
     a.excerpt === b.excerpt &&
+    a.subtitle === b.subtitle &&
     JSON.stringify(a.tags ?? []) === JSON.stringify(b.tags ?? []) &&
     a.content === b.content &&
     a.coverImage === b.coverImage

@@ -30,6 +30,14 @@ test("renders article body and comments", async ({ page }) => {
     }),
   ).toBeVisible();
   await expect(
+    page
+      .locator("article header")
+      .getByText("Stories from a reproducible newsroom", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator("article header").getByText("2 min read", { exact: true }),
+  ).toBeVisible();
+  await expect(
     page.getByText("This seeded article makes smoke tests reliable.", {
       exact: true,
     }),

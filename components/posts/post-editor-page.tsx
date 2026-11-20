@@ -45,6 +45,7 @@ export function PostEditorPage({
   const router = useRouter();
   const { data: session } = useSession();
   const [title, setTitle] = useState(post?.title || "");
+  const [subtitle, setSubtitle] = useState(post?.subtitle || "");
   const [tags, setTags] = useState<string[]>(
     post?.tags?.map((tag) => tag.name) || [],
   );
@@ -55,7 +56,7 @@ export function PostEditorPage({
   const [panel, setPanel] = useState(false);
   const [pending, setPending] = useState(false);
   const draft = useDraftSave(
-    { title, tags, excerpt, content, coverImage },
+    { title, subtitle, tags, excerpt, content, coverImage },
     post?.slug || "",
     published || pending,
   );
@@ -196,15 +197,28 @@ export function PostEditorPage({
           className="mb-5 w-full resize-none bg-transparent font-serif text-[36px] leading-[1.05] tracking-tight placeholder:text-muted-foreground/60 focus:outline-none md:text-[56px]"
         />
         <TextareaAutosize
-          name="excerpt"
+          name="subtitle"
           aria-label="Post subtitle"
+          aria-describedby="subtitle-limit"
           placeholder="Add a subtitle (optional)"
-          value={excerpt}
-          onChange={(event) => setExcerpt(event.target.value)}
-          maxLength={300}
+          value={subtitle}
+          onChange={(event) => setSubtitle(event.target.value)}
+          maxLength={200}
           minRows={1}
-          className="mb-12 w-full resize-none bg-transparent text-lg leading-relaxed text-muted-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+          className="mb-2 w-full resize-none bg-transparent text-lg leading-relaxed text-muted-foreground placeholder:text-muted-foreground/60 focus:outline-none"
         />
+        <div
+          id="subtitle-limit"
+          className="mb-10 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"
+          aria-live="polite"
+        >
+          <span>
+            {subtitle.length === 200
+              ? "Character limit reached. Additional characters are not added."
+              : "Up to 200 characters."}
+          </span>
+          <span>{subtitle.length}/200</span>
+        </div>
         <LexicalEditor
           initialContent={post?.content || ""}
           onChange={setContent}
@@ -236,9 +250,9 @@ export function PostEditorPage({
               <h2 className="break-words font-serif text-4xl leading-tight">
                 {title || "Untitled story"}
               </h2>
-              {excerpt && (
+              {(subtitle || excerpt) && (
                 <p className="mt-3 break-words text-sm text-muted-foreground">
-                  {excerpt}
+                  {subtitle || excerpt}
                 </p>
               )}
               <p className="mt-4 text-xs text-muted-foreground">
@@ -249,6 +263,31 @@ export function PostEditorPage({
               Subtitle / SEO description
               <textarea
                 aria-label="Subtitle / SEO description"
+                aria-describedby="publish-subtitle-limit"
+                value={subtitle}
+                onChange={(event) => setSubtitle(event.target.value)}
+                maxLength={200}
+                rows={3}
+                disabled={pending}
+                className="mt-2 w-full resize-y border border-border bg-transparent p-3 text-sm outline-primary"
+              />
+              <div
+                id="publish-subtitle-limit"
+                className="mt-2 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"
+                aria-live="polite"
+              >
+                <span>
+                  {subtitle.length === 200
+                    ? "Character limit reached. Additional characters are not added."
+                    : "Up to 200 characters."}
+                </span>
+                <span>{subtitle.length}/200</span>
+              </div>
+            </label>
+            <label className="block text-sm">
+              SEO description
+              <textarea
+                aria-label="Post excerpt"
                 value={excerpt}
                 onChange={(event) => setExcerpt(event.target.value)}
                 maxLength={300}
@@ -257,7 +296,7 @@ export function PostEditorPage({
                 className="mt-2 w-full resize-y border border-border bg-transparent p-3 text-sm outline-primary"
               />
               <span className="mt-2 block text-xs text-muted-foreground">
-                Used as your subtitle, preview and search description.
+                Optional summary for search and previews.
               </span>
             </label>
             <TagInput value={tags} onChange={setTags} />
