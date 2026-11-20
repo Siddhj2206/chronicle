@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getDb } from "@/lib/db";
 import { post, postTag, tag, user } from "@/lib/db/schema";
 import { withPostTags } from "@/lib/post-tags";
+import { withResponseCounts } from "@/lib/response-counts";
 import { postVisibility } from "@/lib/post-visibility";
 import { getSession } from "@/lib/session";
 
@@ -114,7 +115,7 @@ export async function getTagPosts(slug: string, page = 1, limit = 10) {
     if (!total.count) return null;
     return {
       tag: topic,
-      posts: await withPostTags(rows),
+      posts: await withResponseCounts(await withPostTags(rows)),
       totalCount: total.count,
       totalPages: Math.ceil(total.count / limit),
       currentPage: page,

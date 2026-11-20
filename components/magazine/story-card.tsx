@@ -8,7 +8,10 @@ import { TagChips } from "@/components/posts/tag-chips";
 import type { Post, User } from "@/lib/db/schema";
 
 export interface StoryCardProps {
-  post: Post & { author: Pick<User, "id" | "name" | "username" | "image"> };
+  post: Post & {
+    responseCount?: number;
+    author: Pick<User, "id" | "name" | "username" | "image">;
+  };
   className?: string;
 }
 
@@ -73,6 +76,15 @@ export function StoryCard({
         </Link>
         {post.excerpt && <p className="story-excerpt">{post.excerpt}</p>}
         <TagChips tags={post.tags} />
+        {post.responseCount !== undefined && (
+          <Link
+            href={`${href}#responses`}
+            className="mt-4 inline-block text-sm text-muted-foreground hover:text-foreground"
+          >
+            {post.responseCount}{" "}
+            {post.responseCount === 1 ? "response" : "responses"}
+          </Link>
+        )}
       </div>
     </article>
   );

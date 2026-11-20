@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { StoryCard } from "@/components/magazine/story-card";
 import { TagChips } from "@/components/posts/tag-chips";
+import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { analyzeReading } from "@/lib/reading";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +71,13 @@ function FeedStory({ post, className }: StoryCardProps): React.JSX.Element {
             </time>
           )}
           <span>{minutes} min read</span>
+          {post.responseCount !== undefined && (
+            <Link href={`${href}#responses`} className="hover:text-foreground">
+              {post.responseCount}{" "}
+              {post.responseCount === 1 ? "response" : "responses"}
+            </Link>
+          )}
+          <BookmarkButton postId={post.id} compact />
         </div>
         <TagChips tags={post.tags} />
       </div>

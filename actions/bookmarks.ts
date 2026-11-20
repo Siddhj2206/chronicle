@@ -9,6 +9,7 @@ import { getDb } from "@/lib/db";
 import { bookmark, post, user } from "@/lib/db/schema";
 import { postVisibility } from "@/lib/post-visibility";
 import { withPostTags } from "@/lib/post-tags";
+import { withResponseCounts } from "@/lib/response-counts";
 import { revalidatePosts } from "@/lib/revalidate-posts";
 import { getSession } from "@/lib/session";
 
@@ -122,7 +123,7 @@ export async function getSavedPosts(
       .orderBy(desc(bookmark.createdAt), desc(bookmark.postId))
       .limit(PAGE_SIZE)
       .offset((currentPage - 1) * PAGE_SIZE);
-    const tagged = await withPostTags(posts);
+    const tagged = await withResponseCounts(await withPostTags(posts));
     return {
       posts: tagged.map(({ post, author }) => ({ ...post, author })),
       totalCount,

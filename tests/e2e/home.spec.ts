@@ -21,7 +21,7 @@ test("home has a featured story, URL-backed Latest tab, story rows and desktop r
   await expect(row.getByRole("heading", { level: 3 })).toBeVisible();
   await expect(row.getByText(/min read/)).toBeVisible();
   await expect(row.locator("time")).toBeVisible();
-  await expect(row.locator("a[aria-label]")).toHaveAttribute(
+  await expect(row.locator('a[aria-label][href^="/@"]')).toHaveAttribute(
     "href",
     /^\/@[^/]+\/.+/,
   );
@@ -52,7 +52,9 @@ test("mobile feed has right-hand thumbnails, working story links and no overflow
   const heading = row.getByRole("heading", { level: 3 });
   await heading.scrollIntoViewIfNeeded();
   const titleBox = await heading.boundingBox();
-  const thumbnailBox = await row.locator("a[aria-label]").boundingBox();
+  const thumbnailBox = await row
+    .locator('a[aria-label][href^="/@"]')
+    .boundingBox();
   expect(thumbnailBox!.x).toBeGreaterThan(titleBox!.x + titleBox!.width);
   expect(
     await page.evaluate(

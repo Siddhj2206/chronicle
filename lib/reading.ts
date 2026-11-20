@@ -25,7 +25,7 @@ function textContent(node: MarkdownNode): string {
 }
 
 function assignHeadingIds(tree: MarkdownNode): ArticleHeading[] {
-  const used = new Set<string>(["theme-toggle"]);
+  const used = new Set<string>(["theme-toggle", "responses"]);
   const headings: ArticleHeading[] = [];
   function visit(node: MarkdownNode): void {
     if (node.type === "heading") {

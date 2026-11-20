@@ -36,12 +36,82 @@ const post: StoryCardProps["post"] = {
 };
 
 describe("Museum monograph components", () => {
+  it("keeps save controls, topics and available response counts in the new feed layout", () => {
+    for (const responseCount of [0, 1, 2, undefined]) {
+      const html = renderToStaticMarkup(
+        createElement(ListCard, {
+          layout: "feed",
+          post: {
+            ...post,
+            responseCount,
+            tags: [
+              {
+                id: "topic",
+                name: "Gardens",
+                slug: "gardens",
+                createdAt: post.createdAt,
+              },
+            ],
+          },
+        }),
+      );
+      expect(html).toContain('aria-label="Sign in to save story"');
+      expect(html).toContain('href="/tag/gardens"');
+      if (responseCount === undefined) expect(html).not.toContain("#responses");
+      else {
+        expect(html).toContain('href="/@alex/morning#responses"');
+        expect(html).toContain(
+          `${responseCount} ${responseCount === 1 ? "response" : "responses"}`,
+        );
+      }
+    }
+  });
+  it("keeps bookmark controls, response totals and topics together on every story card", () => {
+    for (const Card of [HeroCard, GridCard, ListCard]) {
+      const html = renderToStaticMarkup(
+        createElement(Card, {
+          post: {
+            ...post,
+            responseCount: 2,
+            tags: [
+              {
+                id: "topic",
+                name: "Gardens",
+                slug: "gardens",
+                createdAt: new Date("2026-11-19"),
+              },
+            ],
+          },
+        }),
+      );
+      expect(html).toContain('aria-label="Sign in to save story"');
+      expect(html).toContain('href="/@alex/morning#responses"');
+      expect(html).toContain("2 responses");
+      expect(html).toContain('href="/tag/gardens"');
+      expect(html).toContain("Gardens");
+    }
+  });
+  it("links real response counts, pluralizes zero and one, and omits unavailable counts", () => {
+    for (const responseCount of [0, 1, 3]) {
+      const html = renderToStaticMarkup(
+        createElement(ListCard, { post: { ...post, responseCount } }),
+      );
+      expect(html).toContain('href="/@alex/morning#responses"');
+      expect(html).toContain(
+        `${responseCount} ${responseCount === 1 ? "response" : "responses"}`,
+      );
+    }
+    expect(
+      renderToStaticMarkup(createElement(ListCard, { post })),
+    ).not.toContain("#responses");
+  });
   it("preserves linked topics in the feed layout without inventing empty topics", () => {
     const render = (tags?: StoryCardProps["post"]["tags"]) =>
       renderToStaticMarkup(
         createElement(ListCard, { layout: "feed", post: { ...post, tags } }),
       );
     expect(render()).not.toContain('aria-label="Topics"');
+    expect(render()).toContain('aria-label="Sign in to save story"');
     expect(render([])).not.toContain('aria-label="Topics"');
     const html = render([
       { id: "topic", name: "東京", slug: "東京", createdAt: post.createdAt },

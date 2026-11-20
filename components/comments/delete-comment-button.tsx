@@ -18,10 +18,12 @@ import { deleteComment } from "@/actions/comments";
 
 interface DeleteCommentButtonProps {
   commentId: string;
+  hasReplies?: boolean;
 }
 
 export function DeleteCommentButton({
   commentId,
+  hasReplies = false,
 }: DeleteCommentButtonProps): React.JSX.Element {
   const [isPending, startTransition] = useTransition();
 
@@ -42,7 +44,9 @@ export function DeleteCommentButton({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete this note?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. Your note will be permanently removed.
+            {hasReplies
+              ? "This note and all its replies will be permanently removed."
+              : "This action cannot be undone. Your note will be permanently removed."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

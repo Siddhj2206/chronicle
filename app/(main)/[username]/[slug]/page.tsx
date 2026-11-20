@@ -189,8 +189,11 @@ export default async function PostPage({
           </footer>
 
           {/* Comments Section */}
-          <section className="reader-comments max-w-[680px]">
-            <h2>Reader notes</h2>
+          <section id="responses" className="reader-comments max-w-[680px]">
+            <h2>
+              Responses
+              {post.responseCount !== undefined && ` (${post.responseCount})`}
+            </h2>
             <div className="mb-10">
               <CommentForm
                 postId={post.id}
@@ -198,7 +201,11 @@ export default async function PostPage({
                 articlePath={`/@${encodeURIComponent(decodedUsername)}/${encodeURIComponent(slug)}`}
               />
             </div>
-            <CommentList postId={post.id} postAuthorId={author.id} />
+            <CommentList
+              postId={post.id}
+              postAuthorId={author.id}
+              articlePath={`/@${encodeURIComponent(decodedUsername)}/${encodeURIComponent(slug)}`}
+            />
           </section>
         </div>
       </div>
