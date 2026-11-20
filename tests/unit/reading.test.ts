@@ -8,6 +8,14 @@ import { PostContent } from "@/components/posts/post-content";
 import { analyzeReading } from "@/lib/reading";
 
 describe("article reading metadata", () => {
+  it("reserves the skip link target for the main landmark", () => {
+    expect(
+      analyzeReading("## Main content\n\n## Main content").headings.map(
+        ({ id }) => id,
+      ),
+    ).toEqual(["main-content-1", "main-content-2"]);
+  });
+
   it("reserves the article navbar theme toggle id", () => {
     const content = "## Theme toggle\n\n## Theme toggle\n\n## Theme toggle-1";
     const { headings } = analyzeReading(content);

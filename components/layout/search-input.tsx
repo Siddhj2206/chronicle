@@ -44,6 +44,7 @@ function SearchInputContent(): React.JSX.Element {
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <Input
           type="search"
+          data-global-search
           aria-label="Search articles"
           placeholder="Search…"
           value={query}
@@ -62,6 +63,7 @@ function SearchInputContent(): React.JSX.Element {
     <form onSubmit={handleSubmit}>
       <Input
         type="search"
+        data-global-search
         aria-label="Search articles"
         placeholder="Search posts…"
         value={query}

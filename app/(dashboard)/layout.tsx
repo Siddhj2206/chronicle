@@ -30,7 +30,11 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar className="sticky top-0 z-50" />
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-4xl flex-1 px-4 py-8"
+      >
         {children}
       </main>
       <Footer />

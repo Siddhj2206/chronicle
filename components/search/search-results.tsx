@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ListCard } from "@/components/magazine/list-card";
 import { searchPosts } from "@/actions/search";
+import { EmptyState } from "@/components/layout/empty-state";
 
 import type { SearchResult, SearchParams } from "@/actions/search";
 
@@ -66,7 +67,13 @@ function SearchResultsList({
   };
 
   if (results.length === 0) {
-    return null;
+    return (
+      <EmptyState
+        title="No stories found."
+        description="Try another search, or find something unexpected in the archive."
+        action={{ href: "/archive", label: "Explore the archive" }}
+      />
+    );
   }
 
   return (

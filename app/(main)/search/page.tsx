@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { Suspense } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchPosts } from "@/actions/search";
 import { SearchFilters } from "@/components/search/search-filters";
 import { SearchResults } from "@/components/search/search-results";
+import { EmptyState } from "@/components/layout/empty-state";
 
 import type { Metadata } from "next";
 import type { DatePreset, SearchParams } from "@/actions/search";
@@ -65,36 +64,24 @@ function NoResults({
   hasFilters: boolean;
 }) {
   return (
-    <div className="py-12 text-center">
-      <p className="font-serif text-lg italic text-muted-foreground">
-        No stories found matching your query.
-      </p>
-      {hasFilters && (
-        <Button
-          variant="outline"
-          className="mt-6 rounded-none border-2 border-black font-mono text-xs uppercase tracking-widest dark:border-white"
-          asChild
-        >
-          <Link href={`/search?q=${encodeURIComponent(query)}`}>
-            Clear Filters
-          </Link>
-        </Button>
-      )}
-    </div>
+    <EmptyState
+      title="No stories found."
+      description="No stories found matching your query. Try a different phrase or explore the archive."
+      action={
+        hasFilters
+          ? {
+              href: `/search?q=${encodeURIComponent(query)}`,
+              label: "Clear Filters",
+            }
+          : { href: "/archive", label: "Explore the archive" }
+      }
+    />
   );
 }
 
 // ============================================
 // Empty State Component
 // ============================================
-
-function EmptyState() {
-  return (
-    <div className="py-12 text-center font-serif text-lg italic text-muted-foreground">
-      Type above to search the archives…
-    </div>
-  );
-}
 
 // ============================================
 // Search Page
@@ -141,6 +128,32 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         )}
       </div>
 
+      <form
+        action="/search"
+        method="get"
+        role="search"
+        aria-label="Search the journal"
+        className="mb-8 flex items-end gap-3 md:hidden"
+      >
+        <label className="min-w-0 flex-1 text-sm">
+          <span className="mb-2 block">Search articles</span>
+          <input
+            type="search"
+            name="q"
+            defaultValue={query}
+            data-global-search
+            required
+            className="w-full border border-input bg-background px-3 py-3 text-base"
+          />
+        </label>
+        <button
+          type="submit"
+          className="border border-border px-4 py-3 text-sm hover:text-primary"
+        >
+          Search
+        </button>
+      </form>
+
       {/* Filters - only show when there's a query */}
       {query && (
         <Suspense fallback={<Skeleton className="mb-8 h-12 w-full" />}>
@@ -155,7 +168,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Results */}
       {!query ? (
-        <EmptyState />
+        <EmptyState
+          title="Find your next story."
+          description="Search for a title, writer or idea."
+        />
       ) : initialResults.posts.length === 0 ? (
         <NoResults query={query} hasFilters={hasFilters} />
       ) : (

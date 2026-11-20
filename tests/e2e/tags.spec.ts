@@ -194,10 +194,13 @@ test("publishes topics, browses a topic, filters search and edits tags", async (
     await panel.getByRole("button", { name: "Close", exact: true }).click();
     await page.goto("/search?q=gardens&tag=gardens");
     await expect(
-      page.getByText("No stories found matching your query.", { exact: true }),
+      page.getByRole("heading", { name: "No stories found.", exact: true }),
     ).toBeVisible();
     await page.goto("/tag/not-a-real-topic");
-    await expect(page.getByRole("heading", { name: /404/ })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Page Not Found", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("404", { exact: true })).toBeVisible();
   } finally {
     await deleteTestUser(writer.id);
     await db

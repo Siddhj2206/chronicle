@@ -124,7 +124,11 @@ export function PostEditorPage({
   }
 
   return (
-    <main id="main-content" className="min-h-screen bg-background">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="min-h-screen bg-background"
+    >
       <header className="sticky top-0 z-40 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-background px-5 py-3 md:px-10">
         <div className="flex min-w-0 items-center gap-5">
           <Link

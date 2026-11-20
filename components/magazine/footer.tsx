@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ShortcutsButton } from "@/components/layout/keyboard-shortcuts";
 
 export function Footer(): React.JSX.Element {
   return (
@@ -24,6 +25,7 @@ export function Footer(): React.JSX.Element {
             Write an article
           </Link>
         </nav>
+        <ShortcutsButton />
       </div>
     </footer>
   );
