@@ -25,6 +25,15 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
           Chronicle
         </Link>
         <nav aria-label="Main navigation" className="site-links">
+          {session?.user && (
+            <Link
+              href="/library"
+              aria-current={pathname === "/library" ? "page" : undefined}
+              className="hover:text-primary aria-[current=page]:text-foreground"
+            >
+              Library
+            </Link>
+          )}
           <Link
             href="/"
             aria-current={pathname === "/" ? "page" : undefined}

@@ -32,6 +32,7 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/manuscripts") ||
     pathname === "/following" ||
     pathname === "/new" ||
+    pathname === "/library" ||
     pathname.startsWith("/edit") ||
     pathname === "/settings";
 
