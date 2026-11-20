@@ -36,6 +36,36 @@ const post: StoryCardProps["post"] = {
 };
 
 describe("Museum monograph components", () => {
+  it("keeps save controls, topics and available response counts in the new feed layout", () => {
+    for (const responseCount of [0, 1, 2, undefined]) {
+      const html = renderToStaticMarkup(
+        createElement(ListCard, {
+          layout: "feed",
+          post: {
+            ...post,
+            responseCount,
+            tags: [
+              {
+                id: "topic",
+                name: "Gardens",
+                slug: "gardens",
+                createdAt: post.createdAt,
+              },
+            ],
+          },
+        }),
+      );
+      expect(html).toContain('aria-label="Sign in to save story"');
+      expect(html).toContain('href="/tag/gardens"');
+      if (responseCount === undefined) expect(html).not.toContain("#responses");
+      else {
+        expect(html).toContain('href="/@alex/morning#responses"');
+        expect(html).toContain(
+          `${responseCount} ${responseCount === 1 ? "response" : "responses"}`,
+        );
+      }
+    }
+  });
   it("keeps bookmark controls, response totals and topics together on every story card", () => {
     for (const Card of [HeroCard, GridCard, ListCard]) {
       const html = renderToStaticMarkup(
@@ -74,6 +104,20 @@ describe("Museum monograph components", () => {
     expect(
       renderToStaticMarkup(createElement(ListCard, { post })),
     ).not.toContain("#responses");
+  });
+  it("preserves linked topics in the feed layout without inventing empty topics", () => {
+    const render = (tags?: StoryCardProps["post"]["tags"]) =>
+      renderToStaticMarkup(
+        createElement(ListCard, { layout: "feed", post: { ...post, tags } }),
+      );
+    expect(render()).not.toContain('aria-label="Topics"');
+    expect(render()).toContain('aria-label="Sign in to save story"');
+    expect(render([])).not.toContain('aria-label="Topics"');
+    const html = render([
+      { id: "topic", name: "東京", slug: "東京", createdAt: post.createdAt },
+    ]);
+    expect(html).toContain('href="/tag/%E6%9D%B1%E4%BA%AC"');
+    expect(html).toContain("東京");
   });
   it("bounds long topic labels and preserves their full accessible names", () => {
     const name = "W".repeat(50);
@@ -137,6 +181,48 @@ describe("Museum monograph components", () => {
       expect(html).toContain('dateTime="2026-11-19T12:00:00.000Z"');
     },
   );
+
+  it("renders feed metadata and a right-hand cover while retaining story links", () => {
+    const html = renderToStaticMarkup(
+      createElement(ListCard, {
+        post: {
+          ...post,
+          content: "word ".repeat(461),
+          author: { ...post.author, image: "/author.jpg" },
+        },
+        layout: "feed",
+      }),
+    );
+    expect(html).toContain("data-feed-story");
+    expect(html).toContain('href="/@alex/morning"');
+    expect(html).toContain('href="/@alex"');
+    expect(html).toContain("url=%2Fcover.jpg");
+    expect(html).toContain("url=%2Fauthor.jpg");
+    expect(html).toContain("A closer look.");
+    expect(html).toContain("3 min read");
+    expect(html).toContain('dateTime="2026-11-19T12:00:00.000Z"');
+  });
+
+  it("renders feed fallbacks without images, dates or excerpts", () => {
+    const html = renderToStaticMarkup(
+      createElement(ListCard, {
+        post: {
+          ...post,
+          title: "",
+          content: "",
+          coverImage: null,
+          publishedAt: null,
+          excerpt: null,
+        },
+        layout: "feed",
+      }),
+    );
+    expect(html).toContain("Untitled story");
+    expect(html).toContain("1 min read");
+    expect(html).toMatch(/aria-hidden="true"[^>]*>C<\/span>/);
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("<time");
+  });
 
   it("renders a decorative title initial and omits absent dates and excerpts", () => {
     const html = renderToStaticMarkup(
@@ -205,7 +291,7 @@ describe("Museum monograph components", () => {
     vi.mocked(getTrendingPosts).mockResolvedValue([row]);
     const html = renderToStaticMarkup(await FeedPage());
     expect(html).toContain('href="/archive"');
-    expect(html).toContain("Worth a read");
+    expect(html).toContain("Staff picks");
     expect(html.match(/An ordinary morning/g)?.length).toBeGreaterThan(1);
     expect(html).not.toContain("02—07");
   });
@@ -224,5 +310,55 @@ describe("Museum monograph components", () => {
     expect(html).toContain('href="/archive"');
     expect(html).toContain("--shiki-light:");
     expect(html).toContain("--shiki-dark:");
+  });
+
+  it("renders the feed layout with author portrait, excerpt, date and computed reading time", () => {
+    const html = renderToStaticMarkup(
+      createElement(ListCard, {
+        layout: "feed",
+        post: {
+          ...post,
+          content: "word ".repeat(500),
+          author: { ...post.author, image: "/avatar.jpg" },
+        },
+      }),
+    );
+    expect(html).toContain('href="/@alex/morning"');
+    expect(html).toContain('href="/@alex"');
+    expect(html).toContain("avatar.jpg");
+    expect(html).toContain("cover.jpg");
+    expect(html).toContain("A closer look.");
+    expect(html).toContain("3 min read");
+    expect(html).toContain('dateTime="2026-11-19T12:00:00.000Z"');
+  });
+
+  it("renders small title and author initials when feed images are absent", () => {
+    const html = renderToStaticMarkup(
+      createElement(ListCard, {
+        layout: "feed",
+        post: {
+          ...post,
+          coverImage: null,
+          excerpt: null,
+          publishedAt: null,
+          content: "",
+        },
+      }),
+    );
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("<time");
+    expect(html).toContain(">A</span>");
+    expect(html).toContain("1 min read");
+  });
+
+  it("keeps Latest selected and hides the feature and rail in an empty feed", async () => {
+    const html = renderToStaticMarkup(
+      await FeedPage({ searchParams: Promise.resolve({ tab: "following" }) }),
+    );
+    expect(html).toContain('role="tab" aria-selected="true"');
+    expect(html).toContain('href="/?tab=latest"');
+    expect(html).toContain("No stories yet.");
+    expect(html).not.toContain('aria-label="Featured story"');
+    expect(html).not.toContain('data-testid="home-rail"');
   });
 });
