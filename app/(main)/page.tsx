@@ -7,8 +7,19 @@ import { SidebarList } from "@/components/magazine/sidebar-list";
 import { FeedTabs } from "@/components/magazine/feed-tabs";
 import { FeedWriters } from "@/components/magazine/feed-writers";
 import { homeTab, homeWriters } from "@/lib/home-feed";
+import { pageMetadata, SITE_DESCRIPTION } from "@/lib/seo";
+
+import type { Metadata } from "next";
 
 export const revalidate = 60;
+
+export function generateMetadata(): Metadata {
+  return pageMetadata({
+    title: "Chronicle",
+    description: SITE_DESCRIPTION,
+    path: "/",
+  });
+}
 
 export default async function FeedPage({
   searchParams,

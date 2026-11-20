@@ -12,10 +12,32 @@ import { getDb } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { profileStories, profileTab } from "@/lib/profile";
 import { getSession } from "@/lib/session";
+import { getPublicAuthor } from "@/lib/distribution";
+import { authorPath, cleanUsername, pageMetadata } from "@/lib/seo";
+
+import type { Metadata } from "next";
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
   searchParams?: Promise<{ tab?: string | string[] }>;
+}
+
+export async function generateMetadata({
+  params,
+}: ProfilePageProps): Promise<Metadata> {
+  const { username } = await params;
+  const author = await getPublicAuthor(cleanUsername(username));
+  if (!author)
+    return {
+      title: "Author Not Found",
+      robots: { index: false, follow: false },
+    };
+  return pageMetadata({
+    title: `${author.name} (@${author.username}) | Chronicle`,
+    description: author.bio || `Read stories by ${author.name} on Chronicle.`,
+    path: authorPath(author.username),
+    username: author.username,
+  });
 }
 
 export default async function ProfilePage({
