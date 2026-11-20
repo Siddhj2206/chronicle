@@ -90,6 +90,7 @@ test("mobile navigation traps focus, closes with its button and Escape, and rest
     "Archive",
     "Search",
     "Write",
+    "Library",
     "Manuscripts",
     "Settings",
     "Profile",

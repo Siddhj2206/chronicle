@@ -27,6 +27,7 @@ export function MobileNavigation(): React.JSX.Element {
     { href: "/new", label: "Write" },
     ...(session?.user
       ? [
+          { href: "/library", label: "Library" },
           { href: "/manuscripts", label: "Manuscripts" },
           { href: "/settings", label: "Settings" },
           ...(username ? [{ href: `/@${username}`, label: "Profile" }] : []),

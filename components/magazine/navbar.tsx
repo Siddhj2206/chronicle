@@ -29,6 +29,15 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
           aria-label="Main navigation"
           className="site-links !hidden md:!flex"
         >
+          {session?.user && (
+            <Link
+              href="/library"
+              aria-current={pathname === "/library" ? "page" : undefined}
+              className="hover:text-primary aria-[current=page]:text-foreground"
+            >
+              Library
+            </Link>
+          )}
           <Link
             href="/"
             aria-current={pathname === "/" ? "page" : undefined}
