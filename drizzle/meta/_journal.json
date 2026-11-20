@@ -15,6 +15,13 @@
       "when": 1768484295146,
       "tag": "0001_keen_newton_destine",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795111892223,
+      "tag": "0002_topics_tags",
+      "breakpoints": true
     }
   ]
 }
