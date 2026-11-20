@@ -1,9 +1,20 @@
 "use server";
 
 import { cache } from "react";
-import { eq, and, desc, asc, gte, notInArray, sql, like } from "drizzle-orm";
+import {
+  eq,
+  ne,
+  and,
+  desc,
+  asc,
+  gte,
+  notInArray,
+  sql,
+  like,
+} from "drizzle-orm";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
+import { z } from "zod";
 
 import { getSession } from "@/lib/session";
 import { getVisiblePost, postVisibility } from "@/lib/post-visibility";
@@ -381,6 +392,7 @@ export const getPost = cache(async function getPost(
     name: string;
     username: string | null;
     image: string | null;
+    bio: string | null;
   };
 } | null> {
   try {
@@ -394,6 +406,7 @@ export const getPost = cache(async function getPost(
           name: user.name,
           username: user.username,
           image: user.image,
+          bio: user.bio,
         },
       })
       .from(post)
@@ -506,6 +519,38 @@ export async function getPostForEditWithContent(
   } catch (error) {
     console.error("Get post for edit with content error:", error);
     return null;
+  }
+}
+
+const relatedPostsSchema = z.object({
+  authorId: z.string().trim().min(1).max(256),
+  currentPostId: z.string().trim().min(1).max(256),
+});
+
+export async function getMoreFromAuthor(
+  authorId: string,
+  currentPostId: string,
+): Promise<Post[]> {
+  const parsed = relatedPostsSchema.safeParse({ authorId, currentPostId });
+  if (!parsed.success) return [];
+
+  try {
+    const db = await getDb();
+    return await db
+      .select()
+      .from(post)
+      .where(
+        and(
+          eq(post.authorId, parsed.data.authorId),
+          eq(post.published, true),
+          ne(post.id, parsed.data.currentPostId),
+        ),
+      )
+      .orderBy(desc(post.publishedAt), desc(post.id))
+      .limit(3);
+  } catch (error) {
+    console.error("Get more from author error:", error);
+    return [];
   }
 }
 

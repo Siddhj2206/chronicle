@@ -1,14 +1,24 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 
-import { getPost, getPostContent, incrementViewCount } from "@/actions/posts";
+import {
+  getPost,
+  getPostContent,
+  getMoreFromAuthor,
+  incrementViewCount,
+} from "@/actions/posts";
 import { getLikeCount, hasUserLiked } from "@/actions/likes";
+import { getComments } from "@/actions/comments";
 import { PostContent } from "@/components/posts/post-content";
 import { TagChips } from "@/components/posts/tag-chips";
 import { ArticleContents } from "@/components/posts/article-contents";
 import { ReadingProgress } from "@/components/posts/reading-progress";
-import { LikeButton } from "@/components/posts/post-actions";
+import { ArticleActions } from "@/components/posts/article-actions";
+import {
+  ArticleByline,
+  ArticleAuthorCard,
+} from "@/components/posts/article-author";
+import { MoreFromAuthor } from "@/components/posts/more-from-author";
 import { CommentList } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
 import { getSession } from "@/lib/session";
@@ -67,12 +77,15 @@ export default async function PostPage({
   const { post, author } = result;
 
   // Fetch content from R2 and like data in parallel
-  const [content, likeCount, userLiked, session] = await Promise.all([
-    getPostContent(post.id),
-    getLikeCount(post.id),
-    hasUserLiked(post.id),
-    getSession(),
-  ]);
+  const [content, likeCount, userLiked, session, comments, morePosts] =
+    await Promise.all([
+      getPostContent(post.id),
+      getLikeCount(post.id),
+      hasUserLiked(post.id),
+      getSession(),
+      getComments(post.id),
+      getMoreFromAuthor(author.id, post.id),
+    ]);
 
   // Track view (fire and forget - don't await)
   incrementViewCount(post.id);
@@ -80,29 +93,13 @@ export default async function PostPage({
   // Use R2 content, fallback to DB content if not available
   const postContent = content || post.content;
   const { minutes, headings } = analyzeReading(postContent);
+  const commentsId = `article:comments:${post.id}`;
 
   return (
     <article className="reader">
       <ReadingProgress />
       {/* Article Header */}
       <header className="grid gap-x-12 gap-y-6 py-10 md:grid-cols-[1fr_3fr] md:py-16">
-        <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-[13px] leading-relaxed text-muted-foreground md:col-start-2">
-          <Link
-            href={`/@${author.username}`}
-            className="hover:text-foreground hover:underline"
-          >
-            {author.name}
-          </Link>
-          <time dateTime={post.publishedAt?.toISOString()}>
-            {post.publishedAt?.toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </time>
-          <span>{minutes} min read</span>
-        </div>
-
         <h1 className="max-w-[900px] font-serif text-[40px] leading-[1.02] tracking-tight [overflow-wrap:anywhere] md:col-start-2 md:text-[72px]">
           {post.title}
         </h1>
@@ -112,6 +109,11 @@ export default async function PostPage({
             {post.excerpt}
           </p>
         )}
+        <ArticleByline
+          author={author}
+          date={post.publishedAt}
+          minutes={minutes}
+        />
         {!!post.tags?.length && (
           <div className="md:col-start-2">
             <TagChips tags={post.tags} />
@@ -156,40 +158,28 @@ export default async function PostPage({
           </div>
 
           {/* Post Actions */}
-          <div className="mt-12 flex max-w-[680px] flex-wrap items-center justify-between gap-4 border-y border-border py-6">
-            <LikeButton
-              postId={post.id}
-              initialLiked={userLiked}
-              initialCount={likeCount}
-            />
+          <ArticleActions
+            postId={post.id}
+            title={post.title}
+            initialLiked={userLiked}
+            initialCount={likeCount}
+            commentCount={comments.length}
+            commentsId={commentsId}
+          />
+          <div className="mt-6 max-w-[680px]">
             <BookmarkButton postId={post.id} />
           </div>
 
           {/* Article Footer / Author Bio */}
-          <footer className="reader-author max-w-[680px]">
-            {author.image && (
-              <div className="reader-author-image">
-                <Image
-                  src={author.image}
-                  alt={author.name}
-                  fill
-                  sizes="64px"
-                  className="object-cover"
-                />
-              </div>
-            )}
-            <div>
-              <div className="reader-author-label">Written By</div>
-              <h2>
-                <Link href={`/@${author.username}`} className="hover:underline">
-                  {author.name}
-                </Link>
-              </h2>
-            </div>
-          </footer>
+          <ArticleAuthorCard author={author} />
 
           {/* Comments Section */}
-          <section className="reader-comments max-w-[680px]">
+          <section
+            id={commentsId}
+            tabIndex={-1}
+            aria-label="Reader notes"
+            className="reader-comments max-w-[680px] scroll-mt-28"
+          >
             <h2>Reader notes</h2>
             <div className="mb-10">
               <CommentForm
@@ -202,6 +192,7 @@ export default async function PostPage({
           </section>
         </div>
       </div>
+      <MoreFromAuthor posts={morePosts} author={author} />
     </article>
   );
 }

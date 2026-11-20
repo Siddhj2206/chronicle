@@ -11,7 +11,10 @@ export default async function MainLayout({
   const viewer = await getBookmarkViewer();
   return (
     <BookmarkProvider viewer={viewer}>
-      <div className="min-h-screen flex flex-col">
+      <div
+        data-public-page
+        className="min-h-screen flex flex-col pb-[var(--article-actions-height,0px)] md:pb-0"
+      >
         <Navbar />
         <main className="flex-1 w-full mx-auto max-w-7xl px-4 py-8">
           {children}

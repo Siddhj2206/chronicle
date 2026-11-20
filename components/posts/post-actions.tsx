@@ -9,12 +9,14 @@ interface LikeButtonProps {
   postId: string;
   initialLiked: boolean;
   initialCount: number;
+  compact?: boolean;
 }
 
 export function LikeButton({
   postId,
   initialLiked,
   initialCount,
+  compact = false,
 }: LikeButtonProps): React.JSX.Element {
   const [isPending, startTransition] = useTransition();
   const [optimistic, setOptimistic] = useOptimistic(
@@ -44,10 +46,11 @@ export function LikeButton({
       onClick={handleClick}
       disabled={isPending}
       aria-pressed={optimistic.liked}
+      aria-label={likeText}
       variant={optimistic.liked ? "default" : "outline"}
     >
       <span aria-hidden="true">{optimistic.liked ? "♥" : "♡"}</span>
-      <span>{likeText}</span>
+      <span>{compact ? `Like ${optimistic.count}` : likeText}</span>
     </Button>
   );
 }
