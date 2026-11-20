@@ -173,3 +173,20 @@ export type Tag = typeof tag.$inferSelect;
 export type Post = typeof post.$inferSelect & { tags?: Tag[] };
 export type Comment = typeof comment.$inferSelect;
 export type Like = typeof like.$inferSelect;
+
+export const bookmark = pgTable(
+  "bookmark",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    postId: text("post_id")
+      .notNull()
+      .references(() => post.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.postId] }),
+    index("bookmark_user_created_idx").on(table.userId, table.createdAt),
+  ],
+);

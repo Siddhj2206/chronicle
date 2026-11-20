@@ -1,5 +1,5 @@
 {
-  "id": "4a4a938a-f8dd-42ac-838e-1be9c973cd02",
+  "id": "6a1e45f7-ab45-4638-9d09-436f4e825a58",
   "prevId": "cd3da052-229c-4715-84b0-ab14d917e6aa",
   "version": "7",
   "dialect": "postgresql",
@@ -104,6 +104,95 @@
         }
       },
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bookmark": {
+      "name": "bookmark",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "post_id": {
+          "name": "post_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bookmark_user_created_idx": {
+          "name": "bookmark_user_created_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bookmark_user_id_user_id_fk": {
+          "name": "bookmark_user_id_user_id_fk",
+          "tableFrom": "bookmark",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "bookmark_post_id_post_id_fk": {
+          "name": "bookmark_post_id_post_id_fk",
+          "tableFrom": "bookmark",
+          "tableTo": "post",
+          "columnsFrom": [
+            "post_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "bookmark_user_id_post_id_pk": {
+          "name": "bookmark_user_id_post_id_pk",
+          "columns": [
+            "user_id",
+            "post_id"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -307,18 +396,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
-        },
-        "subtitle": {
-          "name": "subtitle",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reading_time_minutes": {
-          "name": "reading_time_minutes",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         },
         "slug": {
           "name": "slug",

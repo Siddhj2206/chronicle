@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { PostSummary } from "@/components/posts/post-summary";
+import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { TagChips } from "@/components/posts/tag-chips";
 
 import type { Post, User } from "@/lib/db/schema";
@@ -58,8 +59,15 @@ export function StoryCard({
         </time>
       )}
       <div className="story-copy">
-        <div className="story-meta story-byline">
-          <Link href={`/@${post.author.username}`}>{post.author.name}</Link>
+        <div className="story-meta story-byline flex items-center justify-between gap-3">
+          <Link
+            href={`/@${post.author.username}`}
+            className="min-w-0 truncate"
+            title={post.author.name}
+          >
+            {post.author.name}
+          </Link>
+          <BookmarkButton postId={post.id} compact />
         </div>
         <Link href={href}>
           <Heading className="story-title">{post.title}</Heading>
