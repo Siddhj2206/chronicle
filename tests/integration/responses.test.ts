@@ -17,6 +17,7 @@ import {
   getTrendingPosts,
 } from "@/actions/posts";
 import { searchPosts } from "@/actions/search";
+import { getSavedPosts, toggleBookmark } from "@/actions/bookmarks";
 import { getTagPosts } from "@/actions/tags";
 import { getDb } from "@/lib/db";
 import { comment, postTag, tag } from "@/lib/db/schema";
@@ -47,7 +48,7 @@ async function fixture() {
 }
 
 describe("threaded responses", () => {
-  it("keeps topic chips and response totals together on topic pages", async () => {
+  it("keeps topic chips and response totals together on topic and library pages", async () => {
     const { article, owner, root } = await fixture();
     await replyToComment(article.id, root.id, body("A reply"));
     const quiet = await createPost(owner.id);
@@ -61,6 +62,22 @@ describe("threaded responses", () => {
       { postId: article.id, tagId: topic.id },
       { postId: quiet.id, tagId: topic.id },
     ]);
+    await toggleBookmark(article.id);
+    await toggleBookmark(quiet.id);
+    expect(await getSavedPosts()).toMatchObject({
+      posts: expect.arrayContaining([
+        expect.objectContaining({
+          id: article.id,
+          tags: [topic],
+          responseCount: 2,
+        }),
+        expect.objectContaining({
+          id: quiet.id,
+          tags: [topic],
+          responseCount: 0,
+        }),
+      ]),
+    });
     expect(await getTagPosts(topic.slug)).toMatchObject({
       posts: expect.arrayContaining([
         expect.objectContaining({
@@ -81,28 +98,38 @@ describe("threaded responses", () => {
     });
     const failure = new Error("Response totals unavailable");
     const select = db.select.bind(db);
-    const lookup = vi
-      .spyOn(db, "select")
-      .mockImplementationOnce(select)
-      .mockImplementationOnce(select)
-      .mockImplementationOnce(select)
-      .mockImplementationOnce(() => {
-        throw failure;
-      });
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
-    try {
-      const result = await getTagPosts(topic.slug);
-      expect(result).toMatchObject({ totalCount: 2 });
-      if (!result || "error" in result)
-        throw new Error("Missing topic stories");
-      for (const row of result.posts) {
-        expect(row.post).toMatchObject({ tags: [topic] });
-        expect(row.post.responseCount).toBeUndefined();
+    for (const query of [
+      () => getTagPosts(topic.slug),
+      () => getSavedPosts(),
+    ]) {
+      const lookup = vi
+        .spyOn(db, "select")
+        .mockImplementationOnce(select)
+        .mockImplementationOnce(select)
+        .mockImplementationOnce(select)
+        .mockImplementationOnce(() => {
+          throw failure;
+        });
+      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const result = await query();
+        expect(result).toMatchObject({ totalCount: 2 });
+        if (!result || "error" in result) throw new Error("Missing stories");
+        expect(result.posts).toHaveLength(2);
+        for (const row of result.posts) {
+          expect("post" in row ? row.post : row).toMatchObject({
+            tags: [topic],
+            responseCount: undefined,
+          });
+        }
+        expect(log).toHaveBeenCalledWith(
+          "Response count lookup error:",
+          failure,
+        );
+      } finally {
+        lookup.mockRestore();
+        log.mockRestore();
       }
-      expect(log).toHaveBeenCalledWith("Response count lookup error:", failure);
-    } finally {
-      lookup.mockRestore();
-      log.mockRestore();
     }
   });
   it("requires authentication and validates identifiers, content and reply targets", async () => {

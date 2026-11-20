@@ -31,6 +31,7 @@ export function proxy(request: NextRequest) {
   const isDashboard =
     pathname.startsWith("/manuscripts") ||
     pathname === "/new" ||
+    pathname === "/library" ||
     pathname.startsWith("/edit") ||
     pathname === "/settings";
 

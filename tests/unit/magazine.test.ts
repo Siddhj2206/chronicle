@@ -36,6 +36,31 @@ const post: StoryCardProps["post"] = {
 };
 
 describe("Museum monograph components", () => {
+  it("keeps bookmark controls, response totals and topics together on every story card", () => {
+    for (const Card of [HeroCard, GridCard, ListCard]) {
+      const html = renderToStaticMarkup(
+        createElement(Card, {
+          post: {
+            ...post,
+            responseCount: 2,
+            tags: [
+              {
+                id: "topic",
+                name: "Gardens",
+                slug: "gardens",
+                createdAt: new Date("2026-11-19"),
+              },
+            ],
+          },
+        }),
+      );
+      expect(html).toContain('aria-label="Sign in to save story"');
+      expect(html).toContain('href="/@alex/morning#responses"');
+      expect(html).toContain("2 responses");
+      expect(html).toContain('href="/tag/gardens"');
+      expect(html).toContain("Gardens");
+    }
+  });
   it("links real response counts, pluralizes zero and one, and omits unavailable counts", () => {
     for (const responseCount of [0, 1, 3]) {
       const html = renderToStaticMarkup(

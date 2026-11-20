@@ -12,6 +12,7 @@ import { LikeButton } from "@/components/posts/post-actions";
 import { CommentList } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
 import { getSession } from "@/lib/session";
+import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { analyzeReading } from "@/lib/reading";
 
 import type { Metadata } from "next";
@@ -155,12 +156,13 @@ export default async function PostPage({
           </div>
 
           {/* Post Actions */}
-          <div className="mt-12 max-w-[680px] border-y border-border py-6">
+          <div className="mt-12 flex max-w-[680px] flex-wrap items-center justify-between gap-4 border-y border-border py-6">
             <LikeButton
               postId={post.id}
               initialLiked={userLiked}
               initialCount={likeCount}
             />
+            <BookmarkButton postId={post.id} />
           </div>
 
           {/* Article Footer / Author Bio */}
