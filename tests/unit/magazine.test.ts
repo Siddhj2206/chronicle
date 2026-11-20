@@ -112,6 +112,48 @@ describe("Museum monograph components", () => {
     },
   );
 
+  it("renders feed metadata and a right-hand cover while retaining story links", () => {
+    const html = renderToStaticMarkup(
+      createElement(ListCard, {
+        post: {
+          ...post,
+          content: "word ".repeat(461),
+          author: { ...post.author, image: "/author.jpg" },
+        },
+        layout: "feed",
+      }),
+    );
+    expect(html).toContain("data-feed-story");
+    expect(html).toContain('href="/@alex/morning"');
+    expect(html).toContain('href="/@alex"');
+    expect(html).toContain("url=%2Fcover.jpg");
+    expect(html).toContain("url=%2Fauthor.jpg");
+    expect(html).toContain("A closer look.");
+    expect(html).toContain("3 min read");
+    expect(html).toContain('dateTime="2026-11-19T12:00:00.000Z"');
+  });
+
+  it("renders feed fallbacks without images, dates or excerpts", () => {
+    const html = renderToStaticMarkup(
+      createElement(ListCard, {
+        post: {
+          ...post,
+          title: "",
+          content: "",
+          coverImage: null,
+          publishedAt: null,
+          excerpt: null,
+        },
+        layout: "feed",
+      }),
+    );
+    expect(html).toContain("Untitled story");
+    expect(html).toContain("1 min read");
+    expect(html).toMatch(/aria-hidden="true"[^>]*>C<\/span>/);
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("<time");
+  });
+
   it("renders a decorative title initial and omits absent dates and excerpts", () => {
     const html = renderToStaticMarkup(
       createElement(HeroCard, {
