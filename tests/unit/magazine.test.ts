@@ -36,6 +36,19 @@ const post: StoryCardProps["post"] = {
 };
 
 describe("Museum monograph components", () => {
+  it("preserves linked topics in the feed layout without inventing empty topics", () => {
+    const render = (tags?: StoryCardProps["post"]["tags"]) =>
+      renderToStaticMarkup(
+        createElement(ListCard, { layout: "feed", post: { ...post, tags } }),
+      );
+    expect(render()).not.toContain('aria-label="Topics"');
+    expect(render([])).not.toContain('aria-label="Topics"');
+    const html = render([
+      { id: "topic", name: "東京", slug: "東京", createdAt: post.createdAt },
+    ]);
+    expect(html).toContain('href="/tag/%E6%9D%B1%E4%BA%AC"');
+    expect(html).toContain("東京");
+  });
   it("bounds long topic labels and preserves their full accessible names", () => {
     const name = "W".repeat(50);
     for (const Card of [HeroCard, GridCard, ListCard]) {
