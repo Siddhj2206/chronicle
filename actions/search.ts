@@ -5,7 +5,8 @@ import { z } from "zod";
 
 import { getDb } from "@/lib/db";
 import { withResponseCounts } from "@/lib/response-counts";
-import { post, user } from "@/lib/db/schema";
+import { post, user, postTag, tag } from "@/lib/db/schema";
+import { withPostTags } from "@/lib/post-tags";
 
 import type { Post } from "@/lib/db/schema";
 
@@ -16,6 +17,7 @@ import type { Post } from "@/lib/db/schema";
 export type DatePreset = "week" | "month" | "year";
 
 export interface SearchParams {
+  tag?: string;
   query: string;
   author?: string; // Filter by username
   datePreset?: DatePreset; // Quick date presets
@@ -98,7 +100,17 @@ const searchCursorSchema = z.object({
  * @returns Paginated search results
  */
 export async function searchPosts(params: SearchParams): Promise<SearchResult> {
-  const { query, author, datePreset, cursor, limit = 10 } = params;
+  const {
+    query,
+    author,
+    datePreset,
+    cursor,
+    limit = 10,
+    tag: tagSlug,
+  } = params;
+  const tagFilter = tagSlug
+    ? sql`exists (select 1 from ${postTag} inner join ${tag} on ${tag.id} = ${postTag.tagId} where ${postTag.postId} = ${post.id} and ${tag.slug} = ${tagSlug})`
+    : undefined;
 
   // Empty query returns empty results
   if (!query || !/[\p{L}\p{N}]/u.test(query)) {
@@ -182,7 +194,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
       })
       .from(post)
       .innerJoin(user, eq(post.authorId, user.id))
-      .where(and(...conditions))
+      .where(and(...conditions, tagFilter))
       // Order by relevance rank (descending), then by publish date, then by ID for stable cursor
       .orderBy(desc(rank), desc(publishedAt), desc(post.id))
       // Fetch one extra to determine if there are more results
@@ -209,7 +221,11 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
           ).toString("base64url")
         : null;
 
-    return { posts: await withResponseCounts(posts), hasMore, nextCursor };
+    return {
+      posts: await withResponseCounts(await withPostTags(posts)),
+      hasMore,
+      nextCursor,
+    };
   } catch (error) {
     if (!after?.fallback) console.error("Search posts error:", error);
     if (after && !after.fallback) return empty;
@@ -253,7 +269,7 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
         })
         .from(post)
         .innerJoin(user, eq(post.authorId, user.id))
-        .where(and(...fallbackConditions))
+        .where(and(...fallbackConditions, tagFilter))
         .orderBy(desc(publishedAt), desc(post.id))
         .limit(limit + 1);
 
@@ -274,7 +290,11 @@ export async function searchPosts(params: SearchParams): Promise<SearchResult> {
             ).toString("base64url")
           : null;
 
-      return { posts: await withResponseCounts(posts), hasMore, nextCursor };
+      return {
+        posts: await withResponseCounts(await withPostTags(posts)),
+        hasMore,
+        nextCursor,
+      };
     } catch (fallbackError) {
       console.error("Search fallback error:", fallbackError);
       return { posts: [], hasMore: false, nextCursor: null };

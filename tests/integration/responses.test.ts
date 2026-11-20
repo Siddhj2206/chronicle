@@ -17,8 +17,9 @@ import {
   getTrendingPosts,
 } from "@/actions/posts";
 import { searchPosts } from "@/actions/search";
+import { getTagPosts } from "@/actions/tags";
 import { getDb } from "@/lib/db";
-import { comment } from "@/lib/db/schema";
+import { comment, postTag, tag } from "@/lib/db/schema";
 import { withResponseCounts } from "@/lib/response-counts";
 import {
   createPost,
@@ -46,6 +47,64 @@ async function fixture() {
 }
 
 describe("threaded responses", () => {
+  it("keeps topic chips and response totals together on topic pages", async () => {
+    const { article, owner, root } = await fixture();
+    await replyToComment(article.id, root.id, body("A reply"));
+    const quiet = await createPost(owner.id);
+    const db = await getDb();
+    const [topic] = await db
+      .insert(tag)
+      .values({ name: "Gardens", slug: "gardens" })
+      .onConflictDoUpdate({ target: tag.slug, set: { name: "Gardens" } })
+      .returning();
+    await db.insert(postTag).values([
+      { postId: article.id, tagId: topic.id },
+      { postId: quiet.id, tagId: topic.id },
+    ]);
+    expect(await getTagPosts(topic.slug)).toMatchObject({
+      posts: expect.arrayContaining([
+        expect.objectContaining({
+          post: expect.objectContaining({
+            id: article.id,
+            tags: [topic],
+            responseCount: 2,
+          }),
+        }),
+        expect.objectContaining({
+          post: expect.objectContaining({
+            id: quiet.id,
+            tags: [topic],
+            responseCount: 0,
+          }),
+        }),
+      ]),
+    });
+    const failure = new Error("Response totals unavailable");
+    const select = db.select.bind(db);
+    const lookup = vi
+      .spyOn(db, "select")
+      .mockImplementationOnce(select)
+      .mockImplementationOnce(select)
+      .mockImplementationOnce(select)
+      .mockImplementationOnce(() => {
+        throw failure;
+      });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const result = await getTagPosts(topic.slug);
+      expect(result).toMatchObject({ totalCount: 2 });
+      if (!result || "error" in result)
+        throw new Error("Missing topic stories");
+      for (const row of result.posts) {
+        expect(row.post).toMatchObject({ tags: [topic] });
+        expect(row.post.responseCount).toBeUndefined();
+      }
+      expect(log).toHaveBeenCalledWith("Response count lookup error:", failure);
+    } finally {
+      lookup.mockRestore();
+      log.mockRestore();
+    }
+  });
   it("requires authentication and validates identifiers, content and reply targets", async () => {
     expect(await replyToComment("post", null, body())).toEqual({
       error: "Unauthorized",

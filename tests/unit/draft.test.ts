@@ -10,6 +10,15 @@ const draft = {
 };
 
 describe("draft helpers", () => {
+  it("tracks topic-only edits and clearing as repeated draft fields", () => {
+    const fields = { ...draft, tags: ["Gardens", "東京"] };
+    expect(draftsMatch(fields, { ...fields, tags: [...fields.tags] })).toBe(
+      true,
+    );
+    expect(draftsMatch(fields, { ...fields, tags: [] })).toBe(false);
+    expect(draftFormData(fields).getAll("tags")).toEqual(fields.tags);
+    expect(draftFormData({ ...fields, tags: [] }).getAll("tags")).toEqual([]);
+  });
   it("compares every persisted field without normalizing Markdown", () => {
     expect(draftsMatch(draft, { ...draft })).toBe(true);
     for (const key of Object.keys(draft)) {
