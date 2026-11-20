@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { StoryCard } from "@/components/magazine/story-card";
+import { TagChips } from "@/components/posts/tag-chips";
 import { analyzeReading } from "@/lib/reading";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +71,7 @@ function FeedStory({ post, className }: StoryCardProps): React.JSX.Element {
           )}
           <span>{minutes} min read</span>
         </div>
+        <TagChips tags={post.tags} />
       </div>
       <Link
         href={href}
