@@ -1,12 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TextareaAutosize from "react-textarea-autosize";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,362 +25,304 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { TagInput } from "@/components/posts/tag-input";
 import { LexicalEditor } from "@/components/posts/lexical-editor";
+import { useDraftSave } from "@/components/posts/use-draft-save";
 import { ImageUpload } from "@/components/layout/image-upload";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import {
-  createPost,
-  updatePost,
-  publishPost,
-  unpublishPost,
-  deletePost,
-} from "@/actions/posts";
-import { cn } from "@/lib/utils";
+import { publishPost, unpublishPost, deletePost } from "@/actions/posts";
+import { useSession } from "@/lib/auth-client";
 
-import type { Post } from "@/lib/db/schema";
+import type { Post, Tag } from "@/lib/db/schema";
 
 interface PostEditorPageProps {
   mode: "new" | "edit";
-  post?: Post;
+  post?: Post & { tags?: Tag[] };
 }
 
-const AUTO_SAVE_DELAY = 30000; // 30 seconds
-
-type SaveResult = { ok: true; slug: string } | { ok: false };
-
-export function PostEditorPage({ mode, post }: PostEditorPageProps) {
+export function PostEditorPage({
+  post,
+}: PostEditorPageProps): React.JSX.Element {
   const router = useRouter();
-  const [isPending, setIsPending] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-
-  // Form state
+  const { data: session } = useSession();
   const [title, setTitle] = useState(post?.title || "");
+  const [tags, setTags] = useState<string[]>(
+    post?.tags?.map((tag) => tag.name) || [],
+  );
   const [excerpt, setExcerpt] = useState(post?.excerpt || "");
   const [content, setContent] = useState(post?.content || "");
   const [coverImage, setCoverImage] = useState(post?.coverImage || "");
-  const [isPublished, setIsPublished] = useState(post?.published || false);
-  const [currentSlug, setCurrentSlug] = useState(post?.slug || "");
-
-  // Track if there are unsaved changes
-  const [hasChanges, setHasChanges] = useState(false);
-  const initialDataRef = useRef({ title, excerpt, content, coverImage });
-
-  // Use ref to store form data for savePost to avoid recreation on every state change
-  const formDataRef = useRef({ title, excerpt, content, coverImage });
-  useEffect(() => {
-    formDataRef.current = { title, excerpt, content, coverImage };
-  }, [title, excerpt, content, coverImage]);
-
-  // Track last change time for optimized auto-save
-  const lastChangeTimeRef = useRef<number>(0);
-
-  // Check for changes
-  useEffect(() => {
-    const hasChanged =
-      title !== initialDataRef.current.title ||
-      excerpt !== initialDataRef.current.excerpt ||
-      content !== initialDataRef.current.content ||
-      coverImage !== initialDataRef.current.coverImage;
-    setHasChanges(hasChanged);
-    if (hasChanged) {
-      lastChangeTimeRef.current = Date.now();
-    }
-  }, [title, excerpt, content, coverImage]);
-
-  // Warn before navigation with unsaved changes
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasChanges) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [hasChanges]);
-
-  // Optimized savePost using refs to minimize dependency array
-  const savePost = useCallback(
-    async (isAutoSave = false): Promise<SaveResult> => {
-      const { title, content, excerpt, coverImage } = formDataRef.current;
-
-      if (!title.trim()) {
-        if (!isAutoSave) toast.error("Title is required");
-        return { ok: false };
-      }
-
-      if (isAutoSave) {
-        setIsSaving(true);
-      } else {
-        setIsPending(true);
-      }
-
-      try {
-        const formData = new FormData();
-        formData.append("title", title);
-        formData.append("content", content);
-        formData.append("excerpt", excerpt);
-        formData.append("coverImage", coverImage);
-
-        if (mode === "new") {
-          const result = await createPost(formData);
-          if (result.error) {
-            toast.error(result.error);
-            return { ok: false };
-          }
-          setCurrentSlug(result.slug!);
-          // Update URL without full reload
-          router.replace(`/edit/${result.slug}`);
-          toast.success("Manuscript created");
-          // Update initial data ref
-          initialDataRef.current = { title, excerpt, content, coverImage };
-          setHasChanges(false);
-          return { ok: true, slug: result.slug! };
-        } else {
-          const result = await updatePost(currentSlug, formData);
-          if (result.error) {
-            toast.error(result.error);
-            return { ok: false };
-          }
-          if (!isAutoSave) {
-            toast.success("Manuscript saved");
-          }
-          setLastSaved(new Date());
-          // Update initial data ref
-          initialDataRef.current = { title, excerpt, content, coverImage };
-          setHasChanges(false);
-          return { ok: true, slug: result.slug! };
-        }
-      } catch {
-        toast.error("Something went wrong");
-        return { ok: false };
-      } finally {
-        setIsPending(false);
-        setIsSaving(false);
-      }
-    },
-    [mode, currentSlug, router],
+  const [published, setPublished] = useState(post?.published || false);
+  const [panel, setPanel] = useState(false);
+  const [pending, setPending] = useState(false);
+  const draft = useDraftSave(
+    { title, tags, excerpt, content, coverImage },
+    post?.slug || "",
+    published || pending,
   );
 
-  // Optimized auto-save: check periodically instead of resetting timer on every keystroke
-  useEffect(() => {
-    if (mode !== "edit" || !currentSlug) return;
-
-    const checkAndSave = async () => {
-      const timeSinceLastChange = Date.now() - lastChangeTimeRef.current;
-      // Only auto-save if there are changes and enough time has passed since last change
-      if (hasChanges && timeSinceLastChange >= AUTO_SAVE_DELAY) {
-        await savePost(true);
-      }
-    };
-
-    // Check every 5 seconds if we should auto-save
-    const interval = setInterval(checkAndSave, 5000);
-    return () => clearInterval(interval);
-  }, [mode, hasChanges, currentSlug, savePost]);
-
-  const handlePublish = useCallback(async () => {
-    let slug = currentSlug;
-    // Save first if there are changes
-    if (hasChanges || mode === "new") {
-      const result = await savePost();
-      if (!result.ok) return;
-      slug = result.slug;
-    }
-
-    if (!slug) return;
-
-    setIsPending(true);
+  async function publish(): Promise<void> {
+    setPending(true);
     try {
-      if (isPublished) {
-        const result = await unpublishPost(slug);
-        if (result.error) {
-          toast.error(result.error);
-          return;
-        }
-        setIsPublished(false);
-        toast.success("Manuscript unpublished");
-      } else {
-        const result = await publishPost(slug);
-        if (result.error) {
-          toast.error(result.error);
-          return;
-        }
-        setIsPublished(true);
-        toast.success("Manuscript published!");
+      const slug = await draft.save();
+      if (!slug) return;
+      if (published) {
+        setPanel(false);
+        toast.success("Story saved");
+        router.refresh();
+        return;
       }
-      router.refresh();
-    } catch {
-      toast.error("Something went wrong");
-    } finally {
-      setIsPending(false);
-    }
-  }, [currentSlug, isPublished, hasChanges, mode, savePost, router]);
-
-  const handleDelete = useCallback(async () => {
-    if (!currentSlug) {
-      router.push("/manuscripts");
-      return;
-    }
-
-    setIsPending(true);
-    try {
-      const result = await deletePost(currentSlug);
+      const result = await publishPost(slug);
       if (result.error) {
         toast.error(result.error);
         return;
       }
-      toast.success("Manuscript burned");
+      setPublished(true);
+      setPanel(false);
+      toast.success("Story published");
+      router.refresh();
+    } catch {
+      toast.error("Could not publish. Please try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function unpublish(): Promise<void> {
+    if (!draft.currentSlug) return;
+    setPending(true);
+    try {
+      const result = await unpublishPost(draft.currentSlug);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setPublished(false);
+      toast.success("Returned to drafts");
+      router.refresh();
+    } catch {
+      toast.error("Could not unpublish. Please try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function remove(): Promise<void> {
+    if (!draft.currentSlug) return;
+    setPending(true);
+    try {
+      const result = await deletePost(draft.currentSlug);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       router.push("/manuscripts");
     } catch {
-      toast.error("Something went wrong");
+      toast.error("Could not delete. Please try again.");
     } finally {
-      setIsPending(false);
+      setPending(false);
     }
-  }, [currentSlug, router]);
+  }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background">
-        <div className="flex items-center justify-between px-4 py-3 md:px-6">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/manuscripts"
-              className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground"
-            >
-              ← Back
-            </Link>
-            <Separator orientation="vertical" className="hidden h-4 md:block" />
-            <span
-              className={cn(
-                "hidden rounded-none border px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-widest md:inline-block",
-                isPublished
-                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                  : "border-neutral-400 text-neutral-500",
-              )}
-            >
-              {isPublished ? "Published" : "Draft"}
-            </span>
-            {isSaving && (
-              <span className="font-mono text-xs text-muted-foreground">
-                Saving...
-              </span>
-            )}
-            {lastSaved && !isSaving && !hasChanges && (
-              <span className="hidden font-mono text-xs text-muted-foreground md:inline">
-                Saved {lastSaved.toLocaleTimeString()}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {mode === "edit" && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    disabled={isPending}
-                    className="h-8 font-mono text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    Burn
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="rounded-none border-2 border-black dark:border-white">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="font-serif text-xl font-bold">
-                      Burn This Manuscript?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription className="font-serif">
-                      Are you sure you want to burn this manuscript? This action
-                      cannot be undone. Your work will be permanently destroyed.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="rounded-none border-2 border-black font-mono text-xs uppercase tracking-widest dark:border-white">
-                      Keep Manuscript
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="rounded-none border-2 border-destructive bg-destructive font-mono text-xs uppercase tracking-widest text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Burn
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            <Separator orientation="vertical" className="hidden h-4 md:block" />
-            <Button
+    <main id="main-content" className="min-h-screen bg-background">
+      <header className="sticky top-0 z-40 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-background px-5 py-3 md:px-10">
+        <div className="flex min-w-0 items-center gap-5">
+          <Link
+            href="/manuscripts"
+            aria-label="Back to manuscripts"
+            onClick={(event) => {
+              if (draft.dirty && !window.confirm("Leave with unsaved changes?"))
+                event.preventDefault();
+            }}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            ← <span className="hidden sm:inline">Manuscripts</span>
+          </Link>
+          <span
+            role="status"
+            aria-live="polite"
+            className="text-xs text-muted-foreground"
+          >
+            {draft.status}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          {(draft.dirty || draft.error) && (
+            <button
               type="button"
-              variant="outline"
-              onClick={() => savePost(false)}
-              disabled={isPending || (!hasChanges && mode === "edit")}
-              className="h-8 rounded-none font-mono text-xs font-bold uppercase tracking-widest"
+              onClick={() => void draft.save()}
+              disabled={draft.saving || pending}
+              className="text-xs text-muted-foreground underline"
             >
-              {isPending ? "Saving..." : "Save Draft"}
-            </Button>
-            <Button
-              type="button"
-              onClick={handlePublish}
-              disabled={isPending || !title.trim()}
-              className="h-8 rounded-none bg-black px-4 font-mono text-xs font-bold uppercase tracking-widest text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
-            >
-              {isPublished ? "Unpublish" : "Publish"}
-            </Button>
-          </div>
+              {draft.error ? "Retry save" : "Save"}
+            </button>
+          )}
+          <Button
+            onClick={() => setPanel(true)}
+            disabled={(!title.trim() && !draft.currentSlug) || pending}
+          >
+            {published ? "Publishing settings" : "Publish"}
+          </Button>
         </div>
       </header>
-
-      {/* Main Content - Full Width WYSIWYG */}
-      <div className="flex-1 p-6 md:p-8 lg:px-16 xl:px-24">
-        <div className="mx-auto max-w-4xl space-y-8">
-          {/* Cover Image Upload */}
-          <div className="space-y-2">
-            <Label className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Cover Image
-            </Label>
-            <ImageUpload
-              value={coverImage}
-              onChange={setCoverImage}
-              aspectRatio="video"
-            />
-          </div>
-
-          {/* Title */}
-          <TextareaAutosize
-            name="title"
-            aria-label="Post title"
-            placeholder="Title…"
-            className="w-full resize-none bg-transparent font-serif text-4xl font-black leading-tight tracking-tight placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-5xl"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            minRows={1}
-          />
-
-          {/* Excerpt */}
-          <TextareaAutosize
-            name="excerpt"
-            aria-label="Post excerpt"
-            placeholder="Write a brief excerpt or subtitle…"
-            className="w-full resize-none bg-transparent font-serif text-xl italic leading-relaxed text-muted-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            value={excerpt}
-            onChange={(e) => setExcerpt(e.target.value)}
-            minRows={1}
-          />
-
-          {/* Content Editor - Lexical WYSIWYG */}
-          <LexicalEditor
-            initialContent={content}
-            onChange={setContent}
-            placeholder="Begin your story…"
-          />
-        </div>
+      {draft.error && (
+        <p
+          role="alert"
+          className="mx-auto max-w-[680px] px-5 pt-5 text-sm text-destructive"
+        >
+          {draft.error}
+        </p>
+      )}
+      <div
+        className="mx-auto max-w-[744px] px-8 pb-32 pt-16 md:pt-24"
+        onBlur={(event) => {
+          if (
+            !event.currentTarget.contains(event.relatedTarget) &&
+            !published &&
+            draft.dirty &&
+            title.trim()
+          )
+            void draft.save();
+        }}
+      >
+        <TextareaAutosize
+          name="title"
+          aria-label="Post title"
+          placeholder="Title"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          maxLength={200}
+          minRows={1}
+          className="mb-5 w-full resize-none bg-transparent font-serif text-[36px] leading-[1.05] tracking-tight placeholder:text-muted-foreground/60 focus:outline-none md:text-[56px]"
+        />
+        <TextareaAutosize
+          name="excerpt"
+          aria-label="Post subtitle"
+          placeholder="Add a subtitle (optional)"
+          value={excerpt}
+          onChange={(event) => setExcerpt(event.target.value)}
+          maxLength={300}
+          minRows={1}
+          className="mb-12 w-full resize-none bg-transparent text-lg leading-relaxed text-muted-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+        />
+        <LexicalEditor
+          initialContent={post?.content || ""}
+          onChange={setContent}
+          placeholder="Begin your story…"
+        />
       </div>
-    </div>
+      <Dialog open={panel} onOpenChange={setPanel}>
+        <DialogContent>
+          <div className="max-h-[80vh] space-y-6 overflow-y-auto pr-1">
+            <DialogHeader>
+              <DialogTitle>Ready for readers?</DialogTitle>
+              <DialogDescription>
+                Review your story before publishing.
+              </DialogDescription>
+            </DialogHeader>
+            <article className="border-b border-border pb-5">
+              {coverImage && (
+                <div
+                  className="mb-4 aspect-[2/1] overflow-hidden bg-muted"
+                  style={{
+                    backgroundImage: `url(${JSON.stringify(coverImage)})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                  role="img"
+                  aria-label="Cover preview"
+                />
+              )}
+              <h2 className="break-words font-serif text-4xl leading-tight">
+                {title || "Untitled story"}
+              </h2>
+              {excerpt && (
+                <p className="mt-3 break-words text-sm text-muted-foreground">
+                  {excerpt}
+                </p>
+              )}
+              <p className="mt-4 text-xs text-muted-foreground">
+                By {session?.user.name || "you"}
+              </p>
+            </article>
+            <label className="block text-sm">
+              Subtitle / SEO description
+              <textarea
+                aria-label="Subtitle / SEO description"
+                value={excerpt}
+                onChange={(event) => setExcerpt(event.target.value)}
+                maxLength={300}
+                rows={3}
+                disabled={pending}
+                className="mt-2 w-full resize-y border border-border bg-transparent p-3 text-sm outline-primary"
+              />
+              <span className="mt-2 block text-xs text-muted-foreground">
+                Used as your subtitle, preview and search description.
+              </span>
+            </label>
+            <TagInput value={tags} onChange={setTags} />
+            <div className="space-y-2">
+              <p className="text-sm">Cover image (optional)</p>
+              <ImageUpload
+                value={coverImage}
+                onChange={setCoverImage}
+                disabled={pending}
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
+              <div className="flex items-center gap-4">
+                {published && (
+                  <button
+                    type="button"
+                    onClick={() => void unpublish()}
+                    disabled={pending || draft.saving}
+                    className="text-xs text-muted-foreground underline"
+                  >
+                    Unpublish
+                  </button>
+                )}
+                {draft.currentSlug && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        type="button"
+                        disabled={pending || draft.saving}
+                        className="text-xs text-muted-foreground underline"
+                      >
+                        Delete draft
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this story?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep writing</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => void remove()}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
+              <Button
+                onClick={() => void publish()}
+                disabled={pending || draft.saving || !title.trim()}
+              >
+                {pending
+                  ? "Publishing…"
+                  : published
+                    ? "Save changes"
+                    : "Confirm publish"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </main>
   );
 }

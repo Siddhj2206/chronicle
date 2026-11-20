@@ -9,6 +9,7 @@ import { getDb } from "@/lib/db";
 import { follow, post, user } from "@/lib/db/schema";
 import { getSession } from "@/lib/session";
 import { revalidatePosts } from "@/lib/revalidate-posts";
+import { withPostTags } from "@/lib/post-tags";
 
 import type { Post, User } from "@/lib/db/schema";
 
@@ -165,7 +166,7 @@ export async function getFollowingPosts(
         .offset((page - 1) * limit),
     ]);
     return {
-      posts,
+      posts: await withPostTags(posts),
       totalCount: total.count,
       totalPages: Math.ceil(total.count / limit),
       currentPage: page,

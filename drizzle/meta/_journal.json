@@ -19,8 +19,15 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1795111632258,
-      "tag": "0002_follow_authors",
+      "when": 1795111892223,
+      "tag": "0002_topics_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795138374668,
+      "tag": "0003_follow_authors",
       "breakpoints": true
     }
   ]

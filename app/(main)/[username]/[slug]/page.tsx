@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getPost, getPostContent, incrementViewCount } from "@/actions/posts";
 import { getLikeCount, hasUserLiked } from "@/actions/likes";
 import { PostContent } from "@/components/posts/post-content";
+import { TagChips } from "@/components/posts/tag-chips";
 import { ArticleContents } from "@/components/posts/article-contents";
 import { ReadingProgress } from "@/components/posts/reading-progress";
 import { LikeButton } from "@/components/posts/post-actions";
@@ -113,6 +114,11 @@ export default async function PostPage({
           <p className="max-w-[680px] text-lg leading-relaxed text-muted-foreground md:col-start-2 md:text-xl">
             {post.excerpt}
           </p>
+        )}
+        {!!post.tags?.length && (
+          <div className="md:col-start-2">
+            <TagChips tags={post.tags} />
+          </div>
         )}
       </header>
 

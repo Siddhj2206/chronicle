@@ -8,7 +8,7 @@ import {
   toggleFollow,
 } from "@/actions/follows";
 import { getDb } from "@/lib/db";
-import { follow, user } from "@/lib/db/schema";
+import { follow, postTag, tag, user } from "@/lib/db/schema";
 import { createPost, createUser, resetDatabase } from "@/tests/helpers/db";
 import { mockSession } from "@/tests/helpers/session";
 
@@ -21,6 +21,51 @@ beforeEach(async () => {
 });
 
 describe("following authors", () => {
+  it("keeps topics on followed stories and tolerates unavailable topic storage", async () => {
+    const writer = await createUser();
+    const article = await createPost(writer.id);
+    await createPost(writer.id);
+    const [topic] = await db
+      .insert(tag)
+      .values({ name: "Gardens", slug: "gardens" })
+      .onConflictDoUpdate({ target: tag.slug, set: { name: "Gardens" } })
+      .returning();
+    await db.insert(postTag).values({ postId: article.id, tagId: topic.id });
+    mockSession(await createUser());
+    await toggleFollow(writer.id);
+    const feed = await getFollowingPosts();
+    expect(feed).toMatchObject({
+      posts: expect.arrayContaining([
+        expect.objectContaining({
+          post: expect.objectContaining({ id: article.id, tags: [topic] }),
+        }),
+        expect.objectContaining({
+          post: expect.objectContaining({ tags: [] }),
+        }),
+      ]),
+    });
+    const failure = new Error("Topic storage unavailable");
+    const select = db.select.bind(db);
+    const lookup = vi
+      .spyOn(db, "select")
+      .mockImplementationOnce(select)
+      .mockImplementationOnce(select)
+      .mockImplementationOnce(() => {
+        throw failure;
+      });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const result = await getFollowingPosts();
+      expect(result).toMatchObject({ totalCount: 2 });
+      if ("error" in result) throw new Error(result.error);
+      expect(result.posts).toHaveLength(2);
+      for (const row of result.posts) expect(row.post.tags).toEqual([]);
+      expect(log).toHaveBeenCalledWith("Post tags lookup error:", failure);
+    } finally {
+      lookup.mockRestore();
+      log.mockRestore();
+    }
+  });
   it("requires a session and validates targets", async () => {
     expect(await toggleFollow("missing")).toEqual({ error: "Unauthorized" });
     expect(await getFollowingPosts()).toEqual({ error: "Unauthorized" });
