@@ -33,6 +33,7 @@ export function SearchResults({
         searchParams.author,
         searchParams.datePreset,
         searchParams.limit,
+        searchParams.tag,
       ])}
       initialResults={initialResults}
       searchParams={searchParams}
