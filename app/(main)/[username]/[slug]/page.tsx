@@ -10,6 +10,7 @@ import {
 import { getLikeCount, hasUserLiked } from "@/actions/likes";
 import { getComments } from "@/actions/comments";
 import { PostContent } from "@/components/posts/post-content";
+import { TagChips } from "@/components/posts/tag-chips";
 import { ArticleContents } from "@/components/posts/article-contents";
 import { ReadingProgress } from "@/components/posts/reading-progress";
 import { ArticleActions } from "@/components/posts/article-actions";
@@ -112,6 +113,11 @@ export default async function PostPage({
           date={post.publishedAt}
           minutes={minutes}
         />
+        {!!post.tags?.length && (
+          <div className="md:col-start-2">
+            <TagChips tags={post.tags} />
+          </div>
+        )}
       </header>
 
       {/* Cover Image (if exists) */}

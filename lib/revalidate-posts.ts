@@ -32,6 +32,9 @@ export async function revalidatePosts(
     if (author?.username) usernames.add(author.username);
 
     for (const path of ["/", "/manuscripts", "/settings"]) revalidatePath(path);
+    revalidatePath("/tag/[slug]", "page");
+    revalidatePath("/search");
+    revalidatePath("/archive");
     for (const username of usernames) {
       revalidatePath(`/@${username}`);
       for (const post of posts) revalidatePath(`/@${username}/${post.slug}`);

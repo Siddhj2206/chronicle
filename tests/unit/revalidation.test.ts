@@ -37,6 +37,8 @@ it("invalidates listing, profile, old username and post paths plus content tags"
     "/",
     "/manuscripts",
     "/settings",
+    "/archive",
+    "/search",
     "/@writer",
     "/@writer/story",
     "/@old-writer",
@@ -44,6 +46,7 @@ it("invalidates listing, profile, old username and post paths plus content tags"
   ]) {
     expect(revalidatePath).toHaveBeenCalledWith(path);
   }
+  expect(revalidatePath).toHaveBeenCalledWith("/tag/[slug]", "page");
   expect(revalidateContent).toHaveBeenCalledExactlyOnceWith("post-1");
 });
 
@@ -59,7 +62,10 @@ it("does not invalidate content for a metadata-only change", async () => {
 it("handles an empty author and post set", async () => {
   limit.mockResolvedValueOnce([]);
   await revalidatePosts("missing", { posts: [], contentChanged: true });
-  expect(revalidatePath).toHaveBeenCalledTimes(3);
+  expect(revalidatePath).toHaveBeenCalledTimes(6);
+  expect(revalidatePath).toHaveBeenCalledWith("/tag/[slug]", "page");
+  expect(revalidatePath).toHaveBeenCalledWith("/search");
+  expect(revalidatePath).toHaveBeenCalledWith("/archive");
   expect(revalidateContent).not.toHaveBeenCalled();
 });
 

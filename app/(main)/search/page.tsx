@@ -28,6 +28,7 @@ interface SearchPageProps {
     q?: string;
     author?: string;
     date?: DatePreset;
+    tag?: string;
   }>;
 }
 
@@ -100,19 +101,20 @@ function EmptyState() {
 // ============================================
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const { q, author, date } = await searchParams;
+  const { q, author, date, tag } = await searchParams;
   const query = q || "";
 
   // Build search params object
   const params: SearchParams = {
     query,
     author,
+    tag,
     datePreset: date,
     limit: 10,
   };
 
   // Check if any filters are active
-  const hasFilters = !!(author || date);
+  const hasFilters = !!(author || date || tag);
 
   // Fetch initial results (only if there's a query)
   const initialResults = query
@@ -146,6 +148,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             query={query}
             currentAuthor={author}
             currentDate={date}
+            currentTag={tag}
           />
         </Suspense>
       )}
