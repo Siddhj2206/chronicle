@@ -25,17 +25,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { TagInput } from "@/components/posts/tag-input";
 import { LexicalEditor } from "@/components/posts/lexical-editor";
 import { useDraftSave } from "@/components/posts/use-draft-save";
 import { ImageUpload } from "@/components/layout/image-upload";
 import { publishPost, unpublishPost, deletePost } from "@/actions/posts";
 import { useSession } from "@/lib/auth-client";
 
-import type { Post } from "@/lib/db/schema";
+import type { Post, Tag } from "@/lib/db/schema";
 
 interface PostEditorPageProps {
   mode: "new" | "edit";
-  post?: Post;
+  post?: Post & { tags?: Tag[] };
 }
 
 export function PostEditorPage({
@@ -45,6 +46,9 @@ export function PostEditorPage({
   const { data: session } = useSession();
   const [title, setTitle] = useState(post?.title || "");
   const [subtitle, setSubtitle] = useState(post?.subtitle || "");
+  const [tags, setTags] = useState<string[]>(
+    post?.tags?.map((tag) => tag.name) || [],
+  );
   const [excerpt, setExcerpt] = useState(post?.excerpt || "");
   const [content, setContent] = useState(post?.content || "");
   const [coverImage, setCoverImage] = useState(post?.coverImage || "");
@@ -52,7 +56,7 @@ export function PostEditorPage({
   const [panel, setPanel] = useState(false);
   const [pending, setPending] = useState(false);
   const draft = useDraftSave(
-    { title, subtitle, excerpt, content, coverImage },
+    { title, subtitle, tags, excerpt, content, coverImage },
     post?.slug || "",
     published || pending,
   );
@@ -295,6 +299,7 @@ export function PostEditorPage({
                 Optional summary for search and previews.
               </span>
             </label>
+            <TagInput value={tags} onChange={setTags} />
             <div className="space-y-2">
               <p className="text-sm">Cover image (optional)</p>
               <ImageUpload

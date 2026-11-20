@@ -16,14 +16,12 @@ export async function signIn(
   assertTestDatabase();
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret) throw new Error("BETTER_AUTH_SECRET must be set in .env.test");
-
   const baseURL = process.env.BETTER_AUTH_URL || "http://localhost:3000";
   const secure = new URL(baseURL).protocol === "https:";
   const writer = await createUser(overrides);
   const token = randomUUID();
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
   try {
     const db = await getDb();
     await db.insert(session).values({

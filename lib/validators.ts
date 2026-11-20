@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { isAllowedImageUrl } from "@/lib/image-sources";
+import { tagsSchema } from "@/lib/tags";
 
 export const imageUrlSchema = z
   .string()
@@ -44,6 +45,7 @@ export const postSchema = z.object({
     .trim()
     .max(200, "Subtitle must be at most 200 characters")
     .optional(),
+  tags: tagsSchema.default([]),
   title: z
     .string()
     .min(1, "Title is required")

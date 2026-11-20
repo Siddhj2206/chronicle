@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { PostSummary } from "@/components/posts/post-summary";
+import { TagChips } from "@/components/posts/tag-chips";
 
 import type { Post, User } from "@/lib/db/schema";
 
@@ -67,6 +68,7 @@ export function StoryCard({
           <p className="story-excerpt">{post.subtitle || post.excerpt}</p>
         )}
         <PostSummary post={post} variant="compact" />
+        <TagChips tags={post.tags} />
       </div>
     </article>
   );
