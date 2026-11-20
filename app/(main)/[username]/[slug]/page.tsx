@@ -22,6 +22,7 @@ import { MoreFromAuthor } from "@/components/posts/more-from-author";
 import { CommentList } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
 import { getSession } from "@/lib/session";
+import { BookmarkButton } from "@/components/posts/bookmark-button";
 import { analyzeReading } from "@/lib/reading";
 
 import type { Metadata } from "next";
@@ -165,6 +166,9 @@ export default async function PostPage({
             commentCount={comments.length}
             commentsId={commentsId}
           />
+          <div className="mt-6 max-w-[680px]">
+            <BookmarkButton postId={post.id} />
+          </div>
 
           {/* Article Footer / Author Bio */}
           <ArticleAuthorCard author={author} />
