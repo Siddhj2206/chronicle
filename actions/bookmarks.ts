@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 
-import { and, count, desc, eq, getTableColumns } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { getDb } from "@/lib/db";
 import { bookmark, post, user } from "@/lib/db/schema";
 import { postVisibility } from "@/lib/post-visibility";
+import { withPostTags } from "@/lib/post-tags";
 import { revalidatePosts } from "@/lib/revalidate-posts";
 import { getSession } from "@/lib/session";
 
@@ -106,7 +107,7 @@ export async function getSavedPosts(
     const currentPage = Math.min(parsed.data, totalPages);
     const posts = await db
       .select({
-        ...getTableColumns(post),
+        post,
         author: {
           id: user.id,
           name: user.name,
@@ -121,7 +122,13 @@ export async function getSavedPosts(
       .orderBy(desc(bookmark.createdAt), desc(bookmark.postId))
       .limit(PAGE_SIZE)
       .offset((currentPage - 1) * PAGE_SIZE);
-    return { posts, totalCount, totalPages, currentPage };
+    const tagged = await withPostTags(posts);
+    return {
+      posts: tagged.map(({ post, author }) => ({ ...post, author })),
+      totalCount,
+      totalPages,
+      currentPage,
+    };
   } catch (error) {
     console.error("Reading list query error:", error);
     return { error: "Could not load your reading list" };

@@ -19,8 +19,15 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1795119769028,
-      "tag": "0002_reading_list",
+      "when": 1795111892223,
+      "tag": "0002_topics_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795138375545,
+      "tag": "0003_reading_list",
       "breakpoints": true
     }
   ]
