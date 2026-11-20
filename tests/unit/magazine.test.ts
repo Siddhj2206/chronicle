@@ -36,6 +36,51 @@ const post: StoryCardProps["post"] = {
 };
 
 describe("Museum monograph components", () => {
+  it("bounds long topic labels and preserves their full accessible names", () => {
+    const name = "W".repeat(50);
+    for (const Card of [HeroCard, GridCard, ListCard]) {
+      const html = renderToStaticMarkup(
+        createElement(Card, {
+          post: {
+            ...post,
+            tags: [
+              {
+                id: "long-topic",
+                name,
+                slug: "long-topic",
+                createdAt: new Date("2026-11-19"),
+              },
+            ],
+          },
+        }),
+      );
+      expect(html).toContain(`title="${name}"`);
+      expect(html).toContain("min-w-0 max-w-full");
+      expect(html).toContain('class="truncate"');
+    }
+  });
+  it("keeps linked Unicode topics on every redesigned card", () => {
+    for (const Card of [HeroCard, GridCard, ListCard]) {
+      const html = renderToStaticMarkup(
+        createElement(Card, {
+          post: {
+            ...post,
+            tags: [
+              {
+                id: "topic",
+                name: "東京",
+                slug: "東京",
+                createdAt: new Date("2026-11-19"),
+              },
+            ],
+          },
+        }),
+      );
+      expect(html).toContain('href="/tag/%E6%9D%B1%E4%BA%AC"');
+      expect(html).toContain("東京");
+    }
+  });
+
   beforeEach(() => {
     vi.mocked(getNewestPosts).mockResolvedValue([]);
     vi.mocked(getTrendingPosts).mockResolvedValue([]);

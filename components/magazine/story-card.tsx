@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
+import { TagChips } from "@/components/posts/tag-chips";
 
 import type { Post, User } from "@/lib/db/schema";
 
@@ -63,6 +64,7 @@ export function StoryCard({
           <Heading className="story-title">{post.title}</Heading>
         </Link>
         {post.excerpt && <p className="story-excerpt">{post.excerpt}</p>}
+        <TagChips tags={post.tags} />
       </div>
     </article>
   );

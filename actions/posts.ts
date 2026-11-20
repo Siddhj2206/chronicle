@@ -12,6 +12,7 @@ import { post, user } from "@/lib/db/schema";
 import { postSchema } from "@/lib/validators";
 import { uploadContent, deleteContent, getContent } from "@/lib/r2-content";
 import { revalidatePosts } from "@/lib/revalidate-posts";
+import { replacePostTags, withPostTags } from "@/lib/post-tags";
 
 import type { Post } from "@/lib/db/schema";
 
@@ -110,6 +111,7 @@ export async function createPost(formData: FormData) {
   }
 
   const parsed = postSchema.safeParse({
+    tags: formData.getAll("tags"),
     title: formData.get("title"),
     content: formData.get("content"),
     excerpt: formData.get("excerpt") || undefined,
@@ -120,7 +122,7 @@ export async function createPost(formData: FormData) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const { title, content, excerpt, coverImage } = parsed.data;
+  const { title, content, excerpt, coverImage, tags } = parsed.data;
 
   // Generate a temporary ID for the post (will be replaced by DB)
   const tempId = crypto.randomUUID();
@@ -139,21 +141,25 @@ export async function createPost(formData: FormData) {
 
     for (let attempt = 0; ; attempt++) {
       try {
-        const [newPost] = await db
-          .insert(post)
-          .values({
-            id: tempId, // Use the same ID we used for R2
-            authorId: session.user.id,
-            title,
-            slug,
-            content, // Keep in DB for now (migration period)
-            contentPath,
-            excerpt: excerpt || null,
-            coverImage: coverImage || null,
-            published: false,
-            searchVector,
-          })
-          .returning();
+        const newPost = await db.transaction(async (tx) => {
+          const [created] = await tx
+            .insert(post)
+            .values({
+              id: tempId, // Use the same ID we used for R2
+              authorId: session.user.id,
+              title,
+              slug,
+              content, // Keep in DB for now (migration period)
+              contentPath,
+              excerpt: excerpt || null,
+              coverImage: coverImage || null,
+              published: false,
+              searchVector,
+            })
+            .returning();
+          await replacePostTags(tx, created.id, tags);
+          return created;
+        });
 
         committed = true;
         await revalidatePosts(session.user.id, {
@@ -182,6 +188,7 @@ export async function updatePost(slug: string, formData: FormData) {
   }
 
   const parsed = postSchema.safeParse({
+    tags: formData.getAll("tags"),
     title: formData.get("title"),
     content: formData.get("content"),
     excerpt: formData.get("excerpt") || undefined,
@@ -192,7 +199,7 @@ export async function updatePost(slug: string, formData: FormData) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const { title, content, excerpt, coverImage } = parsed.data;
+  const { title, content, excerpt, coverImage, tags } = parsed.data;
 
   let contentPath: string | undefined;
   let committed = false;
@@ -217,19 +224,23 @@ export async function updatePost(slug: string, formData: FormData) {
     // Generate updated search vector
     const searchVector = generateSearchVector(title, excerpt || null, content);
 
-    const [updatedPost] = await db
-      .update(post)
-      .set({
-        title,
-        content, // Keep in DB for now (migration period)
-        contentPath,
-        excerpt: excerpt || null,
-        coverImage: coverImage || null,
-        searchVector,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(post.slug, slug), eq(post.authorId, session.user.id)))
-      .returning();
+    const updatedPost = await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(post)
+        .set({
+          title,
+          content, // Keep in DB for now (migration period)
+          contentPath,
+          excerpt: excerpt || null,
+          coverImage: coverImage || null,
+          searchVector,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(post.slug, slug), eq(post.authorId, session.user.id)))
+        .returning();
+      if (updated) await replacePostTags(tx, updated.id, tags);
+      return updated;
+    });
 
     if (!updatedPost) {
       await deleteContent(contentPath);
@@ -400,7 +411,7 @@ export const getPost = cache(async function getPost(
       return null;
     }
 
-    return result[0];
+    return (await withPostTags(result))[0];
   } catch (error) {
     console.error("Get post error:", error);
     return null;
@@ -488,7 +499,8 @@ export async function getPostForEditWithContent(
     const content = await getPostContent(postData.id);
 
     return {
-      post: postData,
+      post: (await withPostTags([{ post: postData }], { required: true }))[0]
+        .post,
       content: content || postData.content, // Fallback to DB content
     };
   } catch (error) {
@@ -515,7 +527,7 @@ export async function getPostsByUser(username: string) {
       .where(and(eq(user.username, username), eq(post.published, true)))
       .orderBy(desc(post.publishedAt));
 
-    return result;
+    return withPostTags(result);
   } catch (error) {
     console.error("Get posts by user error:", error);
     return [];
@@ -564,7 +576,7 @@ export async function getNewestPosts(limit = 10, offset = 0) {
       .limit(limit)
       .offset(offset);
 
-    return result;
+    return withPostTags(result);
   } catch (error) {
     console.error("Get newest posts error:", error);
     return [];
@@ -612,7 +624,7 @@ export async function getTrendingPosts(limit = 5) {
 
     // If we have enough recent posts, return them
     if (recentTrending.length >= limit) {
-      return recentTrending;
+      return withPostTags(recentTrending);
     }
 
     // Backfill with all-time top viewed posts
@@ -636,7 +648,7 @@ export async function getTrendingPosts(limit = 5) {
         .orderBy(desc(post.viewCount))
         .limit(limit);
 
-      return allTimeTrending;
+      return withPostTags(allTimeTrending);
     }
 
     const backfill = await db
@@ -655,7 +667,7 @@ export async function getTrendingPosts(limit = 5) {
       .orderBy(desc(post.viewCount))
       .limit(limit - recentTrending.length);
 
-    return [...recentTrending, ...backfill];
+    return withPostTags([...recentTrending, ...backfill]);
   } catch (error) {
     console.error("Get trending posts error:", error);
     return [];
@@ -710,7 +722,7 @@ export async function getAllPosts(
       .offset(offset);
 
     return {
-      posts,
+      posts: await withPostTags(posts),
       totalCount,
       totalPages: Math.ceil(totalCount / limit),
       currentPage: page,

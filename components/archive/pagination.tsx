@@ -5,10 +5,18 @@ import { cn } from "@/lib/utils";
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
-  sort: string;
+  sort?: string;
+  basePath?: string;
 }
 
-export function Pagination({ currentPage, totalPages, sort }: PaginationProps) {
+export function Pagination({
+  currentPage,
+  totalPages,
+  sort,
+  basePath = "/archive",
+}: PaginationProps) {
+  const pageHref = (page: number) =>
+    `${basePath}?page=${page}${sort ? `&sort=${sort}` : ""}`;
   // Generate page numbers to show (e.g., 1 2 3 ... 10)
   const getPageNumbers = () => {
     const pages: (number | "...")[] = [];
@@ -52,7 +60,7 @@ export function Pagination({ currentPage, totalPages, sort }: PaginationProps) {
       {/* Previous */}
       {currentPage > 1 ? (
         <Link
-          href={`/archive?page=${currentPage - 1}&sort=${sort}`}
+          href={pageHref(currentPage - 1)}
           className="font-mono text-xs uppercase tracking-widest hover:underline"
         >
           ← Prev
@@ -73,7 +81,7 @@ export function Pagination({ currentPage, totalPages, sort }: PaginationProps) {
           ) : (
             <Link
               key={page}
-              href={`/archive?page=${page}&sort=${sort}`}
+              href={pageHref(page)}
               className={cn(
                 "min-w-[2rem] px-2 py-1 text-center font-mono text-xs uppercase tracking-widest",
                 page === currentPage
@@ -90,7 +98,7 @@ export function Pagination({ currentPage, totalPages, sort }: PaginationProps) {
       {/* Next */}
       {currentPage < totalPages ? (
         <Link
-          href={`/archive?page=${currentPage + 1}&sort=${sort}`}
+          href={pageHref(currentPage + 1)}
           className="font-mono text-xs uppercase tracking-widest hover:underline"
         >
           Next →
