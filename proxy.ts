@@ -30,6 +30,7 @@ export function proxy(request: NextRequest) {
   const isOnboarding = pathname === onboardingRoute;
   const isDashboard =
     pathname.startsWith("/manuscripts") ||
+    pathname === "/following" ||
     pathname === "/new" ||
     pathname === "/library" ||
     pathname.startsWith("/edit") ||

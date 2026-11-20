@@ -42,6 +42,7 @@ describe("Museum monograph components", () => {
         createElement(ListCard, { layout: "feed", post: { ...post, tags } }),
       );
     expect(render()).not.toContain('aria-label="Topics"');
+    expect(render()).toContain('aria-label="Sign in to save story"');
     expect(render([])).not.toContain('aria-label="Topics"');
     const html = render([
       { id: "topic", name: "東京", slug: "東京", createdAt: post.createdAt },

@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 
 import { getPostsByUser } from "@/actions/posts";
+import { getFollowInfo } from "@/actions/follows";
+import { FollowButton } from "@/components/auth/follow-button";
 import { HeroCard } from "@/components/magazine/hero-card";
 import { ListCard } from "@/components/magazine/list-card";
 import { ProfileTabs } from "@/components/magazine/profile-tabs";
@@ -42,6 +44,7 @@ export default async function ProfilePage({
     searchParams,
   ]);
   if (!userData) notFound();
+  const followInfo = await getFollowInfo(userData.id);
   const activeTab = profileTab(query?.tab);
   const { featured, remaining, count } = profileStories(posts);
   const joined = (
@@ -88,6 +91,11 @@ export default async function ProfilePage({
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
             <span>Joined {joined}</span>
             <span>
+              {followInfo.followers}{" "}
+              {followInfo.followers === 1 ? "follower" : "followers"}
+            </span>
+            <span>{followInfo.following} following</span>
+            <span>
               {count} {count === 1 ? "story" : "stories"}
             </span>
           </div>
@@ -95,6 +103,11 @@ export default async function ProfilePage({
             data-profile-actions
             className="mt-5 flex flex-wrap gap-4 text-sm"
           >
+            <FollowButton
+              authorId={userData.id}
+              viewerId={followInfo.viewerId}
+              initialFollowing={followInfo.isFollowing}
+            />
             {session?.user.id === userData.id && (
               <Link
                 href="/settings"

@@ -48,6 +48,15 @@ export function Navbar({ className }: NavbarProps): React.JSX.Element {
           >
             Archive
           </Link>
+          {session?.user && (
+            <Link
+              href="/following"
+              aria-current={pathname === "/following" ? "page" : undefined}
+              className="hover:text-primary aria-[current=page]:text-foreground"
+            >
+              Following
+            </Link>
+          )}
         </nav>
         <div className="site-tools">
           <SearchInput />

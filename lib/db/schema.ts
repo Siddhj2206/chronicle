@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   integer,
   pgTable,
@@ -133,6 +135,25 @@ export const like = pgTable(
   (table) => [
     primaryKey({ columns: [table.userId, table.postId] }),
     index("like_post_idx").on(table.postId),
+  ],
+);
+
+export const follow = pgTable(
+  "follow",
+  {
+    followerId: text("follower_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    followingId: text("following_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.followerId, table.followingId] }),
+    check("follow_no_self", sql`${table.followerId} <> ${table.followingId}`),
+    index("follow_follower_idx").on(table.followerId),
+    index("follow_following_idx").on(table.followingId),
   ],
 );
 
